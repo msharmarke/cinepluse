@@ -32,14 +32,23 @@ foreach ($locations as $name => $id) {
 }
 
 // Determine theatrical week start (Friday) and end (Thursday)
-$inputDate = Security::sanitizeInput($_GET['start_date'] ?? date('Y-m-d'), 'date');
-$inputSec = strtotime($inputDate) ?: time();
-$dayOfWeek = (int)date('N', $inputSec); // 1 = Monday, 5 = Friday, 7 = Sunday
-
-if ($dayOfWeek === 5) {
-    $startFridaySec = strtotime('today', $inputSec);
+if (!empty($_GET['start_date']) && strtotime($_GET['start_date'])) {
+    $inputSec = strtotime($_GET['start_date']);
+    $dayOfWeek = (int)date('N', $inputSec);
+    if ($dayOfWeek === 5) {
+        $startFridaySec = strtotime('today', $inputSec);
+    } else {
+        $startFridaySec = strtotime('last Friday', $inputSec);
+    }
 } else {
-    $startFridaySec = strtotime('last Friday', $inputSec);
+    $todaySec = strtotime('today');
+    $dayOfWeek = (int)date('N', $todaySec);
+    if ($dayOfWeek === 5) {
+        $startFridaySec = $todaySec;
+    } else {
+        // Default to upcoming Friday for new week pre-cached schedules
+        $startFridaySec = strtotime('next Friday', $todaySec);
+    }
 }
 
 $startFridayStr = date('Y-m-d', $startFridaySec);
