@@ -1,7 +1,7 @@
 <?php
 /**
  * Cinepulse CLI Cron Task — Schedule Scraper
- * Pre-caches upcoming schedules for theaters in locations.json for the next 7 days.
+ * Pre-caches theatrical week schedules (Friday through Thursday) for theaters in locations.json.
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -16,7 +16,23 @@ require_once dirname(__DIR__) . '/src/Autoloader.php';
 
 use Cinepulse\CineplexAPI;
 
-echo "[" . date('Y-m-d H:i:s') . "] Starting weekly schedule pre-cache pipeline...\n";
+// Determine theatrical week start (Friday) and end (Thursday)
+if (isset($argv[1]) && strtotime($argv[1])) {
+    $startFridaySec = strtotime($argv[1]);
+} else {
+    $todaySec = strtotime('today');
+    $dayOfWeek = (int)date('N', $todaySec); // 1 = Monday, 5 = Friday, 7 = Sunday
+    if ($dayOfWeek === 5) {
+        $startFridaySec = $todaySec;
+    } else {
+        $startFridaySec = strtotime('next Friday', $todaySec);
+    }
+}
+
+$startFridayStr = date('Y-m-d', $startFridaySec);
+$endThursdayStr = date('Y-m-d', strtotime('+6 days', $startFridaySec));
+
+echo "[" . date('Y-m-d H:i:s') . "] Starting theatrical week schedule pre-cache pipeline ({$startFridayStr} to {$endThursdayStr})...\n";
 
 // Load location mappings
 $locFile = dirname(__DIR__) . '/config/locations.json';
@@ -38,15 +54,16 @@ try {
 $successCount = 0;
 $failCount = 0;
 
-// Fetch schedules for the next 7 days
+// Fetch schedules for the 7 days of the theatrical week (Friday -> Thursday)
 for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
-    $currentDate = date('Y-m-d', strtotime("+$dayOffset days"));
+    $currentDate = date('Y-m-d', strtotime("+{$dayOffset} days", $startFridaySec));
     $cineplexDate = date('m+d+Y', strtotime($currentDate));
+    $dayName = date('l', strtotime($currentDate));
     
-    echo "Processing Date: $currentDate\n";
+    echo "Processing Date: {$currentDate} ({$dayName})\n";
     
     foreach ($locations as $name => $id) {
-        echo "  -> Pre-caching schedule for: $name (ID: $id)... ";
+        echo "  -> Pre-caching schedule for: {$name} (ID: {$id})... ";
         
         // Force refresh to download latest schedules
         $data = $api->fetchShowtimes($id, $cineplexDate, true);
@@ -61,20 +78,18 @@ for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
         }
         
         // Sleep to respect API rate limits
-        usleep(500000); // 500ms pause
+        usleep(400000); // 400ms pause
     }
 }
 
 // After caching schedules, scan for new showtimes matching active movie release trackers
-echo "[" . date('Y-m-d H:i:s') . "] Pre-caching complete. Successes: $successCount, Failures: $failCount.\n";
+echo "[" . date('Y-m-d H:i:s') . "] Pre-caching complete for theatrical week {$startFridayStr} to {$endThursdayStr}. Successes: {$successCount}, Failures: {$failCount}.\n";
 echo "Scanning schedules for movie release tracker rules...\n";
 
 try {
-    // Autoload TrackerService
     $trackerService = new Cinepulse\TrackerService();
     $totalRegistered = $trackerService->scanAndRegisterForAllMovieTrackers();
-    echo "SUCCESS! Auto-registered $totalRegistered new matching showtimes from cached schedules.\n";
+    echo "SUCCESS! Auto-registered {$totalRegistered} new matching showtimes from cached schedules.\n";
 } catch (Exception $e) {
     echo "WARNING: Movie release tracker scan skipped/failed: " . $e->getMessage() . "\n";
 }
-

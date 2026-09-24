@@ -300,6 +300,53 @@ try {
 
             </div>
 
+            <!-- Historical Archives Section -->
+            <?php
+            $archiveService = new Cinepulse\ArchiveService();
+            $archivesList = $archiveService->listArchives();
+            ?>
+            <div class="chart-container" style="margin-top: 1.5rem;">
+                <div class="chart-header">
+                    <h3 style="margin: 0; font-size: 1.1rem;">📦 Historical Archives (<?php echo count($archivesList); ?> Archived Periods)</h3>
+                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">Historical showtimes & seating occupancy history</span>
+                </div>
+
+                <?php if (empty($archivesList)): ?>
+                    <p style="color: rgba(255,255,255,0.5);">No historical archive packages found in `/archives`.</p>
+                <?php else: ?>
+                    <div style="max-height: 320px; overflow-y: auto; margin-top: 1rem;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);">
+                                    <th style="padding: 0.75rem;">Archive Name</th>
+                                    <th style="padding: 0.75rem;">Date Saved</th>
+                                    <th style="padding: 0.75rem;">Showtimes Count</th>
+                                    <th style="padding: 0.75rem;">Occupancy Logs</th>
+                                    <th style="padding: 0.75rem;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($archivesList as $arch): ?>
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 0.75rem; font-weight: 600; color: #fff;"><?php echo htmlspecialchars($arch['name']); ?></td>
+                                        <td style="padding: 0.75rem; color: rgba(255,255,255,0.7);"><?php echo htmlspecialchars($arch['created']); ?></td>
+                                        <td style="padding: 0.75rem; color: #3498db;"><?php echo number_format($arch['showtimes_count']); ?> records</td>
+                                        <td style="padding: 0.75rem; color: #2ecc71;"><?php echo number_format($arch['occupancy_count']); ?> logs</td>
+                                        <td style="padding: 0.75rem;">
+                                            <button class="btn-action btn-secondary btn-import-archive" data-archive="<?php echo htmlspecialchars($arch['name']); ?>" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                                                📥 Load into DB
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            </div>
+
         <?php endif; ?>
 
     </main>
@@ -338,6 +385,26 @@ try {
                 }).fail(function(xhr) {
                     alert('Error: ' + (xhr.responseJSON?.error || 'Failed to start daemon.'));
                     $btn.prop('disabled', false).text('▶ Run Occupancy Daemon');
+                });
+            });
+
+            // Load Historical Archive into DB
+            $(document).on('click', '.btn-import-archive', function() {
+                var $btn = $(this);
+                var archiveName = $btn.data('archive');
+                
+                if (!confirm('Load archive records from "' + archiveName + '" into the live database?')) {
+                    return;
+                }
+                
+                $btn.prop('disabled', true).text('⌛ Importing...');
+                $.post('api.php', { action: 'import_archive', archive_name: archiveName, csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Archive imported successfully!');
+                    $btn.prop('disabled', false).text('📥 Load into DB');
+                    location.reload();
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to import archive.'));
+                    $btn.prop('disabled', false).text('📥 Load into DB');
                 });
             });
 

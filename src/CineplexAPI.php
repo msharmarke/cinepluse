@@ -50,7 +50,31 @@ class CineplexAPI {
             return ['error' => 'SSRF Warning: Invalid external request target host.'];
         }
 
-        $ch = curl_init();
+        // Check if cURL extension is installed; fallback to stream_context_create if absent
+        if (!function_exists('curl_init')) {
+            $opts = [
+                "http" => [
+                    "method" => "GET",
+                    "header" => "Ocp-Apim-Subscription-Key: " . $this->apiKey . "\r\n" .
+                                "User-Agent: Mozilla/5.0 (compatible; CinepulseAPI/1.0)\r\n",
+                    "timeout" => 30,
+                    "ignore_errors" => true
+                ],
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false
+                ]
+            ];
+            $context = stream_context_create($opts);
+            $response = @file_get_contents($apiUrl, false, $context);
+            if ($response === false) {
+                return ['error' => 'API HTTP stream request failed.'];
+            }
+            $data = json_decode($response, true);
+            return is_array($data) ? $data : ['error' => 'Failed parsing JSON return content from Cineplex API.'];
+        }
+
+        $ch = \curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [

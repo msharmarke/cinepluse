@@ -13,5 +13,11 @@ snapshots/
 bin/*.log
 bin/.cron_running.lock
 
+# Tarballs & Temporary Test Scripts
+*.tar.gz
+test_api.php
+test_archive_import.php
+archives/
+
 .htaccess
 public/error_log

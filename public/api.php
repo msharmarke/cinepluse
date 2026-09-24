@@ -510,6 +510,30 @@ try {
             ]);
             break;
 
+        case 'list_archives':
+            $archiveService = new Cinepulse\ArchiveService();
+            $archives = $archiveService->listArchives();
+            echo json_encode([
+                'success' => true,
+                'archives' => $archives,
+                'total' => count($archives)
+            ]);
+            break;
+
+        case 'import_archive':
+            Security::verifyCsrfOrDie();
+            $archiveName = Security::sanitizeInput($_POST['archive_name'] ?? null, 'string');
+            if (!$archiveName) {
+                http_response_code(400);
+                echo json_encode(['error' => 'archive_name parameter is required.']);
+                exit;
+            }
+
+            $archiveService = new Cinepulse\ArchiveService();
+            $res = $archiveService->importArchive($archiveName);
+            echo json_encode($res);
+            break;
+
         default:
             http_response_code(404);
             echo json_encode(['error' => 'Requested action is invalid.']);
