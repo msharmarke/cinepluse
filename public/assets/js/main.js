@@ -624,6 +624,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- AJAX View Seats Map Handlers ---
+    const closeLiveMapModal = () => {
+        if (liveMapModal) {
+            liveMapModal.classList.remove('visible');
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+        }
+    };
+
     document.body.addEventListener('click', function(e) {
         const btn = e.target.closest('.view-seats-btn');
         if (btn) {
@@ -634,15 +642,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const auditorium = btn.dataset.auditorium;
             
             openLiveMapModal(theatreId, showtimeId, movieName, movieTime, auditorium);
+            return;
         }
         
-        if (e.target === liveMapModal || e.target === liveMapModalCloseBtn) {
-            liveMapModal.classList.remove('visible');
+        if (e.target === liveMapModal || e.target.closest('#modal-close-btn') || e.target.closest('.modal-close')) {
+            closeLiveMapModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && liveMapModal && liveMapModal.classList.contains('visible')) {
+            closeLiveMapModal();
         }
     });
 
     async function openLiveMapModal(theatreId, showtimeId, movieName, movieTime, auditorium) {
+        if (!liveMapModal) return;
         liveMapModal.classList.add('visible');
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        
         liveMapRenderArea.innerHTML = '<div class="spinner"></div><p style="text-align: center; margin-top: 10px;">Loading seat map...</p>';
         
         try {

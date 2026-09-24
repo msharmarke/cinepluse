@@ -568,8 +568,8 @@ if ($db_configured && !$tables_missing) {
 
     <!-- SEAT MAP MODAL WINDOW -->
     <div id="live-map-modal" class="modal-overlay">
-        <div class="modal-content glass-card" style="max-width: 750px; width: 90%;">
-            <button id="modal-close-btn" class="modal-close" aria-label="Close modal">&times;</button>
+        <div class="modal-content glass-card">
+            <button id="modal-close-btn" class="modal-close" aria-label="Close modal">✕ Close</button>
             <div id="live-map-render-area" class="modal-body-content">
                 <!-- Rendered dynamically by assets/js/main.js -->
             </div>
