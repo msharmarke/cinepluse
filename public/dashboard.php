@@ -193,6 +193,12 @@ try {
             backdrop-filter: blur(12px);
             position: relative;
         }
+        .chart-wrapper {
+            position: relative;
+            height: 260px;
+            width: 100%;
+            overflow: hidden;
+        }
         .chart-box-header {
             display: flex;
             justify-content: space-between;
@@ -433,14 +439,18 @@ try {
                         <div class="chart-box-header">
                             <h3>📈 Daily Occupancy Trends</h3>
                         </div>
-                        <canvas id="dailyTrendChart" height="220"></canvas>
+                        <div class="chart-wrapper">
+                            <canvas id="dailyTrendChart"></canvas>
+                        </div>
                     </div>
 
                     <div class="chart-box">
                         <div class="chart-box-header">
                             <h3>🎬 Top Movies by Occupancy</h3>
                         </div>
-                        <canvas id="topMoviesChart" height="220"></canvas>
+                        <div class="chart-wrapper">
+                            <canvas id="topMoviesChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
