@@ -200,6 +200,28 @@ if ($db_configured && !$tables_missing) {
             </div>
         <?php endif; ?>
 
+        <!-- 7-DAY THEATRICAL WEEK HORIZONTAL CAROUSEL -->
+        <?php
+        $todaySec = strtotime('today');
+        $selectedDate = $date ?? date('Y-m-d');
+        ?>
+        <div class="week-strip-container">
+            <?php for ($i = 0; $i < 7; $i++): 
+                $daySec = strtotime("+{$i} days", $todaySec);
+                $dayStr = date('Y-m-d', $daySec);
+                $dayName = date('D', $daySec);
+                $dayNum = date('j', $daySec);
+                $monthName = date('M', $daySec);
+                $isActive = ($dayStr === $selectedDate);
+            ?>
+                <a href="?locationId=<?php echo $location_id; ?>&date=<?php echo $dayStr; ?>&fetch_showtimes=1" class="week-pill <?php echo $isActive ? 'active' : ''; ?>">
+                    <span class="day-name"><?php echo $dayName; ?></span>
+                    <span class="day-num"><?php echo $dayNum; ?></span>
+                    <span style="font-size: 0.65rem; opacity: 0.7;"><?php echo $monthName; ?></span>
+                </a>
+            <?php endfor; ?>
+        </div>
+
         <!-- SECTION 1: SEARCH FILTER CONTROLS -->
         <div class="form-section glass-card" style="margin-bottom: 30px; padding: 25px;">
             <h2 style="margin-top:0;">🔍 Find Showtimes</h2>

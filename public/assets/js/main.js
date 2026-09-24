@@ -814,24 +814,55 @@ document.addEventListener('DOMContentLoaded', function() {
     const fetchOccupancy = (el) => {
         const tId = el.dataset.theatreId;
         const sId = el.dataset.showtimeId;
-        
+        const cacheKey = `cinepulse_occ_${tId}_${sId}`;
+
+        const applyOccupancy = (data) => {
+            if (!data || data.error || !(data.total > 0)) return;
+            const fill = el.querySelector('.occupancy-fill');
+            const pct = data.percentage;
+            if (fill) {
+                fill.style.width = pct + '%';
+                if (pct < 50) {
+                    fill.style.background = '#22c55e';
+                } else if (pct < 85) {
+                    fill.style.background = '#f59e0b';
+                } else {
+                    fill.style.background = '#ef4444';
+                }
+            }
+
+            // Hacker Terminal ASCII bar support
+            const asciiContainer = el.closest('tr')?.querySelector('.ascii-capacity-bar') || el.parentElement?.querySelector('.ascii-capacity-bar');
+            if (asciiContainer) {
+                const barLen = 14;
+                const filledLen = Math.round((pct / 100) * barLen);
+                const emptyLen = barLen - filledLen;
+                const asciiBar = '[' + '='.repeat(filledLen) + '-'.repeat(emptyLen) + ']';
+                asciiContainer.textContent = `${asciiBar} ${pct}% (${data.occupied}/${data.total})`;
+            }
+
+            el.title = `Occupancy: ${pct}% (${data.occupied}/${data.total} seats)`;
+        };
+
+        // Instant render from LocalStorage cache
+        try {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Date.now() - parsed.ts < 15 * 60 * 1000) {
+                    applyOccupancy(parsed.data);
+                }
+            }
+        } catch(e) {}
+
         fetch(`api?action=fetch_occupancy&theatre_id=${tId}&showtime_id=${sId}`)
             .then(res => res.json())
             .then(data => {
                 if (!data.error && data.total > 0) {
-                    const fill = el.querySelector('.occupancy-fill');
-                    const pct = data.percentage;
-                    fill.style.width = pct + '%';
-                    
-                    if (pct < 50) {
-                        fill.style.background = '#22c55e'; // Green
-                    } else if (pct < 85) {
-                        fill.style.background = '#f59e0b'; // Yellow
-                    } else {
-                        fill.style.background = '#ef4444'; // Red
-                    }
-                    
-                    el.title = `Occupancy: ${pct}% (${data.occupied}/${data.total} seats)`;
+                    applyOccupancy(data);
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: data }));
+                    } catch(e) {}
                 }
             })
             .catch(err => console.error("Occupancy fetch error", err));
