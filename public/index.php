@@ -175,12 +175,12 @@ if ($db_configured && !$tables_missing) {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.php" class="active">📅 Schedule</a>
-                <a href="movies.php">🎬 Movies</a>
-                <a href="double-feature.php">🍿 Planner</a>
-                <a href="tracker.php">📈 Tracker</a>
-                <a href="dashboard.php">📊 Dashboard</a>
-                <a href="tracker_scan_logs.php">🔍 Scan Logs</a>
+                <a href="schedule" class="active">📅 Schedule</a>
+                <a href="movies">🎬 Movies</a>
+                <a href="planner">🍿 Planner</a>
+                <a href="tracker">📈 Tracker</a>
+                <a href="dashboard">📊 Dashboard</a>
+                <a href="scan-logs">🔍 Scan Logs</a>
             </nav>
         </aside>
 
@@ -224,7 +224,7 @@ if ($db_configured && !$tables_missing) {
                     
                     <div class="form-group" style="align-self: flex-end; display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="submit" class="button-primary">📡 Fetch Schedules</button>
-                        <a href="export_pdf.php?locationId=<?php echo $location_id; ?>&start_date=<?php echo $date; ?>&print=1" target="_blank" class="button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; padding: 10px 16px; border-radius: 8px;">📄 Export Theater PDF</a>
+                        <a href="export-pdf?locationId=<?php echo $location_id; ?>&start_date=<?php echo $date; ?>&print=1" target="_blank" class="button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; padding: 10px 16px; border-radius: 8px;">📄 Export Theater PDF</a>
                     </div>
                 </div>
             </form>

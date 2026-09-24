@@ -1,0 +1,14 @@
+# Cinepulse Apache URL Rewrite Rules
+<IfModule mod_rewrite.c>
+    Options -MultiViews
+    RewriteEngine On
+
+    RewriteRule ^dashboard/?$ public/dashboard.php [L,QSA]
+    RewriteRule ^schedule/?$ public/index.php [L,QSA]
+    RewriteRule ^movies/?$ public/movies.php [L,QSA]
+    RewriteRule ^planner/?$ public/double-feature.php [L,QSA]
+    RewriteRule ^tracker/?$ public/tracker.php [L,QSA]
+    RewriteRule ^scan-logs/?$ public/tracker_scan_logs.php [L,QSA]
+    RewriteRule ^watch-party/?$ public/watch-party.php [L,QSA]
+    RewriteRule ^export-pdf/?$ public/export_pdf.php [L,QSA]
+</IfModule>

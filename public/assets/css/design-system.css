@@ -60,20 +60,21 @@
     --color-gray-900: #111827;
     
     /* Background Colors - Light Mode */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
     --bg-tertiary: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.9);
     --bg-elevated: #ffffff;
     --bg-overlay: rgba(15, 23, 42, 0.8);
     
     /* Text Colors - Light Mode */
     --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-tertiary: #64748b;
+    --text-secondary: #334155;
+    --text-tertiary: #475569;
     --text-inverse: #ffffff;
-    --text-muted: #94a3b8;
+    --text-muted: #64748b;
     
-    /* Border Colors */
+    /* Border Colors - Light Mode */
     --border-light: #e2e8f0;
     --border-medium: #cbd5e1;
     --border-dark: #94a3b8;
@@ -88,18 +89,18 @@
     --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
     
     /* Gradient System - Will be overridden by themes */
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-primary: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
     --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
     --gradient-cool: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-    --gradient-cinematic: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    --gradient-cinematic: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%);
     --gradient-hero: var(--gradient-cinematic);
     
-    /* Glassmorphism */
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    /* Glassmorphism - Light Mode */
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(203, 213, 225, 0.6);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
     
     /* Spacing System (8px base) */
     --space-1: 0.25rem;   /* 4px */
@@ -116,7 +117,7 @@
     --space-24: 6rem;     /* 96px */
     
     /* Typography Scale */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     
     --text-xs: 0.75rem;     /* 12px */
@@ -149,27 +150,29 @@
 :root.dark,
 html.dark {
     /* Background Colors - Dark Mode */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-tertiary: #334155;
-    --bg-elevated: #1e293b;
+    --bg-primary: #0b0f19;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --bg-card: rgba(17, 24, 39, 0.8);
+    --bg-elevated: #1f2937;
     --bg-overlay: rgba(0, 0, 0, 0.9);
     
     /* Text Colors - Dark Mode */
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
+    --text-primary: #f9fafb;
+    --text-secondary: #e5e7eb;
+    --text-tertiary: #cbd5e1;
     --text-inverse: #0f172a;
-    --text-muted: #64748b;
+    --text-muted: #9ca3af;
     
     /* Border Colors - Dark Mode */
-    --border-light: #334155;
-    --border-medium: #475569;
-    --border-dark: #64748b;
+    --border-light: #374151;
+    --border-medium: #4b5563;
+    --border-dark: #6b7280;
     
     /* Glassmorphism - Dark Mode */
-    --glass-bg: rgba(15, 23, 42, 0.3);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(17, 24, 39, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
     
     /* Shadows - Dark Mode (more intense) */

@@ -203,12 +203,12 @@ if (!empty($showtimes_data)) {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.php">📅 Schedule</a>
-                <a href="movies.php">🎬 Movies</a>
-                <a href="double-feature.php" class="active">🍿 Planner</a>
-                <a href="tracker.php">📈 Tracker</a>
-                <a href="dashboard.php">📊 Dashboard</a>
-                <a href="tracker_scan_logs.php">🔍 Scan Logs</a>
+                <a href="schedule">📅 Schedule</a>
+                <a href="movies">🎬 Movies</a>
+                <a href="planner" class="active">🍿 Planner</a>
+                <a href="tracker">📈 Tracker</a>
+                <a href="dashboard">📊 Dashboard</a>
+                <a href="scan-logs">🔍 Scan Logs</a>
             </nav>
         </aside>
 

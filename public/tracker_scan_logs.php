@@ -126,12 +126,12 @@ try {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.php">📅 Schedule</a>
-                <a href="movies.php">🎬 Movies</a>
-                <a href="double-feature.php">🍿 Planner</a>
-                <a href="tracker.php">📈 Tracker</a>
-                <a href="dashboard.php">📊 Dashboard</a>
-                <a href="tracker_scan_logs.php" class="active">🔍 Scan Logs</a>
+                <a href="schedule">📅 Schedule</a>
+                <a href="movies">🎬 Movies</a>
+                <a href="planner">🍿 Planner</a>
+                <a href="tracker">📈 Tracker</a>
+                <a href="dashboard">📊 Dashboard</a>
+                <a href="scan-logs" class="active">🔍 Scan Logs</a>
             </nav>
         </aside>
 

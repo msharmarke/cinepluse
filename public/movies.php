@@ -163,12 +163,12 @@ if ($movie_name_filter && $location_id) {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.php">📅 Schedule</a>
-                <a href="movies.php" class="active">🎬 Movies</a>
-                <a href="double-feature.php">🍿 Planner</a>
-                <a href="tracker.php">📈 Tracker</a>
-                <a href="dashboard.php">📊 Dashboard</a>
-                <a href="tracker_scan_logs.php">🔍 Scan Logs</a>
+                <a href="schedule">📅 Schedule</a>
+                <a href="movies" class="active">🎬 Movies</a>
+                <a href="planner">🍿 Planner</a>
+                <a href="tracker">📈 Tracker</a>
+                <a href="dashboard">📊 Dashboard</a>
+                <a href="scan-logs">🔍 Scan Logs</a>
             </nav>
         </aside>
 

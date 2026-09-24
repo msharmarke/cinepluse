@@ -336,7 +336,7 @@ try {
         }
     </style>
 </head>
-<body class="theme-dark">
+<body>
 
     <div class="app-container">
         
@@ -347,12 +347,12 @@ try {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="index.php">📅 Schedule</a>
-                <a href="movies.php">🎬 Movies</a>
-                <a href="double-feature.php">🍿 Planner</a>
-                <a href="tracker.php">📈 Tracker</a>
-                <a href="dashboard.php" class="active">📊 Dashboard</a>
-                <a href="tracker_scan_logs.php">🔍 Scan Logs</a>
+                <a href="schedule">📅 Schedule</a>
+                <a href="movies">🎬 Movies</a>
+                <a href="planner">🍿 Planner</a>
+                <a href="tracker">📈 Tracker</a>
+                <a href="dashboard" class="active">📊 Dashboard</a>
+                <a href="scan-logs">🔍 Scan Logs</a>
             </nav>
             <div style="padding: 1rem 1.5rem; margin-top: auto;">
                 <button id="openThemeModal" class="btn-dash btn-dash-secondary" style="width: 100%; justify-content: center;">🎨 Customize Theme</button>
@@ -370,9 +370,9 @@ try {
                 </div>
 
                 <div class="controls-group">
-                    <form method="GET" action="dashboard.php" class="date-filter-form">
+                    <form method="GET" action="dashboard" class="date-filter-form">
                         <input type="date" name="date_from" value="<?php echo htmlspecialchars($metrics['date_range']['from'] ?? date('Y-m-d', strtotime('-30 days'))); ?>" class="date-input-custom">
-                        <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">to</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">to</span>
                         <input type="date" name="date_to" value="<?php echo htmlspecialchars($metrics['date_range']['to'] ?? date('Y-m-d')); ?>" class="date-input-custom">
                         <button type="submit" class="btn-dash btn-dash-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">Filter</button>
                     </form>
@@ -394,12 +394,12 @@ try {
                         <span class="status-badge <?php echo ($daemonStatus['is_running'] ?? false) ? 'status-active' : 'status-idle'; ?>">
                             ● <?php echo ($daemonStatus['is_running'] ?? false) ? 'Daemon Active' : 'Daemon Standby'; ?>
                         </span>
-                        <span style="color: rgba(255,255,255,0.7); font-size: 0.88rem;">
-                            Last Activity: <strong style="color: #fff;"><?php echo htmlspecialchars($daemonStatus['last_log_time'] ?? 'N/A'); ?></strong>
+                        <span style="color: var(--text-secondary); font-size: 0.88rem;">
+                            Last Activity: <strong style="color: var(--text-primary);"><?php echo htmlspecialchars($daemonStatus['last_log_time'] ?? 'N/A'); ?></strong>
                         </span>
                     </div>
-                    <div style="color: rgba(255,255,255,0.7); font-size: 0.88rem;">
-                        ⏱️ Next Scheduled Polling: <strong style="color: #fff;"><?php echo htmlspecialchars($daemonStatus['next_run_time'] ?? 'N/A'); ?></strong>
+                    <div style="color: var(--text-secondary); font-size: 0.88rem;">
+                        ⏱️ Next Scheduled Polling: <strong style="color: var(--text-primary);"><?php echo htmlspecialchars($daemonStatus['next_run_time'] ?? 'N/A'); ?></strong>
                     </div>
                 </div>
 
@@ -463,11 +463,11 @@ try {
                         <div class="chart-box-header">
                             <h3>📥 Data & Schedule Export Center</h3>
                         </div>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.5;">
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.5;">
                             Export raw historical seating occupancy snapshots CSV, or generate a publication-ready per-theater weekly schedule PDF.
                         </p>
                         
-                        <form method="GET" action="export_pdf.php" target="_blank" style="margin-bottom: 1.25rem; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                        <form method="GET" action="export-pdf" target="_blank" style="margin-bottom: 1.25rem; background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
                             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                                 <select name="locationId" class="date-input-custom" style="flex: 1; min-width: 180px;">
                                     <?php foreach ($locations as $name => $id): ?>
@@ -494,11 +494,11 @@ try {
                     <div class="chart-box">
                         <div class="chart-box-header">
                             <h3>📜 Daemon Terminal Log</h3>
-                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Latest 50 entries</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Latest 50 entries</span>
                         </div>
                         <div class="log-terminal">
                             <?php if (empty($logs)): ?>
-                                <div style="color: rgba(255,255,255,0.4);">No execution log lines captured yet.</div>
+                                <div style="color: var(--text-muted);">No execution log lines captured yet.</div>
                             <?php else: ?>
                                 <?php foreach ($logs as $line): ?>
                                     <div><?php echo htmlspecialchars($line); ?></div>
@@ -512,11 +512,11 @@ try {
                 <div class="chart-box" style="margin-bottom: 3rem;">
                     <div class="chart-box-header">
                         <h3>📦 Historical Archives (<?php echo count($archivesList); ?> Archived Periods)</h3>
-                        <span style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">Showtimes & seating occupancy history</span>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Showtimes & seating occupancy history</span>
                     </div>
 
                     <?php if (empty($archivesList)): ?>
-                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">No historical archive packages found in `/archives`.</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">No historical archive packages found in `/archives`.</p>
                     <?php else: ?>
                         <div class="table-responsive-wrapper">
                             <table class="archive-table">
@@ -532,8 +532,8 @@ try {
                                 <tbody>
                                     <?php foreach ($archivesList as $arch): ?>
                                         <tr>
-                                            <td style="font-weight: 700; color: #fff;"><?php echo htmlspecialchars($arch['name']); ?></td>
-                                            <td style="color: rgba(255,255,255,0.7);"><?php echo htmlspecialchars($arch['created']); ?></td>
+                                            <td style="font-weight: 700; color: var(--text-primary);"><?php echo htmlspecialchars($arch['name']); ?></td>
+                                            <td style="color: var(--text-secondary);"><?php echo htmlspecialchars($arch['created']); ?></td>
                                             <td style="color: #3498db; font-weight: 600;"><?php echo number_format($arch['showtimes_count']); ?> records</td>
                                             <td style="color: #2ecc71; font-weight: 600;"><?php echo number_format($arch['occupancy_count']); ?> logs</td>
                                             <td>

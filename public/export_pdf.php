@@ -403,7 +403,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
     <div class="no-print-bar">
         <h2>📄 Weekly Schedule PDF Exporter</h2>
 
-        <form method="GET" action="export_pdf.php" style="display: flex; gap: 10px; align-items: center;">
+        <form method="GET" action="export-pdf" style="display: flex; gap: 10px; align-items: center;">
             <select name="locationId" class="select-custom" onchange="this.form.submit()">
                 <?php foreach ($locations as $name => $id): ?>
                     <option value="<?php echo $id; ?>" <?php echo ((int)$theatreId === (int)$id) ? 'selected' : ''; ?>>
@@ -421,7 +421,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
 
         <div style="display: flex; gap: 10px;">
             <button onclick="window.print()" class="btn-action">🖨️ Print / Save as PDF</button>
-            <a href="dashboard.php" class="btn-action btn-action-secondary">📊 Back to Dashboard</a>
+            <a href="dashboard" class="btn-action btn-action-secondary">📊 Back to Dashboard</a>
         </div>
     </div>
 

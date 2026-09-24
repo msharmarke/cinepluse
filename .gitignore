@@ -19,5 +19,4 @@ test_api.php
 test_archive_import.php
 archives/
 
-.htaccess
 public/error_log
