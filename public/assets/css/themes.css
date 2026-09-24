@@ -1,0 +1,203 @@
+/**
+ * 🎨 MULTI-THEME DESIGN SYSTEM
+ * Multiple award-winning design themes
+ * 
+ * Themes:
+ * - Cinematic (Default) - Movie theater vibes
+ * - Command Center - Dark, data-rich cockpit aesthetic
+ * - Hacker Terminal - High-contrast neon green on black
+ * - Minimalist - Clean, distraction-free modern aesthetic
+ */
+
+/* ============================================
+   CINEMATIC THEME (Default)
+   ============================================ */
+:root,
+:root[data-theme="cinematic"] {
+    /* Primary Colors - Deep Purple/Blue */
+    --theme-primary: #667eea;
+    --theme-primary-light: #818cf8;
+    --theme-primary-dark: #4f46e5;
+    --theme-secondary: #764ba2;
+    --theme-accent: #f093fb;
+    
+    /* Backgrounds */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --bg-elevated: #ffffff;
+    --bg-overlay: rgba(15, 23, 42, 0.8);
+    
+    /* Text */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #64748b;
+    --text-inverse: #ffffff;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    
+    /* Glass */
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+:root[data-theme="cinematic"].dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-elevated: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --glass-bg: rgba(15, 23, 42, 0.3);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   COMMAND CENTER THEME - Dark Data Cockpit
+   ============================================ */
+:root[data-theme="command-center"] {
+    /* Primary Colors - Muted Blues & Alert Colors */
+    --theme-primary: #3b82f6;
+    --theme-primary-light: #60a5fa;
+    --theme-primary-dark: #2563eb;
+    --theme-secondary: #64748b;
+    --theme-accent: #f59e0b; /* Warning Yellow */
+    
+    /* Backgrounds */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-elevated: #475569;
+    --bg-overlay: rgba(15, 23, 42, 0.95);
+    
+    /* Text */
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-inverse: #0f172a;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
+    --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #3b82f6 100%);
+    --gradient-accent: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    
+    /* Glass */
+    --glass-bg: rgba(30, 41, 59, 0.6);
+    --glass-border: rgba(100, 116, 139, 0.4);
+}
+
+:root[data-theme="command-center"].dark {
+    /* Command center is naturally dark */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+}
+
+/* ============================================
+   HACKER TERMINAL - Utilitarian Data Focus
+   ============================================ */
+:root[data-theme="terminal"] {
+    /* Primary Colors - Neon Green/Cyan */
+    --theme-primary: #00ff00;
+    --theme-primary-light: #4dff4d;
+    --theme-primary-dark: #00cc00;
+    --theme-secondary: #00ffff;
+    --theme-accent: #ff00ff;
+    
+    /* Backgrounds */
+    --bg-primary: #050505;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #141414;
+    --bg-elevated: #1f1f1f;
+    --bg-overlay: rgba(0, 0, 0, 0.95);
+    
+    /* Text */
+    --text-primary: #00ff00;
+    --text-secondary: #00cc00;
+    --text-tertiary: #008000;
+    --text-inverse: #050505;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #00ff00 0%, #00ffff 100%);
+    --gradient-hero: linear-gradient(135deg, #050505 0%, #00cc00 50%, #00ffff 100%);
+    --gradient-accent: linear-gradient(135deg, #ff00ff 0%, #00ffff 100%);
+    
+    /* Glass */
+    --glass-bg: rgba(0, 255, 0, 0.05);
+    --glass-border: rgba(0, 255, 0, 0.3);
+}
+
+:root[data-theme="terminal"].dark {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #141414;
+}
+
+/* ============================================
+   MINIMALIST ANALYTICS - Clean & Distraction-free
+   ============================================ */
+:root[data-theme="minimalist"] {
+    /* Primary Colors - Monochromes with subtle blue */
+    --theme-primary: #0f172a;
+    --theme-primary-light: #334155;
+    --theme-primary-dark: #000000;
+    --theme-secondary: #64748b;
+    --theme-accent: #3b82f6;
+    
+    /* Backgrounds */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --bg-elevated: #ffffff;
+    --bg-overlay: rgba(255, 255, 255, 0.9);
+    
+    /* Text */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+    --text-inverse: #ffffff;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #334155 0%, #0f172a 100%);
+    --gradient-hero: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+    --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    
+    /* Glass */
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(203, 213, 225, 0.5);
+}
+
+:root[data-theme="minimalist"].dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-elevated: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --glass-bg: rgba(15, 23, 42, 0.8);
+    --glass-border: rgba(71, 85, 105, 0.5);
+}
+
+/* ============================================
+   THEME TRANSITIONS
+   ============================================ */
+* {
+    transition: background-color 0.3s ease, 
+                color 0.3s ease,
+                border-color 0.3s ease;
+}
+
+/* Theme-specific font weights */
+:root[data-theme="neon"] {
+    font-weight: 600; /* Bolder for neon */
+}
+
+:root[data-theme="midnight"] {
+    font-weight: 500; /* Medium for midnight */
+}
+

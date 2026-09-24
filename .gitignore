@@ -1,0 +1,17 @@
+# Cinepulse Local Ignored Files
+# Ignore private configurations
+config/config.ini
+
+# Ignore API response cache folder
+cache/
+
+# Ignore logged seatmap snapshots
+snapshots/
+
+# Logs & Lock Files
+*.log
+bin/*.log
+bin/.cron_running.lock
+
+.htaccess
+public/error_log

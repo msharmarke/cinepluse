@@ -1,0 +1,40 @@
+; Cinepulse Configuration File Template
+; Copy this file to config.ini and edit the settings.
+
+[api]
+; Cineplex Subscription Key (Required)
+key = "YOUR_CINEPLEX_API_KEY_HERE"
+
+[database]
+; Database Connection Settings (Required)
+host = "localhost"
+name = "cinepulse_db"
+user = "cinepulse_user"
+pass = "cinepulse_password"
+
+[email]
+; Email Notification Settings (Optional)
+enabled = 1
+smtp_from = "alerts@example.com"
+smtp_from_name = "Cinepulse Occupancy Alerts"
+smtp_to = "recipient@example.com"
+smtp_host = "smtp.example.com"
+smtp_port = 587
+smtp_user = "smtp_username"
+smtp_pass = "smtp_password"
+weekly_theatres = "7411,7408,7130"
+
+[social_media]
+; Social Media Integration Settings (Optional)
+enabled = 0
+threshold = 75
+
+[reddit]
+; Reddit Bot Integration (Optional)
+reddit_enabled = 0
+reddit_client_id = "YOUR_REDDIT_CLIENT_ID"
+reddit_client_secret = "YOUR_REDDIT_CLIENT_SECRET"
+reddit_username = "YOUR_REDDIT_USERNAME"
+reddit_password = "YOUR_REDDIT_PASSWORD"
+reddit_user_agent = "CinepulsePlanner/1.0 (by /u/YOUR_USERNAME)"
+reddit_subreddit = "movies"
