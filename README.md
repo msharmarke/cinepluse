@@ -1,41 +1,67 @@
-# Cinepulse — Modern Modular Cineplex Companion & Occupancy Tracker
+# 🎬 Cinepulse — Modern Modular Cineplex Companion & Seating Occupancy Analytics
 
-Cinepulse is a clean, developer-friendly PHP application designed to interface with the Cineplex API. It allows users to browse showtimes, match back-to-back double feature layout combinations, and schedule trackers to monitor and chart auditorium seating occupancy over time.
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Production Status](https://img.shields.io/badge/Production-Live-success.svg)](https://cinepluse.msharmarke.com/)
+
+**Cinepulse** is a modern, modular PHP application designed to interface with the Cineplex API (`apis.cineplex.com`). It allows users and developers to browse theatrical showtimes, match back-to-back double feature layout combinations, chart auditorium seating occupancy over time, and manage automated release tracking with system analytics.
+
+🌐 **Live Production Deployment**: [https://cinepluse.msharmarke.com](https://cinepluse.msharmarke.com/)  
+📊 **Live System Analytics Dashboard**: [https://cinepluse.msharmarke.com/dashboard.php](https://cinepluse.msharmarke.com/dashboard.php)
 
 ---
 
-## 🏗️ Folder Structure
+## ✨ Core Features
+
+* **🍿 Theatrical Week Schedule Browser**: Pre-caches and displays theatrical showtimes for Friday-to-Thursday release cycles across all tracked Cineplex theaters.
+* **📊 Analytics Dashboard**: Real-time daemon status indicators, Chart.js trend graphs (daily occupancy & top movies), estimated ticket revenue calculator (`ticket_price * seats_occupied`), terminal execution log scrubber, and CSV export portal.
+* **📈 Live Interactive Seat Maps**: Visual seating availability maps per auditorium session (occupied, available, broken, total layout capacity).
+* **⚡ Double Feature Scheduler**: Smart layover planner computing proximity gaps between movies, with warnings for tight breaks (<10m), long waits (>120m), or auditorium transfers.
+* **🤖 Automated Release Tracking**: Auto-registers upcoming showtimes matching user-configured movie pattern rules and experience filters (IMAX, VIP, UltraAVX, D-BOX, 3D).
+* **📦 Historical Archive Engine**: Browse, inspect, and import historical showtimes and occupancy logs across 22+ archived periods (from 2025 to present).
+
+---
+
+## 🏗️ Project Structure
 
 ```
 cinepluse/
-├── bin/                       # Command Line Cron scripts
-│   ├── collect_showtimes.php  # Pre-caches theatrical schedules weekly
-│   └── track_occupancy.php    # Polling daemon for seats snapshots
+├── bin/                          # CLI Cron Scripts & Daemons
+│   ├── collect_showtimes.php     # Pre-caches theatrical week schedules (Friday -> Thursday)
+│   └── track_occupancy.php       # 15-minute seating snapshot daemon & alert dispatcher
 │
-├── config/                    # Configurations folder
-│   ├── config.ini.example     # Database & credentials template
-│   └── locations.json         # Unified list of tracked locations
+├── config/                       # Application Configuration
+│   ├── config.ini.example        # Database & credentials template
+│   └── locations.json            # Unified list of tracked Cineplex theaters
 │
-├── public/                    # Web-exposed Document Root
-│   ├── index.php              # Showtimes search & live seat maps
-│   ├── double-feature.php     # Proximity layover scheduler
-│   ├── tracker.php            # Occupancy trends dashboard & scrubber
-│   ├── api.php                # Dispatcher for AJAX callbacks
-│   └── assets/                # Styling and script assets
+├── public/                       # Web Document Root (Publicly Exposed)
+│   ├── index.php                 # Showtime browser & live interactive seat map viewer
+│   ├── dashboard.php             # Analytics dashboard, daemon status & CSV export
+│   ├── tracker.php               # Occupancy monitors dashboard & snapshot scrubber
+│   ├── double-feature.php        # Double-feature layover matcher & gap calculator
+│   ├── movies.php                # Global playing movies directory
+│   ├── tracker_scan_logs.php     # Scraper execution audit log viewer
+│   ├── watch-party.php           # Group movie planning interface
+│   ├── api.php                   # Central AJAX JSON API dispatcher
+│   └── assets/                   # CSS (design system, themes) & JavaScript modules
 │
-├── src/                       # Backend Logic (Namespaced classes)
-│   ├── Autoloader.php         # Custom PSR-4 autoloader
-│   ├── Database.php           # PDO connection Singleton
-│   ├── Security.php           # Sanitization and CSRF guards
-│   ├── CineplexAPI.php        # Network client (with caching)
-│   ├── ShowtimeService.php    # Groupers, sorters & compatibility rules
-│   └── TrackerService.php     # Monitor registries & snapshot files
+├── src/                          # Backend PSR-4 Core Logic (`namespace Cinepulse`)
+│   ├── Autoloader.php            # PSR-4 dynamic class loader
+│   ├── Database.php              # Singleton PDO wrapper (America/Toronto timezone)
+│   ├── Security.php              # CSRF, XSS, and input sanitization helpers
+│   ├── CineplexAPI.php           # Network client with 30-min file caching & retries
+│   ├── ShowtimeService.php       # Double-feature gap logic & experience groupers
+│   ├── TrackerService.php        # Snapshot manager & flat-file seatmap persistence
+│   ├── DashboardService.php      # Metrics aggregation, chart datasets & CSV exporter
+│   └── ArchiveService.php        # Historical archive scanner and database importer
 │
-├── cache/                     # Temporary JSON API Cache responses (git-ignored)
-├── snapshots/                 # Monitored flat seatmap snapshot files (git-ignored)
-├── schema.sql                 # Combined MySQL table scripts
-├── README.md                  # Quickstart guide (This document)
-└── DEVELOPER.md               # Code structures & development reference
+├── archives/                     # Historical archive packages (SQL & CSV backups)
+├── snapshots/                    # Flat seatmap JSON snapshot files (git-ignored)
+├── cache/                        # API response JSON caches (git-ignored)
+├── deploy.sh                     # Production VPS deployment helper script
+├── schema.sql                    # MySQL schema initialization script
+├── README.md                     # Application guide (This document)
+└── DEVELOPER.md                  # Developer reference & extension manual
 ```
 
 ---
@@ -43,17 +69,17 @@ cinepluse/
 ## 🚀 Quickstart Deployment Guide
 
 ### 1. Database Setup
-Create a new MySQL database (e.g. `cinepulse_db`) and run the setup queries inside [schema.sql](file:///c:/Users/Moe/movies/cinepluse/schema.sql) to initialize the tables:
+Create a new MySQL database (e.g. `cinepulse_db`) and import `schema.sql`:
 ```bash
-mysql -u your_user -p cinepulse_db < schema.sql
+mysql -u cinepulse_user -p cinepulse_db < schema.sql
 ```
 
 ### 2. Configuration Setup
-Copy [config.ini.example](file:///c:/Users/Moe/movies/cinepluse/config/config.ini.example) to `config.ini`:
+Copy `config/config.ini.example` to `config/config.ini`:
 ```bash
 cp config/config.ini.example config/config.ini
 ```
-Edit the database connection parameters and paste your Cineplex subscription API key under `[api]`:
+Edit `config/config.ini` with your database parameters and Cineplex API key:
 ```ini
 [api]
 key = "YOUR_CINEPLEX_API_KEY_HERE"
@@ -61,28 +87,34 @@ key = "YOUR_CINEPLEX_API_KEY_HERE"
 [database]
 host = "localhost"
 name = "cinepulse_db"
-user = "your_db_user"
-pass = "your_db_password"
+user = "cinepulse_user"
+pass = "your_password"
 ```
 
 ### 3. File Permissions
-Ensure the `cache/` and `snapshots/` folders exist and are writeable by the web server user:
+Ensure `cache/` and `snapshots/` exist and are writeable by the web server:
 ```bash
 chmod 755 cache snapshots
 ```
 
-### 4. Apache/Nginx Web Server Setup
-Point your web server's document root to the `public/` directory, rather than the root directory, so that configurations, source files, and CLI binaries are safely unexposed from public URL routes.
+### 4. Web Server Configuration (Nginx / Apache)
+> ⚠️ **CRITICAL**: Point the web server's **Document Root** to the `/public` directory, NOT the root directory. This shields source files, configurations, and CLI scripts from public URL access.
 
 ---
 
-## ⏰ Cron Jobs Setup
-Add the following tasks to your server's crontab (`crontab -e`) to automate pre-caching and background logging:
+## ⏰ Cron Jobs Automation
+
+Add the following background daemons to your server's crontab (`crontab -e`):
 
 ```crontab
 # 1. Pre-cache theatrical schedules every Monday at 2 AM
-0 2 * * 1 php /path/to/cinepluse/bin/collect_showtimes.php >> /path/to/cinepluse/bin/collect_showtimes.log 2>&1
+0 2 * * 1 php /path/to/cinepulse/bin/collect_showtimes.php >> /path/to/cinepulse/bin/collect_showtimes.log 2>&1
 
 # 2. Run occupancy tracker checks and snapshot logs every 15 minutes
-*/15 * * * * php /path/to/cinepluse/bin/track_occupancy.php >> /path/to/cinepluse/bin/track_occupancy.log 2>&1
+*/15 * * * * php /path/to/cinepulse/bin/track_occupancy.php >> /path/to/cinepulse/bin/track_occupancy.log 2>&1
 ```
+
+---
+
+## 📄 License & Maintainers
+Developed for movie enthusiasts and Cineplex schedule tracking. Maintained by **Mohamed Sharmarke** (`msharmarke@actra.ca`).
