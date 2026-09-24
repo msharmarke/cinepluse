@@ -140,10 +140,22 @@ class DesignOptionsModal {
         
         // Close on ESC key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.modal.style.display !== 'none') {
+            if (e.key === 'Escape' && this.modal && this.modal.style.display !== 'none') {
                 this.close();
             }
         });
+
+        // Global delegated click handler for theme modal triggers across all pages
+        document.addEventListener('click', (e) => {
+            const trigger = e.target.closest('#openThemeModal, .open-theme-modal, [data-action="open-theme-modal"], .btn-design-options');
+            if (trigger) {
+                e.preventDefault();
+                this.open();
+            }
+        });
+
+        // Automatically ensure a floating "Design Options" trigger button exists on pages
+        this.ensureThemeTriggerButton();
         
         // Set initial dark mode toggle state
         const darkToggle = document.getElementById('dark-mode-toggle');
@@ -155,6 +167,38 @@ class DesignOptionsModal {
         const fontSelector = document.getElementById('font-selector');
         if (fontSelector) {
             fontSelector.value = this.getSavedFont() || 'inter';
+        }
+    }
+
+    ensureThemeTriggerButton() {
+        // If a trigger button already exists, do nothing
+        if (document.querySelector('#openThemeModal, .open-theme-modal, [data-action="open-theme-modal"]')) {
+            return;
+        }
+
+        const darkModeToggleWrapper = document.querySelector('.dark-mode-toggle');
+        if (darkModeToggleWrapper) {
+            const themeBtn = document.createElement('button');
+            themeBtn.type = 'button';
+            themeBtn.id = 'openThemeModal';
+            themeBtn.className = 'open-theme-modal';
+            themeBtn.style.cssText = 'padding: 10px 16px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; border: none; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35); display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; transition: all 0.2s ease;';
+            themeBtn.innerHTML = '🎨 <span>Design Options</span>';
+            themeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.open();
+            });
+            darkModeToggleWrapper.insertBefore(themeBtn, darkModeToggleWrapper.firstChild);
+        } else {
+            const floatContainer = document.createElement('div');
+            floatContainer.className = 'dark-mode-toggle';
+            floatContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; align-items: center;';
+            floatContainer.innerHTML = `
+                <button id="openThemeModal" class="open-theme-modal" style="padding: 10px 16px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; border: none; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35); display: inline-flex; align-items: center; gap: 6px;">
+                    🎨 <span>Design Options</span>
+                </button>
+            `;
+            document.body.appendChild(floatContainer);
         }
     }
 
@@ -218,8 +262,6 @@ class DesignOptionsModal {
     }
 
     loadFont(font) {
-        // Font is applied via CSS attribute selector in design-system.css
-        // Just set the attribute
         document.documentElement.setAttribute('data-font', font);
     }
 
@@ -234,7 +276,6 @@ class DesignOptionsModal {
 
     saveDarkMode(isDark) {
         localStorage.setItem('design-dark-mode', isDark ? '1' : '0');
-        // Also update cookie for compatibility
         document.cookie = `dark_mode=${isDark ? '1' : '0'}; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/`;
     }
 
@@ -243,7 +284,6 @@ class DesignOptionsModal {
         if (saved !== null) {
             return saved === '1';
         }
-        // Fallback to cookie
         return document.cookie.includes('dark_mode=1');
     }
 
@@ -256,15 +296,15 @@ class DesignOptionsModal {
     }
 }
 
-// Initialize modal
-let designModal;
+// Initialize modal globally
+window.designModal = null;
 document.addEventListener('DOMContentLoaded', () => {
-    designModal = new DesignOptionsModal();
+    window.designModal = new DesignOptionsModal();
     
     // Load saved font
-    const savedFont = designModal.getSavedFont();
+    const savedFont = window.designModal.getSavedFont();
     if (savedFont) {
-        designModal.selectFont(savedFont);
+        window.designModal.selectFont(savedFont);
     }
 });
 

@@ -153,6 +153,9 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎬 Weekly Showtimes Schedule — <?php echo htmlspecialchars($theatreName); ?> (<?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j, Y', strtotime('+6 days', $startFridaySec)); ?>)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/design-system.css">
+    <link rel="stylesheet" href="assets/css/themes.css">
+    <link rel="stylesheet" href="assets/css/design-options-modal.css">
     <style>
         * {
             box-sizing: border-box;
@@ -510,5 +513,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             }
         });
     </script>
+    <script src="assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

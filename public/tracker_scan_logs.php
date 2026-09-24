@@ -276,5 +276,7 @@ try {
             });
         });
     </script>
+    <script src="assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
