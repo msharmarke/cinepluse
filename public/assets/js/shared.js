@@ -1,14 +1,12 @@
 // shared.js
 
-// Apply dark mode immediately (before DOMContentLoaded) to prevent flash
+// Apply dark mode, theme, and font immediately (before DOMContentLoaded) to prevent flash
 (function() {
     function getDarkMode() {
-        // Check localStorage first (design-options-modal uses this)
         const saved = localStorage.getItem('design-dark-mode');
         if (saved !== null) {
             return saved === '1';
         }
-        // Fallback to cookie (shared.js uses this)
         return document.cookie.includes('dark_mode=1');
     }
     
@@ -17,6 +15,16 @@
         document.documentElement.classList.add('dark');
     } else {
         document.documentElement.classList.remove('dark');
+    }
+
+    // Restore saved theme
+    const savedTheme = localStorage.getItem('design-theme') || 'cinematic';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // Restore saved font
+    const savedFont = localStorage.getItem('design-font');
+    if (savedFont) {
+        document.documentElement.setAttribute('data-font', savedFont);
     }
 })();
 

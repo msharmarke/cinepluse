@@ -46,26 +46,38 @@ class DesignOptionsModal {
                             <div class="theme-grid">
                                 <div class="theme-card" data-theme="cinematic" onclick="designModal.selectTheme('cinematic')">
                                     <div class="theme-preview cinematic-preview"></div>
-                                    <div class="theme-name">Cinematic (Default)</div>
-                                    <div class="theme-desc">Movie theater vibes</div>
+                                    <div class="theme-name">Cinema Command Deck</div>
+                                    <div class="theme-desc">Neon accents & seating heatmaps</div>
+                                </div>
+
+                                <div class="theme-card" data-theme="portal" onclick="designModal.selectTheme('portal')">
+                                    <div class="theme-preview" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);"></div>
+                                    <div class="theme-name">Modern Cinema Portal</div>
+                                    <div class="theme-desc">Poster grids & 7-day week tabs</div>
                                 </div>
                                 
                                 <div class="theme-card" data-theme="command-center" onclick="designModal.selectTheme('command-center')">
-                                    <div class="theme-preview" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);"></div>
+                                    <div class="theme-preview" style="background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);"></div>
                                     <div class="theme-name">Command Center</div>
-                                    <div class="theme-desc">Data-rich cockpit aesthetic</div>
+                                    <div class="theme-desc">Muted data cockpit</div>
                                 </div>
                                 
                                 <div class="theme-card" data-theme="terminal" onclick="designModal.selectTheme('terminal')">
-                                    <div class="theme-preview" style="background: linear-gradient(135deg, #0a0a0f 0%, #00ff00 100%);"></div>
+                                    <div class="theme-preview" style="background: linear-gradient(135deg, #050807 0%, #00ff66 100%);"></div>
                                     <div class="theme-name">Hacker Terminal</div>
-                                    <div class="theme-desc">Utilitarian data focus</div>
+                                    <div class="theme-desc">Monospaced neon matrix console</div>
                                 </div>
                                 
                                 <div class="theme-card" data-theme="minimalist" onclick="designModal.selectTheme('minimalist')">
                                     <div class="theme-preview" style="background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%); border: 1px solid #e2e8f0;"></div>
                                     <div class="theme-name">Minimal Analytics</div>
-                                    <div class="theme-desc">Clean, modern data view</div>
+                                    <div class="theme-desc">Apple-esque clean workspace</div>
+                                </div>
+
+                                <div class="theme-card" data-theme="executive" onclick="designModal.selectTheme('executive')">
+                                    <div class="theme-preview" style="background: linear-gradient(135deg, #d97706 0%, #6366f1 100%);"></div>
+                                    <div class="theme-name">Executive Report</div>
+                                    <div class="theme-desc">Luxury gold & indigo view</div>
                                 </div>
                             </div>
                         </section>
