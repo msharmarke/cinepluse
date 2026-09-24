@@ -539,6 +539,7 @@ if ($db_configured && !$tables_missing) {
                                     <div class="occupancy-tracker" data-theatre-id="<?php echo $location_id; ?>" data-showtime-id="<?php echo $session['session_id']; ?>" style="width: 100%; height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-light);">
                                         <div class="occupancy-fill" style="width: 0%; height: 100%; background: var(--text-tertiary); transition: width 0.8s ease-out, background 0.5s ease-out;"></div>
                                     </div>
+                                    <div class="ascii-capacity-bar" style="margin-top: 4px;"></div>
                                 </td>
                                 <td style="padding: 15px; text-align: right;">
                                     <div style="display: flex; gap: 8px; justify-content: flex-end;">

@@ -1815,4 +1815,56 @@ select:focus-visible {
     .mobile-bottom-nav {
         display: block;
     }
+
+    /* Transform table rows into modern touch cards on mobile */
+    .dashboard-table, 
+    .dashboard-table tbody, 
+    .dashboard-table tr, 
+    .dashboard-table td {
+        display: block;
+        width: 100%;
+    }
+    .dashboard-table thead {
+        display: none;
+    }
+    .dashboard-table tr.session-row {
+        background: var(--bg-card);
+        border: 1px solid var(--border-light) !important;
+        border-radius: 14px;
+        margin-bottom: 14px;
+        padding: 16px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+    .dashboard-table tr.session-row td {
+        padding: 4px 0 !important;
+        border-bottom: none !important;
+    }
+    .dashboard-table tr.session-row td:first-child {
+        font-size: 1.2rem;
+        color: var(--theme-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+    .dashboard-table tr.session-row td:nth-child(2) {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    .dashboard-table tr.session-row td:last-child {
+        margin-top: 12px;
+    }
+    .dashboard-table tr.session-row td:last-child div {
+        justify-content: stretch !important;
+    }
+    .dashboard-table tr.session-row td:last-child button {
+        flex: 1;
+        padding: 10px 14px !important;
+        font-size: 0.9rem !important;
+        border-radius: 8px !important;
+    }
+    .dashboard-widgets {
+        grid-template-columns: 1fr !important;
+    }
 }
