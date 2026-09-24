@@ -176,4 +176,81 @@ class ShowtimeService {
             'warning' => $warning
         ];
     }
+
+    /**
+     * Save/upsert API showtime listings into MySQL database table
+     * 
+     * @param int $theatreId
+     * @param string $theatreName
+     * @param array $apiData
+     * @return int Count of showtimes inserted/updated
+     */
+    public static function saveShowtimesToDatabase($theatreId, $theatreName, $apiData) {
+        if (empty($apiData[0]['dates'][0]['movies'])) {
+            return 0;
+        }
+
+        try {
+            $db = Database::getInstance()->getConnection();
+            $movies = $apiData[0]['dates'][0]['movies'];
+            $count = 0;
+
+            foreach ($movies as $movie) {
+                $movieName = $movie['name'] ?? $movie['title'] ?? '';
+                if (empty($movieName)) continue;
+                
+                $runtime = (int)($movie['runtime'] ?? $movie['runtimeMinutes'] ?? 120);
+
+                if (!empty($movie['experiences'])) {
+                    foreach ($movie['experiences'] as $exp) {
+                        $expTypes = $exp['experienceTypes'] ?? [];
+                        $expJson = json_encode($expTypes);
+
+                        $is3d = in_array('3D', $expTypes) ? 1 : 0;
+                        $isImax = in_array('IMAX', $expTypes) ? 1 : 0;
+                        $isVip = in_array('VIP', $expTypes) ? 1 : 0;
+                        $isDbox = in_array('D-BOX', $expTypes) ? 1 : 0;
+                        $isUltra = in_array('UltraAVX', $expTypes) ? 1 : 0;
+
+                        if (!empty($exp['sessions'])) {
+                            foreach ($exp['sessions'] as $session) {
+                                $showtimeId = $session['vistaSessionId'] ?? null;
+                                if (!$showtimeId) continue;
+
+                                $screenName = $session['auditorium'] ?? $session['screenName'] ?? 'Auditorium';
+                                $startTimeIso = $session['showStartDateTime'] ?? null;
+                                if (!$startTimeIso) continue;
+
+                                $startSec = strtotime($startTimeIso);
+                                if (!$startSec) continue;
+
+                                $startTimeSql = date('Y-m-d H:i:s', $startSec);
+                                $endTimeSql = date('Y-m-d H:i:s', $startSec + ($runtime * 60));
+                                $price = isset($session['price']) ? (float)$session['price'] : 14.99;
+
+                                $stmt = $db->prepare("INSERT INTO showtimes 
+                                    (theatre_id, theatre_name, showtime_id, movie_name, movie_runtime_minutes, screen_name, show_start_time, show_end_time, experience_types, ticket_price, is_3d, is_imax, is_vip, is_dbox, is_ultraavx)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    ON DUPLICATE KEY UPDATE 
+                                    movie_runtime_minutes = VALUES(movie_runtime_minutes),
+                                    screen_name = VALUES(screen_name),
+                                    experience_types = VALUES(experience_types),
+                                    ticket_price = VALUES(ticket_price)");
+                                
+                                $stmt->execute([
+                                    $theatreId, $theatreName, $showtimeId, $movieName, $runtime, $screenName,
+                                    $startTimeSql, $endTimeSql, $expJson, $price, $is3d, $isImax, $isVip, $isDbox, $isUltra
+                                ]);
+                                $count++;
+                            }
+                        }
+                    }
+                }
+            }
+            return $count;
+        } catch (\Exception $e) {
+            error_log("Failed saving showtimes to DB: " . $e->getMessage());
+            return 0;
+        }
+    }
 }

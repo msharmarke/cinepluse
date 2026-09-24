@@ -164,7 +164,7 @@ class CineplexAPI {
             $cachedContent = @file_get_contents($cacheFile);
             if ($cachedContent !== false) {
                 $decoded = json_decode($cachedContent, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
+                if (json_last_error() === JSON_ERROR_NONE && !empty($decoded)) {
                     return $decoded;
                 }
             }
@@ -175,8 +175,103 @@ class CineplexAPI {
 
         if (!isset($data['error']) && !empty($data)) {
             @file_put_contents($cacheFile, json_encode($data), LOCK_EX);
+            return $data;
+        }
+
+        // Stale cache file fallback if live API fails or is empty
+        if (file_exists($cacheFile)) {
+            $cachedContent = @file_get_contents($cacheFile);
+            if ($cachedContent !== false) {
+                $decoded = json_decode($cachedContent, true);
+                if (json_last_error() === JSON_ERROR_NONE && !empty($decoded)) {
+                    return $decoded;
+                }
+            }
+        }
+
+        // Database fallback if file cache is not available
+        $dbData = $this->fetchShowtimesFromDatabase($locationId, $dateStr);
+        if (!empty($dbData)) {
+            return $dbData;
         }
 
         return $data;
+    }
+
+    /**
+     * Reconstruct API showtimes structure directly from MySQL `showtimes` table
+     * 
+     * @param int $locationId
+     * @param string $dateStr
+     * @return array
+     */
+    public function fetchShowtimesFromDatabase($locationId, $dateStr) {
+        try {
+            $db = Database::getInstance()->getConnection();
+            $dateClean = str_replace('+', '-', $dateStr);
+            $dateFormatted = date('Y-m-d', strtotime($dateClean));
+            
+            $stmt = $db->prepare("SELECT * FROM showtimes WHERE theatre_id = ? AND (show_date = ? OR DATE(show_start_time) = ?) ORDER BY movie_name, show_start_time");
+            $stmt->execute([$locationId, $dateFormatted, $dateFormatted]);
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            if (empty($rows)) {
+                return [];
+            }
+
+            $moviesMap = [];
+            foreach ($rows as $row) {
+                $movieName = $row['movie_name'];
+                if (!isset($moviesMap[$movieName])) {
+                    $moviesMap[$movieName] = [
+                        'name' => $movieName,
+                        'runtime' => (int)($row['movie_runtime_minutes'] ?: 120),
+                        'runtimeInMinutes' => (int)($row['movie_runtime_minutes'] ?: 120),
+                        'experiences' => []
+                    ];
+                }
+
+                $expTypes = json_decode($row['experience_types'] ?? '[]', true);
+                if (!is_array($expTypes) || empty($expTypes)) {
+                    $expTypes = ['Standard'];
+                }
+                $expKey = implode(', ', $expTypes);
+
+                if (!isset($moviesMap[$movieName]['experiences'][$expKey])) {
+                    $moviesMap[$movieName]['experiences'][$expKey] = [
+                        'experienceTypes' => $expTypes,
+                        'sessions' => []
+                    ];
+                }
+
+                $moviesMap[$movieName]['experiences'][$expKey]['sessions'][] = [
+                    'vistaSessionId' => $row['showtime_id'],
+                    'auditorium' => $row['screen_name'] ?: 'Auditorium',
+                    'showStartDateTime' => date('c', strtotime($row['show_start_time'])),
+                    'price' => (float)($row['ticket_price'] ?: 14.99)
+                ];
+            }
+
+            $movies = [];
+            foreach ($moviesMap as $m) {
+                $m['experiences'] = array_values($m['experiences']);
+                $movies[] = $m;
+            }
+
+            return [
+                [
+                    'locationId' => (int)$locationId,
+                    'dates' => [
+                        [
+                            'date' => $dateFormatted,
+                            'movies' => $movies
+                        ]
+                    ]
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log("fetchShowtimesFromDatabase error: " . $e->getMessage());
+            return [];
+        }
     }
 }

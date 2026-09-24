@@ -18,8 +18,11 @@ $dashService = null;
 $daemonStatus = [];
 $metrics = [];
 $analytics = [];
-$logs = [];
-$archivesList = [];
+$locations = [];
+$locFile = dirname(__DIR__) . '/config/locations.json';
+if (file_exists($locFile)) {
+    $locations = json_decode(file_get_contents($locFile), true) ?: [];
+}
 
 try {
     $dashService = new DashboardService();
@@ -454,16 +457,30 @@ try {
                     </div>
                 </div>
 
-                <!-- Terminal & CSV Export Grid -->
+                <!-- Terminal & Export Grid -->
                 <div class="bottom-grid">
                     <div class="chart-box">
                         <div class="chart-box-header">
-                            <h3>📥 CSV Export Center</h3>
+                            <h3>📥 Data & Schedule Export Center</h3>
                         </div>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">
-                            Export raw historical seating occupancy snapshots or pre-cached showtimes catalog for analysis in Excel or Python.
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.5;">
+                            Export raw historical seating occupancy snapshots CSV, or generate a publication-ready per-theater weekly schedule PDF.
                         </p>
                         
+                        <form method="GET" action="export_pdf.php" target="_blank" style="margin-bottom: 1.25rem; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                <select name="locationId" class="date-input-custom" style="flex: 1; min-width: 180px;">
+                                    <?php foreach ($locations as $name => $id): ?>
+                                        <option value="<?php echo $id; ?>"><?php echo htmlspecialchars($name); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <input type="hidden" name="print" value="1">
+                                <button type="submit" class="btn-dash" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+                                    📄 Export Theater Weekly PDF
+                                </button>
+                            </div>
+                        </form>
+
                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                             <a href="api.php?action=export_csv&type=occupancy&date_from=<?php echo urlencode($metrics['date_range']['from']); ?>&date_to=<?php echo urlencode($metrics['date_range']['to']); ?>" class="btn-dash btn-dash-secondary">
                                 📊 Download Occupancy CSV

@@ -44,7 +44,7 @@ if (file_exists($locFile)) {
 // Default query parameters
 $location_id = Security::sanitizeInput($_GET['locationId'] ?? 7411, 'int');
 $date = Security::sanitizeInput($_GET['date'] ?? date('Y-m-d'), 'date');
-$fetch_showtimes = isset($_GET['fetch_showtimes']) || isset($_GET['locationId']);
+$fetch_showtimes = true;
 
 // Cineplex Date Format
 $cineplex_date = date('m+d+Y', strtotime($date));
@@ -222,8 +222,9 @@ if ($db_configured && !$tables_missing) {
                         <input type="date" id="date" name="date" value="<?php echo $date; ?>" min="<?php echo date('Y-m-d'); ?>">
                     </div>
                     
-                    <div class="form-group" style="align-self: flex-end;">
+                    <div class="form-group" style="align-self: flex-end; display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="submit" class="button-primary">📡 Fetch Schedules</button>
+                        <a href="export_pdf.php?locationId=<?php echo $location_id; ?>&start_date=<?php echo $date; ?>&print=1" target="_blank" class="button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; padding: 10px 16px; border-radius: 8px;">📄 Export Theater PDF</a>
                     </div>
                 </div>
             </form>

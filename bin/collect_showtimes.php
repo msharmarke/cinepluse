@@ -73,7 +73,8 @@ for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
             $failCount++;
         } else {
             $movies = $data[0]['dates'][0]['movies'] ?? [];
-            echo "SUCCESS (" . count($movies) . " movies listed)\n";
+            $savedDbCount = \Cinepulse\ShowtimeService::saveShowtimesToDatabase($id, $name, $data);
+            echo "SUCCESS (" . count($movies) . " movies, {$savedDbCount} showtimes saved to DB)\n";
             $successCount++;
         }
         
