@@ -12,15 +12,16 @@ These 9 flagship locations represent primary metropolitan hubs across Ontario, Q
 
 | Theater Name | ID | City / Province | Region Tag | Key Screen Formats | Active Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Scotiabank Theatre Toronto** | `7402` | Toronto, ON | GTA Flagship | IMAX Laser, AVX, VIP, DBOX | 🟢 **ACTIVE** |
+| **Scotiabank Theatre Toronto** | `7402` | Toronto, ON | GTA Flagship | 🍿 **70mm IMAX Laser**, AVX, VIP, DBOX | 🟢 **ACTIVE** |
+| **Vaughan (Colossus)** | `7408` | Vaughan, ON | GTA Flagship | 🍿 **70mm IMAX GT**, AVX | 🟢 **ACTIVE** |
+| **Courtney Park** | `7122` | Mississauga, ON | West GTA | 🍿 **70mm IMAX GT**, AVX | 🟢 **ACTIVE** |
 | **Yonge-Dundas** | `7130` | Toronto, ON | Downtown Toronto | IMAX, 4DX, VIP | 🟢 **ACTIVE** |
 | **Yorkdale** | `7406` | Toronto, ON | GTA | AVX, VIP | 🟢 **ACTIVE** |
-| **Mississauga** | `7420` | Mississauga, ON | West GTA | IMAX, AVX, VIP | 🟢 **ACTIVE** |
-| **Scotiabank Montreal** | `9406` | Montreal, QC | Montreal Metro | IMAX, AVX, VIP | 🟢 **ACTIVE** |
+| **Scotiabank Montreal** | `9406` | Montreal, QC | Montreal Metro | IMAX GT Laser, AVX, VIP | 🟢 **ACTIVE** |
 | **Forum** | `9109` | Montreal, QC | Montreal Metro | AVX, VIP | 🟢 **ACTIVE** |
 | **Scotiabank Vancouver** | `1422` | Vancouver, BC | Metro Vancouver | IMAX, AVX, VIP | 🟢 **ACTIVE** |
-| **Chinook** | `3401` | Calgary, AB | Calgary Metro | IMAX Laser, 4DX, AVX | 🟢 **ACTIVE** |
-| **South Edmonton** | `3144` | Edmonton, AB | Edmonton Metro | IMAX, AVX, VIP | 🟢 **ACTIVE** |
+| **Langley** | `1404` | Langley, BC | Metro Vancouver | 🍿 **70mm IMAX GT**, AVX | 🟢 **ACTIVE** |
+| **Chinook** | `3401` | Calgary, AB | Calgary Metro | 🍿 **70mm IMAX Laser**, 4DX, AVX | 🟢 **ACTIVE** |
 
 ---
 
