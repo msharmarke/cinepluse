@@ -223,6 +223,9 @@ class DesignOptionsModal {
         this.loadTheme(theme);
         this.saveTheme(theme);
         this.updateActiveTheme();
+        if (typeof window.updateDesktopThemePills === 'function') {
+            window.updateDesktopThemePills(theme);
+        }
         
         // Sync URL parameter so sharing link contains active theme
         try {

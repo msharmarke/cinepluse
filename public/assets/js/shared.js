@@ -379,4 +379,83 @@ document.addEventListener('DOMContentLoaded', function() {
 
         document.body.insertAdjacentHTML('beforeend', navHTML);
     })();
+
+    // --- Dynamic Desktop 1-Click Quick Theme Switcher Bar ---
+    (function setupDesktopThemeBar() {
+        if (document.querySelector('.desktop-theme-bar')) return;
+
+        const activeTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('design-theme') || 'cinematic';
+
+        const themes = [
+            { id: 'cinematic', name: 'Deck', icon: '🎬' },
+            { id: 'portal', name: 'Portal', icon: '🔮' },
+            { id: 'command-center', name: 'Command', icon: '📈' },
+            { id: 'terminal', name: 'Terminal', icon: '💻' },
+            { id: 'minimalist', name: 'Minimal', icon: '🍏' },
+            { id: 'executive', name: 'Executive', icon: '👑' }
+        ];
+
+        let pillsHTML = themes.map(t => `
+            <button type="button" class="theme-pill-btn ${t.id === activeTheme ? 'active' : ''}" data-theme="${t.id}" title="Switch to ${t.name} Theme">
+                <span>${t.icon}</span>
+                <span>${t.name}</span>
+            </button>
+        `).join('');
+
+        const barHTML = `
+            <div class="desktop-theme-bar">
+                ${pillsHTML}
+                <button type="button" class="theme-pill-btn open-theme-modal" onclick="if(window.designModal){window.designModal.open();}return false;" style="background: rgba(255,255,255,0.12); color: #fff; margin-left: 2px;" title="Open Theme Customizer">
+                    🎨 All
+                </button>
+            </div>
+        `;
+
+        const wrapper = document.querySelector('.dark-mode-toggle');
+        if (wrapper) {
+            wrapper.insertAdjacentHTML('afterbegin', barHTML);
+        } else {
+            const floatWrapper = document.createElement('div');
+            floatWrapper.className = 'dark-mode-toggle';
+            floatWrapper.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; align-items: center; gap: 10px;';
+            floatWrapper.innerHTML = barHTML;
+            document.body.appendChild(floatWrapper);
+        }
+
+        // Add event listener for quick theme switching pills
+        document.querySelectorAll('.desktop-theme-bar .theme-pill-btn[data-theme]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const theme = this.dataset.theme;
+                if (window.designModal) {
+                    window.designModal.selectTheme(theme);
+                } else {
+                    document.documentElement.setAttribute('data-theme', theme);
+                    localStorage.setItem('design-theme', theme);
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('theme', theme);
+                        window.history.replaceState({}, '', url.toString());
+                    } catch(e) {}
+                    if (window.syncShareMetaTags) window.syncShareMetaTags();
+                }
+
+                // Update active state across pills
+                document.querySelectorAll('.desktop-theme-bar .theme-pill-btn').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Sync active pill state when theme changes via modal
+        const origSelectTheme = window.designModal ? window.designModal.selectTheme : null;
+        window.updateDesktopThemePills = function(selectedTheme) {
+            document.querySelectorAll('.desktop-theme-bar .theme-pill-btn').forEach(p => {
+                if (p.dataset.theme === selectedTheme) {
+                    p.classList.add('active');
+                } else {
+                    p.classList.remove('active');
+                }
+            });
+        };
+    })();
 });
