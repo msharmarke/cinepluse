@@ -496,6 +496,9 @@ try {
                             </span>
                         </div>
                         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <button id="btnOpenAddTheatreModal" class="btn-dash" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); font-size: 0.85rem; padding: 0.45rem 0.9rem;">
+                                ➕ Add New Location
+                            </button>
                             <span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
                                 🟢 <span id="cntActiveTheatres"><?php echo $activeTheatresCount; ?></span> Active Monitored
                             </span>
@@ -729,6 +732,76 @@ try {
                 <button id="btnModalImportDb" class="btn-dash" style="display: none; background: #27ae60;">📥 Restore Package into Database</button>
                 <button id="btnModalCloseBottom" class="btn-dash btn-dash-secondary" style="margin-left: auto;">Close Viewer</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Add New Theater Location Modal -->
+    <div id="addTheatreModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999; justify-content: center; align-items: center; padding: 1.5rem; overflow-y: auto;">
+        <div style="background: var(--bg-secondary, #14171d); border: 1px solid var(--glass-border); border-radius: 16px; max-width: 540px; width: 100%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);">
+            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">🏛️</span>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #ffffff;">Add Cineplex Location</h2>
+                        <span style="font-size: 0.82rem; color: var(--text-muted);">Configure a new theater venue for occupancy tracking</span>
+                    </div>
+                </div>
+                <button id="closeAddTheatreModal" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            
+            <form id="formAddTheatre" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">THEATER ID (NUMERIC CINEPLEX ID)</label>
+                    <input type="number" id="addTheatreId" required placeholder="e.g. 7402" class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">THEATER FULL NAME</label>
+                    <input type="text" id="addTheatreName" required placeholder="e.g. Scotiabank Theatre Toronto" class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">CITY</label>
+                        <input type="text" id="addTheatreCity" required placeholder="e.g. Toronto" class="date-input-custom" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">PROVINCE</label>
+                        <select id="addTheatreProvince" class="date-input-custom" style="width: 100%;">
+                            <option value="ON">Ontario (ON)</option>
+                            <option value="QC">Quebec (QC)</option>
+                            <option value="BC">British Columbia (BC)</option>
+                            <option value="AB">Alberta (AB)</option>
+                            <option value="MB">Manitoba (MB)</option>
+                            <option value="NS">Nova Scotia (NS)</option>
+                            <option value="SK">Saskatchewan (SK)</option>
+                            <option value="NB">New Brunswick (NB)</option>
+                            <option value="NL">Newfoundland (NL)</option>
+                            <option value="PE">Prince Edward Island (PE)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">REGION / METRO AREA</label>
+                    <input type="text" id="addTheatreRegion" placeholder="e.g. Greater Toronto Area" class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">SPECIAL AUDITORIUM FORMATS (COMMA SEPARATED)</label>
+                    <input type="text" id="addTheatreScreens" placeholder="e.g. 70mm IMAX GT, UltraAVX, D-BOX" class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                    <input type="checkbox" id="addTheatreEnabled" checked style="width: 18px; height: 18px; accent-color: #3b82f6; cursor: pointer;">
+                    <label for="addTheatreEnabled" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; cursor: pointer;">Enable active telemetry monitoring immediately</label>
+                </div>
+
+                <div style="padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;">
+                    <button type="button" id="cancelAddTheatre" class="btn-dash btn-dash-secondary">Cancel</button>
+                    <button type="submit" id="btnSubmitAddTheatre" class="btn-dash" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">➕ Add Location</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1407,10 +1480,16 @@ try {
                     html += '  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem; margin-top: 0.25rem;">';
                     if (isEnabled) {
                         html += '    <span style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; display: flex; align-items: center; gap: 0.3rem;">🟢 Active Monitored</span>';
-                        html += '    <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" data-target="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">⏸️ Pause</button>';
+                        html += '    <div style="display: flex; gap: 0.35rem;">';
+                        html += '      <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" data-target="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">⏸️ Pause</button>';
+                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
+                        html += '    </div>';
                     } else {
                         html += '    <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">⚪ Trimming Paused</span>';
-                        html += '    <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + t.name + '" data-target="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: var(--theme-primary, #3b82f6); color: #fff;">▶️ Enable</button>';
+                        html += '    <div style="display: flex; gap: 0.35rem;">';
+                        html += '      <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + t.name + '" data-target="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: var(--theme-primary, #3b82f6); color: #fff;">▶️ Enable</button>';
+                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
+                        html += '    </div>';
                     }
                     html += '  </div>';
 
@@ -1456,6 +1535,80 @@ try {
                     }
                 }).fail(function(xhr) {
                     var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to update theater status.';
+                    alert('Error: ' + errMsg);
+                    loadTheatresGrid();
+                });
+            });
+
+            // Add Theater Modal Handlers
+            $('#btnOpenAddTheatreModal').on('click', function() {
+                $('#addTheatreModal').css('display', 'flex');
+            });
+
+            $('#closeAddTheatreModal, #cancelAddTheatre').on('click', function() {
+                $('#addTheatreModal').hide();
+            });
+
+            $('#formAddTheatre').on('submit', function(e) {
+                e.preventDefault();
+                var $btn = $('#btnSubmitAddTheatre');
+                $btn.prop('disabled', true).text('⌛ Saving Location...');
+
+                $.post('/api', {
+                    action: 'add_theatre',
+                    theatre_id: $('#addTheatreId').val(),
+                    name: $('#addTheatreName').val(),
+                    city: $('#addTheatreCity').val(),
+                    province: $('#addTheatreProvince').val(),
+                    region: $('#addTheatreRegion').val() || 'Canada',
+                    screens: $('#addTheatreScreens').val() || 'Standard',
+                    enabled: $('#addTheatreEnabled').is(':checked'),
+                    csrf_token: csrfToken
+                }, function(res) {
+                    if (res && res.success) {
+                        $('#addTheatreModal').hide();
+                        $('#formAddTheatre')[0].reset();
+                        alert(res.message || 'Theater added successfully!');
+                        loadTheatresGrid();
+                        loadWeeklySchedule();
+                    } else {
+                        alert('Error: ' + (res.error || 'Failed to add location.'));
+                    }
+                    $btn.prop('disabled', false).text('➕ Add Location');
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to add location.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).text('➕ Add Location');
+                });
+            });
+
+            // Delete Theater Handler
+            $(document).on('click', '.btn-delete-theatre', function() {
+                var theatreId = $(this).data('id');
+                var theatreName = $(this).data('name');
+
+                if (!confirm('Are you sure you want to delete "' + theatreName + '" (ID #' + theatreId + ') from the location list?')) {
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('⌛ Deleting...');
+
+                $.post('/api', {
+                    action: 'delete_theatre',
+                    theatre_id: theatreId,
+                    csrf_token: csrfToken
+                }, function(res) {
+                    if (res && res.success) {
+                        alert(res.message || 'Theater removed from locations roster.');
+                        loadTheatresGrid();
+                        loadWeeklySchedule();
+                    } else {
+                        alert('Error: ' + (res.error || 'Failed to delete theater.'));
+                        loadTheatresGrid();
+                    }
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to delete theater.';
                     alert('Error: ' + errMsg);
                     loadTheatresGrid();
                 });

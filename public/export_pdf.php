@@ -171,6 +171,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
     <meta name="twitter:image" content="/assets/images/share/executive.jpg">
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/design-system.css">
     <link rel="stylesheet" href="/assets/css/themes.css">
@@ -661,11 +662,14 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
         </div>
 
         <div style="display: flex; gap: 10px;">
+            <button id="downloadPdfBtn" class="btn-action" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" type="button">
+                📥 Download PDF File
+            </button>
             <button id="toggleInkSaverBtn" class="btn-action btn-action-secondary" type="button">
                 🌓 Toggle Theme
             </button>
-            <button onclick="window.print()" class="btn-action" type="button">
-                🖨️ Save as PDF / Print
+            <button onclick="window.print()" class="btn-action btn-action-secondary" type="button">
+                🖨️ Print
             </button>
             <a href="/admin/dashboard" class="btn-action btn-action-secondary">
                 📊 Dashboard
@@ -786,13 +790,40 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             $('body').toggleClass('ink-saver-mode');
         });
 
-        // Trigger print dialog after page load if ?print=1 is passed
+        // Download PDF Programmatically using html2pdf.js
+        $('#downloadPdfBtn').on('click', function() {
+            var $btn = $(this);
+            var originalText = $btn.html();
+            $btn.prop('disabled', true).html('⌛ Rendering PDF...');
+
+            var element = document.querySelector('.pdf-document-wrapper');
+            var filename = 'Cinepulse_Weekly_Schedule_' + <?php echo json_encode(preg_replace('/[^a-zA-Z0-9_\-]/', '_', $theatreName)); ?> + '_' + <?php echo json_encode($startFridayStr); ?> + '.pdf';
+
+            var opt = {
+                margin:       [8, 8, 8, 8],
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false, backgroundColor: $('body').hasClass('ink-saver-mode') ? '#ffffff' : '#111827' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function() {
+                $btn.prop('disabled', false).html(originalText);
+            }).catch(function(err) {
+                console.error(err);
+                alert('Failed to generate PDF download.');
+                $btn.prop('disabled', false).html(originalText);
+            });
+        });
+
+        // Trigger PDF download automatically if ?download=1 or ?print=1 is passed
         window.addEventListener('load', function() {
             var urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('print') === '1') {
+            if (urlParams.get('download') === '1') {
                 setTimeout(function() {
-                    window.print();
-                }, 400);
+                    $('#downloadPdfBtn').trigger('click');
+                }, 500);
             }
         });
     </script>

@@ -640,6 +640,85 @@ try {
             }
             break;
 
+        case 'add_theatre':
+            Security::verifyCsrfOrDie();
+            $name = Security::sanitizeInput($_POST['name'] ?? null, 'string');
+            $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? null, 'int');
+            $city = Security::sanitizeInput($_POST['city'] ?? 'Unknown', 'string');
+            $province = Security::sanitizeInput($_POST['province'] ?? 'ON', 'string');
+            $region = Security::sanitizeInput($_POST['region'] ?? 'Canada', 'string');
+            $screensStr = Security::sanitizeInput($_POST['screens'] ?? 'Standard', 'string');
+            $enabled = isset($_POST['enabled']) ? filter_var($_POST['enabled'], FILTER_VALIDATE_BOOLEAN) : true;
+
+            if (!$name || !$theatreId) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Theater Name and ID are required.']);
+                exit;
+            }
+
+            $locFile = dirname(__DIR__) . '/config/locations.json';
+            $locations = file_exists($locFile) ? (json_decode(file_get_contents($locFile), true) ?: []) : [];
+
+            $screensArr = array_map('trim', explode(',', $screensStr));
+            $screensArr = array_values(array_filter($screensArr));
+            if (empty($screensArr)) $screensArr = ['Standard'];
+
+            $locations[$name] = [
+                'id' => (int)$theatreId,
+                'city' => $city,
+                'province' => strtoupper($province),
+                'region' => $region,
+                'screens' => $screensArr,
+                'enabled' => $enabled
+            ];
+
+            file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+            echo json_encode([
+                'success' => true,
+                'message' => "Theater '{$name}' (ID #{$theatreId}) added to locations list successfully."
+            ]);
+            break;
+
+        case 'delete_theatre':
+            Security::verifyCsrfOrDie();
+            $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? null, 'int');
+            if (!$theatreId) {
+                http_response_code(400);
+                echo json_encode(['error' => 'theatre_id parameter is required.']);
+                exit;
+            }
+
+            $locFile = dirname(__DIR__) . '/config/locations.json';
+            if (!file_exists($locFile)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'locations.json file missing.']);
+                exit;
+            }
+
+            $locations = json_decode(file_get_contents($locFile), true) ?: [];
+            $targetKey = null;
+
+            foreach ($locations as $name => $data) {
+                $id = is_array($data) ? ($data['id'] ?? null) : $data;
+                if ((int)$id === (int)$theatreId) {
+                    $targetKey = $name;
+                    break;
+                }
+            }
+
+            if ($targetKey !== null) {
+                unset($locations[$targetKey]);
+                file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+                echo json_encode([
+                    'success' => true,
+                    'message' => "Theater '{$targetKey}' (ID #{$theatreId}) removed from location list."
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Theater ID not found in locations configuration.']);
+            }
+            break;
+
         default:
             http_response_code(404);
             echo json_encode(['error' => 'Requested action is invalid.']);
