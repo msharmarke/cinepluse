@@ -786,7 +786,8 @@ try {
                         html += '      </tbody>';
                         html += '    </table>';
                         html += '  </div>';
-                        html += '</div>';
+                    }
+                    html += '</div>';
 
                     // TAB 4: Files Manifest & Readme
                     html += '<div id="tabFiles" class="arch-tab-content" style="display: none;">';
