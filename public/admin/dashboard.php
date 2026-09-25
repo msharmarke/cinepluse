@@ -423,6 +423,8 @@ try {
                         <input type="date" name="date_to" value="<?php echo htmlspecialchars($metrics['date_range']['to'] ?? date('Y-m-d')); ?>" class="date-input-custom">
                         <button type="submit" class="btn-dash btn-dash-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">Filter</button>
                     </form>
+                    <button id="btnCleanAllTrackers" class="btn-dash" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); font-weight: 800;">🧹 Full Clean: Wipe Active Trackers</button>
+                    <button id="btnSetupTomorrow" class="btn-dash" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); font-weight: 800;">🌅 Setup for Tomorrow</button>
                     <button id="btnScrapeWeek" class="btn-dash" style="background: linear-gradient(135deg, #e50914 0%, #b20710 100%);">🗓️ Scrape Week (Fri–Thu)</button>
                     <button id="btnTriggerCollect" class="btn-dash btn-dash-secondary">🔄 Pre-cache Schedules</button>
                     <button id="btnTriggerTrack" class="btn-dash btn-dash-secondary">▶ Run Daemon</button>
@@ -1597,6 +1599,7 @@ try {
                 $.post('/api', {
                     action: 'delete_theatre',
                     theatre_id: theatreId,
+                    name: theatreName,
                     csrf_token: csrfToken
                 }, function(res) {
                     if (res && res.success) {
@@ -1611,6 +1614,38 @@ try {
                     var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to delete theater.';
                     alert('Error: ' + errMsg);
                     loadTheatresGrid();
+                });
+            });
+
+            // Full Clean / Wipe All Active Trackers Handler
+            $('#btnCleanAllTrackers').on('click', function() {
+                if (!confirm('Wipe ALL active showtime monitors and occupancy telemetry logs? This will reset active tracking to 0 and give you a clean slate for tomorrow.')) {
+                    return;
+                }
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('⌛ Wiping Active Trackers...');
+                $.post('/api', { action: 'clean_all_trackers', csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'System cleaned successfully!');
+                    location.reload();
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to wipe trackers.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).text('🧹 Full Clean: Wipe Active Trackers');
+                });
+            });
+
+            // Setup for Tomorrow Handler
+            $('#btnSetupTomorrow').on('click', function() {
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('⌛ Pre-caching Tomorrow...');
+                $.post('/api', { action: 'setup_tomorrow', csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Tomorrow pre-caching complete!');
+                    $btn.prop('disabled', false).text('🌅 Setup for Tomorrow');
+                    location.reload();
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to setup tomorrow.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).text('🌅 Setup for Tomorrow');
                 });
             });
 

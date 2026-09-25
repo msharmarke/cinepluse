@@ -681,10 +681,12 @@ try {
 
         case 'delete_theatre':
             Security::verifyCsrfOrDie();
-            $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? null, 'int');
-            if (!$theatreId) {
+            $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? $_POST['id'] ?? null, 'int');
+            $theatreName = Security::sanitizeInput($_POST['name'] ?? $_POST['theatre_name'] ?? null, 'string');
+
+            if (!$theatreId && !$theatreName) {
                 http_response_code(400);
-                echo json_encode(['error' => 'theatre_id parameter is required.']);
+                echo json_encode(['error' => 'theatre_id or name parameter is required.']);
                 exit;
             }
 
@@ -700,7 +702,8 @@ try {
 
             foreach ($locations as $name => $data) {
                 $id = is_array($data) ? ($data['id'] ?? null) : $data;
-                if ((int)$id === (int)$theatreId) {
+                if (($theatreId && (int)$id === (int)$theatreId) || 
+                    ($theatreName && strtolower(trim($name)) === strtolower(trim($theatreName)))) {
                     $targetKey = $name;
                     break;
                 }
@@ -711,11 +714,73 @@ try {
                 file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
                 echo json_encode([
                     'success' => true,
-                    'message' => "Theater '{$targetKey}' (ID #{$theatreId}) removed from location list."
+                    'message' => "Theater '{$targetKey}' removed from locations list."
                 ]);
             } else {
                 http_response_code(404);
-                echo json_encode(['error' => 'Theater ID not found in locations configuration.']);
+                echo json_encode(['error' => 'Theater not found in locations configuration.']);
+            }
+            break;
+
+        case 'clean_all_trackers':
+            Security::verifyCsrfOrDie();
+            try {
+                $db = Cinepulse\Database::getInstance()->getConnection();
+                
+                // Reset active tracking tables
+                try {
+                    $db->exec("TRUNCATE TABLE tracked_showtimes");
+                } catch (\Exception $e) {
+                    $db->exec("DELETE FROM tracked_showtimes");
+                }
+                
+                try {
+                    $db->exec("TRUNCATE TABLE showtime_occupancy_log");
+                } catch (\Exception $e) {
+                    $db->exec("DELETE FROM showtime_occupancy_log");
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'All active trackers and occupancy telemetry logs have been wiped clean. System reset complete!'
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to wipe trackers: ' . $e->getMessage()]);
+            }
+            break;
+
+        case 'setup_tomorrow':
+            Security::verifyCsrfOrDie();
+            try {
+                $tomorrowStr = date('Y-m-d', strtotime('+1 day'));
+                $cineplexDate = date('m+d+Y', strtotime('+1 day'));
+                
+                $locations = \Cinepulse\ShowtimeService::getTrackerTheatres(true); // Active locations only
+                $api = new CineplexAPI();
+                $totalSaved = 0;
+
+                foreach ($locations as $tName => $tId) {
+                    try {
+                        $raw = $api->fetchShowtimes($tId, $cineplexDate);
+                        if (!isset($raw['error'])) {
+                            $saved = \Cinepulse\ShowtimeService::saveShowtimesToDatabase($tId, $tName, $raw);
+                            $totalSaved += $saved;
+                        }
+                    } catch (\Exception $e) {
+                        // Skip location on error
+                    }
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'date' => $tomorrowStr,
+                    'showtimes_count' => $totalSaved,
+                    'message' => "Successfully pre-cached {$totalSaved} showtimes for tomorrow ({$tomorrowStr}) across " . count($locations) . " active venues."
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to setup tomorrow: ' . $e->getMessage()]);
             }
             break;
 
