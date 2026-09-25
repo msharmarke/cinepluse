@@ -799,41 +799,78 @@ try {
                         }
                         html += '  </div>';
 
-                        // Sessions Grid
-                        html += '  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 0.85rem;">';
+                        // Cross-Theater Matrix Grouping
+                        var byTheatre = {};
                         m.showtimes.forEach(function(s) {
-                            var isTracked = s.tracker_id !== null;
-                            html += '    <div style="background: ' + (isTracked ? 'rgba(46, 204, 113, 0.08)' : 'rgba(0,0,0,0.3)') + '; border: 1px solid ' + (isTracked ? 'rgba(46, 204, 113, 0.35)' : 'var(--glass-border)') + '; border-radius: 10px; padding: 0.9rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">';
-                            
-                            html += '      <div style="display: flex; justify-content: space-between; align-items: flex-start;">';
-                            html += '        <div>';
-                            html += '          <div style="font-weight: 800; font-size: 1.1rem; color: #ffffff; display: flex; align-items: center; gap: 0.4rem;">';
-                            html += '            <span>' + s.show_start_formatted + '</span>';
-                            html += '          </div>';
-                            html += '          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">🏛️ ' + $('<div>').text(s.theatre_name).html() + ' • ' + $('<div>').text(s.screen_name).html() + '</div>';
-                            html += '        </div>';
-                            html += '        <div style="font-weight: 800; font-size: 0.9rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid rgba(74, 222, 128, 0.2);">$' + s.ticket_price.toFixed(2) + '</div>';
-                            html += '      </div>';
-
-                            // Active Monitoring Status or Quick Add Button
-                            if (isTracked) {
-                                var occText = s.latest_occupancy !== null ? (s.latest_occupancy + '% Occupied (' + s.latest_occupied_seats + '/' + s.latest_total_seats + ' seats)') : 'Active • Pending initial snapshot...';
-                                html += '      <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 0.45rem 0.65rem; font-size: 0.78rem; color: #2ecc71; font-weight: 700; display: flex; align-items: center; justify-content: space-between;">';
-                                html += '        <span>● ' + occText + '</span>';
-                                html += '      </div>';
-                                html += '      <div style="display: flex; gap: 0.4rem; margin-top: 0.1rem;">';
-                                html += '        <button class="btn-dash btn-trigger-single-snap" data-tracker="' + s.tracker_id + '" style="flex: 1; padding: 0.35rem 0.5rem; font-size: 0.75rem; background: rgba(52, 152, 219, 0.2); color: #38bdf8; border: 1px solid rgba(52, 152, 219, 0.4); justify-content: center;">📷 Take Snapshot</button>';
-                                html += '        <button class="btn-dash btn-stop-single-track" data-tracker="' + s.tracker_id + '" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background: rgba(231, 76, 60, 0.2); color: #f87171; border: 1px solid rgba(231, 76, 60, 0.4); justify-content: center;">❌ Stop</button>';
-                                html += '      </div>';
-                            } else {
-                                html += '      <button class="btn-dash btn-start-single-track" data-theatre-id="' + s.theatre_id + '" data-theatre-name="' + $('<div>').text(s.theatre_name).html() + '" data-showtime-id="' + s.showtime_id + '" data-movie-name="' + $('<div>').text(m.movie_name).html() + '" data-start-time="' + s.show_start_time + '" style="width: 100%; padding: 0.45rem 0.65rem; font-size: 0.8rem; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #ffffff;">';
-                                html += '        ➕ Track Occupancy';
-                                html += '      </button>';
+                            var tName = s.theatre_name;
+                            if (!byTheatre[tName]) {
+                                byTheatre[tName] = {
+                                    theatre_id: s.theatre_id,
+                                    theatre_name: tName,
+                                    sessions: []
+                                };
                             }
-
-                            html += '    </div>';
+                            byTheatre[tName].sessions.push(s);
                         });
-                        html += '  </div>';
+
+                        html += '<div style="display: flex; flex-direction: column; gap: 0.85rem;">';
+
+                        Object.keys(byTheatre).forEach(function(tName) {
+                            var tData = byTheatre[tName];
+                            var trackedInTheatre = tData.sessions.filter(function(x) { return x.tracker_id !== null; }).length;
+                            var totalInTheatre = tData.sessions.length;
+
+                            html += '<div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0.95rem;">';
+                            
+                            // Theater Subheader
+                            html += '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.5rem;">';
+                            html += '    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">';
+                            html += '      <span style="font-weight: 800; font-size: 0.96rem; color: #60a5fa;">🏛️ ' + $('<div>').text(tName).html() + '</span>';
+                            html += '      <span style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: var(--text-muted); padding: 1px 7px; border-radius: 10px; font-weight: 600;">' + totalInTheatre + ' sessions</span>';
+                            if (trackedInTheatre > 0) {
+                                html += '      <span style="font-size: 0.72rem; background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); padding: 1px 7px; border-radius: 10px; font-weight: 700;">🟢 ' + trackedInTheatre + '/' + totalInTheatre + ' Monitored</span>';
+                            }
+                            html += '    </div>';
+                            html += '  </div>';
+
+                            // Time Slot Chips Row
+                            html += '  <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">';
+                            tData.sessions.forEach(function(s) {
+                                var isTracked = s.tracker_id !== null;
+                                var badgeBg = isTracked ? 'rgba(46, 204, 113, 0.12)' : 'rgba(255, 255, 255, 0.04)';
+                                var badgeBorder = isTracked ? 'rgba(46, 204, 113, 0.4)' : 'rgba(255, 255, 255, 0.12)';
+                                var timeColor = isTracked ? '#ffffff' : '#e2e8f0';
+
+                                html += '    <div style="background: ' + badgeBg + '; border: 1px solid ' + badgeBorder + '; border-radius: 10px; padding: 0.65rem 0.85rem; display: flex; align-items: center; gap: 0.65rem; min-width: 175px;">';
+                                
+                                html += '      <div style="flex: 1;">';
+                                html += '        <div style="font-weight: 800; font-size: 0.95rem; color: ' + timeColor + '; line-height: 1.1;">' + s.show_start_formatted + '</div>';
+                                html += '        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem;">' + $('<div>').text(s.screen_name).html() + ' &bull; $' + s.ticket_price.toFixed(2) + '</div>';
+                                
+                                if (isTracked) {
+                                    var occVal = s.latest_occupancy !== null ? (s.latest_occupancy + '% (' + s.latest_occupied_seats + '/' + s.latest_total_seats + ')') : 'Active';
+                                    html += '        <div style="font-size: 0.7rem; color: #2ecc71; font-weight: 700; margin-top: 0.2rem;">🟢 ' + occVal + '</div>';
+                                }
+                                html += '      </div>';
+
+                                // Action Buttons
+                                html += '      <div style="margin-left: auto; display: flex; flex-direction: column; gap: 0.25rem;">';
+                                if (isTracked) {
+                                    html += '        <button class="btn-trigger-single-snap" data-tracker="' + s.tracker_id + '" title="Take Manual Snapshot" style="background: rgba(52, 152, 219, 0.25); color: #38bdf8; border: 1px solid rgba(52, 152, 219, 0.4); border-radius: 6px; padding: 3px 7px; font-size: 0.72rem; cursor: pointer;">📷</button>';
+                                    html += '        <button class="btn-stop-single-track" data-tracker="' + s.tracker_id + '" title="Stop Telemetry" style="background: rgba(231, 76, 60, 0.25); color: #f87171; border: 1px solid rgba(231, 76, 60, 0.4); border-radius: 6px; padding: 3px 7px; font-size: 0.72rem; cursor: pointer;">❌</button>';
+                                } else {
+                                    html += '        <button class="btn-start-single-track" data-theatre-id="' + s.theatre_id + '" data-theatre-name="' + $('<div>').text(s.theatre_name).html() + '" data-showtime-id="' + s.showtime_id + '" data-movie-name="' + $('<div>').text(m.movie_name).html() + '" data-start-time="' + s.show_start_time + '" title="Track Occupancy" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">+ Track</button>';
+                                }
+                                html += '      </div>';
+
+                                html += '    </div>';
+                            });
+                            html += '  </div>';
+
+                            html += '</div>';
+                        });
+
+                        html += '</div>';
                         html += '</div>';
                     });
 
