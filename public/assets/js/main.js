@@ -869,35 +869,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-        // Tooltip listeners
-        $('.seat').hover(function() {
-            const node = $(this);
-            tooltip.innerHTML = `<strong>Row ${node.data('row')} Seat ${node.data('seatLabel')}</strong><br>Status: ${node.data('status')}`;
-            tooltip.style.display = 'block';
-        }, function() {
-            tooltip.style.display = 'none';
-        });
-
-        // Click to select/deselect seat
-        chartWrapper.addEventListener('click', function(e) {
-            const seat = e.target.closest('.seat');
-            if (!seat || seat.dataset.status !== 'Available') return;
-            
-            const seatId = seat.dataset.seatId;
-            if (selectedSeats.has(seatId)) {
-                selectedSeats.delete(seatId);
-                seat.classList.remove('selected');
-            } else {
-                if (selectedSeats.size >= maxSelection) {
-                    alert(`Maximum selection threshold is ${maxSelection} seats.`);
-                    return;
-                }
-                selectedSeats.add(seatId);
-                seat.classList.add('selected');
-            }
-        });
-    }
-
     // --- Occupancy Heatmap Logic & Mini Seat-Map Popovers ---
     const occupancyTrackers = document.querySelectorAll('.occupancy-tracker');
     let visibleTrackers = new Set();
