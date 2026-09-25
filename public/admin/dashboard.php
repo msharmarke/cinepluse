@@ -1586,8 +1586,9 @@ try {
 
             // Delete Theater Handler
             $(document).on('click', '.btn-delete-theatre', function() {
-                var theatreId = $(this).data('id');
-                var theatreName = $(this).data('name');
+                var $btn = $(this);
+                var theatreId = $btn.attr('data-id') || $btn.data('id');
+                var theatreName = $btn.attr('data-name') || $btn.data('name');
 
                 if (!confirm('Are you sure you want to delete "' + theatreName + '" (ID #' + theatreId + ') from the location list?')) {
                     return;

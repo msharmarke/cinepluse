@@ -406,6 +406,17 @@ class DashboardService {
         if ($theatreId) {
             $sql .= " AND s.theatre_id = ?";
             $params[] = (int)$theatreId;
+        } else {
+            // Only include showtimes for active/enabled locations in config/locations.json
+            $activeLocationsMap = \Cinepulse\ShowtimeService::getTrackerTheatres(true);
+            if (!empty($activeLocationsMap)) {
+                $activeTheatreIds = array_unique(array_values($activeLocationsMap));
+                $inClause = implode(',', array_fill(0, count($activeTheatreIds), '?'));
+                $sql .= " AND s.theatre_id IN ({$inClause})";
+                foreach ($activeTheatreIds as $actId) {
+                    $params[] = (int)$actId;
+                }
+            }
         }
 
         if ($search) {

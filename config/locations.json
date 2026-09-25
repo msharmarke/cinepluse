@@ -21,7 +21,6 @@
   "Varsity": { "id": 7199, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["VIP"], "enabled": false },
   "Fairview Mall": { "id": 7115, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["AVX"], "enabled": false },
   "Don Mills": { "id": 7139, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["VIP"], "enabled": false },
-  "Beaches": { "id": 7293, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["Standard"], "enabled": false },
   "Mission": { "id": 1407, "city": "Mission", "province": "BC", "region": "Lower Mainland", "screens": ["Standard"], "enabled": false },
   "Red Deer": { "id": 313, "city": "Red Deer", "province": "AB", "region": "Central Alberta", "screens": ["Standard"], "enabled": false },
   "Grand Prairie": { "id": 3141, "city": "Grande Prairie", "province": "AB", "region": "Northern Alberta", "screens": ["Standard"], "enabled": false },

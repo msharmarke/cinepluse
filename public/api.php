@@ -711,7 +711,12 @@ try {
 
             if ($targetKey !== null) {
                 unset($locations[$targetKey]);
-                file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+                $bytesWritten = @file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+                if ($bytesWritten === false) {
+                    http_response_code(500);
+                    echo json_encode(['error' => "Failed to write to locations.json. Please check server file write permissions."]);
+                    exit;
+                }
                 echo json_encode([
                     'success' => true,
                     'message' => "Theater '{$targetKey}' removed from locations list."
