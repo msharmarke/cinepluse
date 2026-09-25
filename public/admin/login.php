@@ -246,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
 
         <div class="login-footer">
-            <p>Default Passcode: <code>ms88</code> (Configurable in config.ini)</p>
+            <p style="color: var(--text-muted); font-size: 0.82rem;">🔐 Authorized personnel access only. Passcode configured via <code>config.ini</code> or <code>ADMIN_PASSWORD</code> environment variable.</p>
             <p style="margin-top: 1rem;"><a href="/schedule">← Return to Public Schedule</a></p>
         </div>
     </div>

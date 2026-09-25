@@ -149,7 +149,7 @@ class Security {
             }
         }
         if (!$adminPass) {
-            $adminPass = 'admin'; // Default password
+            $adminPass = 'change_me_in_config_ini'; // Default fallback requiring user configuration
         }
 
         return hash_equals($adminPass, $inputPassword) || password_verify($inputPassword, $adminPass);

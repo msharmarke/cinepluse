@@ -39,4 +39,4 @@ reddit_password = "YOUR_REDDIT_PASSWORD"
 reddit_user_agent = "CinepulsePlanner/1.0 (by /u/YOUR_USERNAME)"
 [admin]
 ; Admin Authentication Settings
-password = "ms88"
+password = "YOUR_SECURE_ADMIN_PASSCODE_HERE"
