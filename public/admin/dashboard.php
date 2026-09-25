@@ -1176,7 +1176,8 @@ try {
                     $btn.prop('disabled', false).text('📥 Restore Package into Database');
                     location.reload();
                 }).fail(function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to import archive.'));
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to import archive.';
+                    alert('Error: ' + errMsg);
                     $btn.prop('disabled', false).text('📥 Restore Package into Database');
                 });
             });
@@ -1190,7 +1191,8 @@ try {
                     alert(res.message || 'Task started.');
                     $btn.prop('disabled', false).text('🔄 Pre-cache Schedules');
                 }).fail(function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to trigger pre-caching.'));
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to trigger pre-caching.';
+                    alert('Error: ' + errMsg);
                     $btn.prop('disabled', false).text('🔄 Pre-cache Schedules');
                 });
             });
@@ -1205,7 +1207,8 @@ try {
                     $btn.prop('disabled', false).text('▶ Run Daemon');
                     setTimeout(function() { location.reload(); }, 1500);
                 }).fail(function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to start daemon.'));
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to start daemon.';
+                    alert('Error: ' + errMsg);
                     $btn.prop('disabled', false).text('▶ Run Daemon');
                 });
             });
@@ -1225,7 +1228,8 @@ try {
                     $btn.prop('disabled', false).text('📥 Load into DB');
                     location.reload();
                 }).fail(function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to import archive.'));
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to import archive.';
+                    alert('Error: ' + errMsg);
                     $btn.prop('disabled', false).text('📥 Load into DB');
                 });
             });
@@ -1414,7 +1418,8 @@ try {
                         loadTheatresGrid();
                     }
                 }).fail(function(xhr) {
-                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to update theater status.'));
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to update theater status.';
+                    alert('Error: ' + errMsg);
                     loadTheatresGrid();
                 });
             });
