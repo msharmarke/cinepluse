@@ -1846,6 +1846,11 @@ select:focus-visible {
 }
 
 @media (max-width: 768px) {
+    /* Hide floating top buttons to declutter mobile header area */
+    .dark-mode-toggle {
+        display: none !important;
+    }
+
     .app-container {
         flex-direction: column;
     }

@@ -342,6 +342,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         </a>
                     </li>
                     <li>
+                        <a href="#" class="open-theme-modal" onclick="if(window.designModal){window.designModal.open();}return false;">
+                            <span class="nav-icon">🎨</span>
+                            <span>Theme</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="export-pdf" class="${isPdf ? 'active' : ''}">
                             <span class="nav-icon">📄</span>
                             <span>PDF</span>
