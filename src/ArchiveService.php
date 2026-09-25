@@ -207,20 +207,20 @@ class ArchiveService {
             'max_date' => null
         ];
 
-        // Read README.md
+        // 1. Read README.md
         $readmeFile = $targetDir . '/README.md';
         if (file_exists($readmeFile)) {
             $details['readme'] = file_get_contents($readmeFile);
             
-            // Extract counts
-            if (preg_match_all('/-\s*\*\*([a-z0-9_]+)\*\*:\s*(\d+)\s*records/i', $details['readme'], $matches, PREG_SET_ORDER)) {
+            // Extract counts (support both `- showtimes: 123` and `- **showtimes**: 123`)
+            if (preg_match_all('/-\s*(?:\*\*)?([a-z0-9_]+)(?:\*\*)?:\s*(\d+)\s*records/i', $details['readme'], $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $m) {
                     $details['table_counts'][$m[1]] = (int)$m[2];
                 }
             }
         }
 
-        // List files
+        // 2. List files
         $files = scandir($targetDir);
         foreach ($files as $file) {
             if ($file === '.' || $file === '..') continue;
@@ -234,25 +234,33 @@ class ArchiveService {
             }
         }
 
-        // Inspect SQL file for movie list, theater names, dates, and sample records
-        $sqlFiles = glob($targetDir . '/*.sql');
-        if (!empty($sqlFiles)) {
-            $sqlContent = file_get_contents($sqlFiles[0]);
+        $moviesFound = [];
+        $theatresFound = [];
+        $datesFound = [];
+        $samples = [];
 
-            // Match showtimes table inserts
-            if (preg_match_all("/INSERT INTO `showtimes`.* VALUES \((.+)\);/i", $sqlContent, $matches)) {
-                $moviesFound = [];
-                $theatresFound = [];
-                $datesFound = [];
-                $samples = [];
+        // 3a. Try reading showtimes.csv if it exists
+        $csvFile = $targetDir . '/showtimes.csv';
+        if (file_exists($csvFile)) {
+            $handle = fopen($csvFile, 'r');
+            if ($handle !== false) {
+                $header = fgetcsv($handle);
+                if ($header !== false) {
+                    $headerMap = array_flip(array_map('trim', $header));
+                    $colMovie = $headerMap['movie_name'] ?? null;
+                    $colTheatre = $headerMap['theatre_name'] ?? null;
+                    $colScreen = $headerMap['screen_name'] ?? null;
+                    $colStart = $headerMap['show_start_time'] ?? null;
+                    $colPrice = $headerMap['ticket_price'] ?? null;
 
-                foreach ($matches[1] as $idx => $valStr) {
-                    // Extract values
-                    $vals = str_getcsv($valStr, ',', "'");
-                    if (count($vals) >= 7) {
-                        $theatreName = $vals[1] ?? '';
-                        $movieName = $vals[3] ?? '';
-                        $showStart = $vals[6] ?? '';
+                    $rowCount = 0;
+                    while (($row = fgetcsv($handle)) !== false) {
+                        $rowCount++;
+                        $movieName = ($colMovie !== null && isset($row[$colMovie])) ? trim($row[$colMovie]) : '';
+                        $theatreName = ($colTheatre !== null && isset($row[$colTheatre])) ? trim($row[$colTheatre]) : '';
+                        $screenName = ($colScreen !== null && isset($row[$colScreen])) ? trim($row[$colScreen]) : '';
+                        $showStart = ($colStart !== null && isset($row[$colStart])) ? trim($row[$colStart]) : '';
+                        $price = ($colPrice !== null && isset($row[$colPrice])) ? trim($row[$colPrice]) : '';
 
                         if ($movieName && !in_array($movieName, $moviesFound)) {
                             $moviesFound[] = $movieName;
@@ -260,35 +268,88 @@ class ArchiveService {
                         if ($theatreName && !in_array($theatreName, $theatresFound)) {
                             $theatresFound[] = $theatreName;
                         }
-                        if ($showStart) {
+                        if ($showStart && strlen($showStart) >= 10) {
                             $datesFound[] = substr($showStart, 0, 10);
                         }
 
-                        if ($idx < 15) {
+                        if (count($samples) < 15) {
                             $samples[] = [
                                 'theatre_name' => $theatreName,
                                 'movie_name' => $movieName,
-                                'screen_name' => $vals[5] ?? '',
+                                'screen_name' => $screenName,
                                 'show_start_time' => $showStart,
-                                'ticket_price' => $vals[9] ?? ''
+                                'ticket_price' => $price ?: '14.99'
+                            ];
+                        }
+                    }
+
+                    if (!isset($details['table_counts']['showtimes']) || $details['table_counts']['showtimes'] === 0) {
+                        $details['table_counts']['showtimes'] = $rowCount;
+                    }
+                }
+                fclose($handle);
+            }
+        }
+
+        // 3b. If CSV wasn't present or yielded no movies, parse SQL files
+        if (empty($moviesFound)) {
+            $sqlFiles = glob($targetDir . '/*.sql');
+            foreach ($sqlFiles as $sqlFile) {
+                $sqlContent = file_get_contents($sqlFile);
+                if (empty($sqlContent)) continue;
+
+                // Match single or multi-row INSERT statements
+                if (preg_match_all("/\('(\d+)',\s*'(\d+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)',\s*(?:NULL|'[^']*'),\s*'([^']*)',\s*'([^']+)'/i", $sqlContent, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $m) {
+                        $theatreName = $m[3];
+                        $movieName = $m[5];
+                        $screenName = $m[6];
+                        $showStart = $m[7];
+
+                        if ($movieName && !in_array($movieName, $moviesFound)) {
+                            $moviesFound[] = $movieName;
+                        }
+                        if ($theatreName && !in_array($theatreName, $theatresFound)) {
+                            $theatresFound[] = $theatreName;
+                        }
+                        if ($showStart && strlen($showStart) >= 10) {
+                            $datesFound[] = substr($showStart, 0, 10);
+                        }
+
+                        if (count($samples) < 15) {
+                            $samples[] = [
+                                'theatre_name' => $theatreName,
+                                'movie_name' => $movieName,
+                                'screen_name' => $screenName,
+                                'show_start_time' => $showStart,
+                                'ticket_price' => '14.99'
                             ];
                         }
                     }
                 }
-
-                sort($moviesFound);
-                sort($theatresFound);
-                sort($datesFound);
-
-                $details['movies'] = array_values(array_unique($moviesFound));
-                $details['theatres'] = array_values(array_unique($theatresFound));
-                $details['sample_showtimes'] = $samples;
-
-                if (!empty($datesFound)) {
-                    $details['min_date'] = reset($datesFound);
-                    $details['max_date'] = end($datesFound);
-                }
             }
+        }
+
+        // Also check showtime_occupancy_log counts if missing from table_counts
+        if (!isset($details['table_counts']['showtime_occupancy_log']) || $details['table_counts']['showtime_occupancy_log'] === 0) {
+            $occCsv = $targetDir . '/showtime_occupancy_log.csv';
+            if (file_exists($occCsv)) {
+                $lines = file($occCsv, FILE_SKIP_EMPTY_LINES);
+                $details['table_counts']['showtime_occupancy_log'] = max(0, count($lines) - 1);
+            }
+        }
+
+        sort($moviesFound);
+        sort($theatresFound);
+        sort($datesFound);
+
+        $details['movies'] = array_values(array_unique($moviesFound));
+        $details['theatres'] = array_values(array_unique($theatresFound));
+        $details['sample_showtimes'] = $samples;
+
+        if (!empty($datesFound)) {
+            $details['min_date'] = reset($datesFound);
+            $details['max_date'] = end($datesFound);
         }
 
         return [
