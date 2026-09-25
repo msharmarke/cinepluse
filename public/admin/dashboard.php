@@ -37,6 +37,28 @@ try {
 
     $archiveService = new ArchiveService();
     $archivesList = $archiveService->listArchives();
+
+    // Calculate current theatrical week days (Friday -> Thursday)
+    $todaySec = strtotime('today');
+    $dayOfWeek = (int)date('N', $todaySec); // 1 = Mon, 5 = Fri, 7 = Sun
+    if ($dayOfWeek === 5) {
+        $startFridaySec = $todaySec;
+    } else if ($dayOfWeek < 5) {
+        $startFridaySec = strtotime('last Friday', $todaySec);
+    } else {
+        $startFridaySec = strtotime('last Friday', $todaySec);
+    }
+
+    $weekDays = [];
+    for ($i = 0; $i < 7; $i++) {
+        $ts = strtotime("+{$i} days", $startFridaySec);
+        $weekDays[] = [
+            'date' => date('Y-m-d', $ts),
+            'day_name' => date('D', $ts),
+            'short_date' => date('M j', $ts),
+            'is_today' => date('Y-m-d', $ts) === date('Y-m-d')
+        ];
+    }
 } catch (Exception $e) {
     $dbConfigured = false;
     $dbError = $e->getMessage();
@@ -449,6 +471,53 @@ try {
                     </div>
                 </div>
 
+                <!-- Weekly Scraped Schedule & Live Occupancy Explorer Section -->
+                <div class="chart-box" style="margin-bottom: 2rem;">
+                    <div class="chart-box-header" style="flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.25rem;">🗓️ Weekly Scraped Schedule & Live Occupancy Explorer</h3>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Browse pre-cached showtimes for Friday through Thursday and toggle live seating occupancy monitors.</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button id="btnRefreshSchedule" class="btn-dash btn-dash-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">🔄 Refresh Schedule</button>
+                        </div>
+                    </div>
+
+                    <!-- Theatrical Week Day Selector Pills -->
+                    <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.75rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--glass-border);">
+                        <?php foreach ($weekDays as $idx => $wd): ?>
+                            <button class="week-day-pill <?php echo ($wd['is_today'] || ($idx === 0 && !array_filter($weekDays, fn($w) => $w['is_today']))) ? 'active' : ''; ?>" data-date="<?php echo $wd['date']; ?>" style="padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: <?php echo ($wd['is_today'] || ($idx === 0 && !array_filter($weekDays, fn($w) => $w['is_today']))) ? 'var(--theme-primary, #e50914)' : 'rgba(255,255,255,0.04)'; ?>; color: #ffffff; transition: all 0.2s ease; white-space: nowrap;">
+                                <span style="opacity: 0.8; font-size: 0.72rem; text-transform: uppercase; display: block;"><?php echo $wd['day_name']; ?></span>
+                                <span><?php echo $wd['short_date']; ?></span>
+                                <?php if ($wd['is_today']): ?><span style="font-size: 0.62rem; background: #2ecc71; color: #000; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: 800;">TODAY</span><?php endif; ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Live Filter Controls -->
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center;">
+                        <select id="schedLocationSelect" class="date-input-custom" style="min-width: 200px;">
+                            <option value="">🏛️ All Theater Locations</option>
+                            <?php foreach ($locations as $name => $id): ?>
+                                <option value="<?php echo $id; ?>"><?php echo htmlspecialchars($name); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+
+                        <input type="text" id="schedSearchInput" placeholder="🔍 Search movie title or auditorium..." class="date-input-custom" style="flex: 1; min-width: 220px;">
+
+                        <select id="schedFilterStatus" class="date-input-custom" style="min-width: 170px;">
+                            <option value="all">⚡ All Showtimes</option>
+                            <option value="tracked">● Only Monitored</option>
+                            <option value="untracked">➕ Untracked Showtimes</option>
+                        </select>
+                    </div>
+
+                    <!-- Weekly Schedule Grid Container -->
+                    <div id="weeklyScheduleContainer" style="min-height: 250px;">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-muted);">⌛ Loading weekly showtimes schedule...</div>
+                    </div>
+                </div>
+
                 <!-- Charts Section Grid -->
                 <div class="charts-grid">
                     <div class="chart-box">
@@ -611,6 +680,214 @@ try {
         $(document.body).ready(function() {
             var csrfToken = $('meta[name="csrf-token"]').attr('content');
             var currentModalArchive = '';
+
+            // --- Weekly Schedule & Live Occupancy Explorer ---
+            var selectedScheduleDate = $('.week-day-pill.active').data('date') || '<?php echo date('Y-m-d'); ?>';
+
+            function loadWeeklySchedule() {
+                var $container = $('#weeklyScheduleContainer');
+                $container.html('<div style="text-align: center; padding: 3rem; color: var(--text-muted);">⌛ Fetching pre-cached showtimes for ' + selectedScheduleDate + '...</div>');
+
+                var theatreId = $('#schedLocationSelect').val();
+                var search = $('#schedSearchInput').val();
+                var filter = $('#schedFilterStatus').val();
+
+                $.get('/api', {
+                    action: 'get_weekly_schedule',
+                    date: selectedScheduleDate,
+                    theatre_id: theatreId,
+                    search: search,
+                    filter: filter
+                }, function(res) {
+                    if (!res.success) {
+                        $container.html('<div style="color: #e74c3c; text-align: center; padding: 2rem;">Failed to load schedule data.</div>');
+                        return;
+                    }
+
+                    if (!res.movies || res.movies.length === 0) {
+                        var emptyHtml = '<div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--glass-border); padding: 3rem 1.5rem; text-align: center; border-radius: 14px;">';
+                        emptyHtml += '  <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>';
+                        emptyHtml += '  <h4 style="margin: 0 0 0.5rem 0; font-weight: 700;">No showtimes pre-cached for ' + selectedScheduleDate + '</h4>';
+                        emptyHtml += '  <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 500px; margin: 0 auto 1.5rem auto;">No showtime records found matching your filters. Trigger the theatrical week scraper to pull the latest schedules from Cineplex.</p>';
+                        emptyHtml += '  <button class="btn-dash btn-trigger-scrape-now" style="background: linear-gradient(135deg, #e50914 0%, #b20710 100%);">🗓️ Run Weekly Scraper Now</button>';
+                        emptyHtml += '</div>';
+                        $container.html(emptyHtml);
+                        return;
+                    }
+
+                    var html = '';
+                    html += '<div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">';
+                    html += '  <span>Showing <strong>' + res.total_showtimes + '</strong> showtimes across <strong>' + res.movies_count + '</strong> movies for ' + selectedScheduleDate + '</span>';
+                    html += '</div>';
+
+                    res.movies.forEach(function(m) {
+                        html += '<div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; backdrop-filter: blur(8px);">';
+                        html += '  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem;">';
+                        html += '    <div style="display: flex; align-items: center; gap: 0.75rem;">';
+                        html += '      <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(229,9,20,0.15); border: 1px solid rgba(229,9,20,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">🎬</div>';
+                        html += '      <div>';
+                        html += '        <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #ffffff;">' + $('<div>').text(m.movie_name).html() + '</h4>';
+                        html += '        <span style="font-size: 0.8rem; color: var(--text-muted);">Runtime: ' + m.runtime + ' mins • ' + m.showtimes.length + ' sessions on ' + selectedScheduleDate + '</span>';
+                        html += '      </div>';
+                        html += '    </div>';
+
+                        if (m.experience_types && m.experience_types.length > 0) {
+                            html += '    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">';
+                            m.experience_types.forEach(function(exp) {
+                                html += '      <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.72rem; padding: 0.2rem 0.55rem; border-radius: 6px; font-weight: 700;">' + $('<div>').text(exp).html() + '</span>';
+                            });
+                            html += '    </div>';
+                        }
+                        html += '  </div>';
+
+                        // Sessions Grid
+                        html += '  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 0.85rem;">';
+                        m.showtimes.forEach(function(s) {
+                            var isTracked = s.tracker_id !== null;
+                            html += '    <div style="background: ' + (isTracked ? 'rgba(46, 204, 113, 0.08)' : 'rgba(0,0,0,0.3)') + '; border: 1px solid ' + (isTracked ? 'rgba(46, 204, 113, 0.35)' : 'var(--glass-border)') + '; border-radius: 10px; padding: 0.9rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">';
+                            
+                            html += '      <div style="display: flex; justify-content: space-between; align-items: flex-start;">';
+                            html += '        <div>';
+                            html += '          <div style="font-weight: 800; font-size: 1.1rem; color: #ffffff; display: flex; align-items: center; gap: 0.4rem;">';
+                            html += '            <span>' + s.show_start_formatted + '</span>';
+                            html += '          </div>';
+                            html += '          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">🏛️ ' + $('<div>').text(s.theatre_name).html() + ' • ' + $('<div>').text(s.screen_name).html() + '</div>';
+                            html += '        </div>';
+                            html += '        <div style="font-weight: 800; font-size: 0.9rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid rgba(74, 222, 128, 0.2);">$' + s.ticket_price.toFixed(2) + '</div>';
+                            html += '      </div>';
+
+                            // Active Monitoring Status or Quick Add Button
+                            if (isTracked) {
+                                var occText = s.latest_occupancy !== null ? (s.latest_occupancy + '% Occupied (' + s.latest_occupied_seats + '/' + s.latest_total_seats + ' seats)') : 'Active • Pending initial snapshot...';
+                                html += '      <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 6px; padding: 0.45rem 0.65rem; font-size: 0.78rem; color: #2ecc71; font-weight: 700; display: flex; align-items: center; justify-content: space-between;">';
+                                html += '        <span>● ' + occText + '</span>';
+                                html += '      </div>';
+                                html += '      <div style="display: flex; gap: 0.4rem; margin-top: 0.1rem;">';
+                                html += '        <button class="btn-dash btn-trigger-single-snap" data-tracker="' + s.tracker_id + '" style="flex: 1; padding: 0.35rem 0.5rem; font-size: 0.75rem; background: rgba(52, 152, 219, 0.2); color: #38bdf8; border: 1px solid rgba(52, 152, 219, 0.4); justify-content: center;">📷 Take Snapshot</button>';
+                                html += '        <button class="btn-dash btn-stop-single-track" data-tracker="' + s.tracker_id + '" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; background: rgba(231, 76, 60, 0.2); color: #f87171; border: 1px solid rgba(231, 76, 60, 0.4); justify-content: center;">❌ Stop</button>';
+                                html += '      </div>';
+                            } else {
+                                html += '      <button class="btn-dash btn-start-single-track" data-theatre-id="' + s.theatre_id + '" data-theatre-name="' + $('<div>').text(s.theatre_name).html() + '" data-showtime-id="' + s.showtime_id + '" data-movie-name="' + $('<div>').text(m.movie_name).html() + '" data-start-time="' + s.show_start_time + '" style="width: 100%; padding: 0.45rem 0.65rem; font-size: 0.8rem; justify-content: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #ffffff;">';
+                                html += '        ➕ Track Occupancy';
+                                html += '      </button>';
+                            }
+
+                            html += '    </div>';
+                        });
+                        html += '  </div>';
+                        html += '</div>';
+                    });
+
+                    $container.html(html);
+                }).fail(function() {
+                    $container.html('<div style="color: #e74c3c; text-align: center; padding: 2rem;">Failed to fetch weekly schedule data.</div>');
+                });
+            }
+
+            // Day Pill Click Handler
+            $(document).on('click', '.week-day-pill', function() {
+                $('.week-day-pill').removeClass('active').css({ background: 'rgba(255,255,255,0.04)', color: '#ffffff' });
+                $(this).addClass('active').css({ background: 'var(--theme-primary, #e50914)', color: '#ffffff' });
+                selectedScheduleDate = $(this).data('date');
+                loadWeeklySchedule();
+            });
+
+            // Filters & Search handlers
+            $('#schedLocationSelect, #schedFilterStatus').on('change', function() {
+                loadWeeklySchedule();
+            });
+
+            var searchTimer;
+            $('#schedSearchInput').on('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(loadWeeklySchedule, 300);
+            });
+
+            $('#btnRefreshSchedule').on('click', function() {
+                loadWeeklySchedule();
+            });
+
+            $(document).on('click', '.btn-trigger-scrape-now', function() {
+                $('#btnScrapeWeek').trigger('click');
+            });
+
+            // Quick Track Single Showtime from Dashboard Card
+            $(document).on('click', '.btn-start-single-track', function() {
+                var $btn = $(this);
+                var theatreId = $btn.data('theatre-id');
+                var theatreName = $btn.data('theatre-name');
+                var showtimeId = $btn.data('showtime-id');
+                var movieName = $btn.data('movie-name');
+                var startTime = $btn.data('start-time');
+
+                $btn.prop('disabled', true).text('⌛ Registering...');
+
+                $.post('/api', {
+                    action: 'add_tracker',
+                    theatre_id: theatreId,
+                    theatre_name: theatreName,
+                    showtime_id: showtimeId,
+                    movie_name: movieName,
+                    show_start_time: startTime,
+                    csrf_token: csrfToken
+                }, function(res) {
+                    if (res.success) {
+                        loadWeeklySchedule();
+                    } else {
+                        alert('Error: ' + (res.error || 'Failed to start tracking.'));
+                        $btn.prop('disabled', false).text('➕ Track Occupancy');
+                    }
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to start tracking.'));
+                    $btn.prop('disabled', false).text('➕ Track Occupancy');
+                });
+            });
+
+            // Quick Log Single Snapshot from Dashboard Card
+            $(document).on('click', '.btn-trigger-single-snap', function() {
+                var $btn = $(this);
+                var trackerId = $btn.data('tracker');
+
+                $btn.prop('disabled', true).text('⌛ Logging...');
+
+                $.post('/api', {
+                    action: 'trigger_snapshot',
+                    tracker_id: trackerId,
+                    csrf_token: csrfToken
+                }, function(res) {
+                    if (res.success && res.snapshot_info) {
+                        alert('Snapshot Logged! Latest Occupancy: ' + res.snapshot_info.occupancy_percentage + '% (' + res.snapshot_info.seats_occupied + '/' + res.snapshot_info.seats_total_layout + ' seats)');
+                    }
+                    loadWeeklySchedule();
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to take snapshot.'));
+                    $btn.prop('disabled', false).text('📷 Take Snapshot');
+                });
+            });
+
+            // Quick Stop Single Tracker from Dashboard Card
+            $(document).on('click', '.btn-stop-single-track', function() {
+                var $btn = $(this);
+                var trackerId = $btn.data('tracker');
+
+                if (!confirm('Stop monitoring seating occupancy for this showtime?')) return;
+
+                $btn.prop('disabled', true).text('⌛ Stopping...');
+
+                $.post('/api', {
+                    action: 'delete_tracker',
+                    tracker_id: trackerId,
+                    csrf_token: csrfToken
+                }, function(res) {
+                    loadWeeklySchedule();
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to stop tracker.'));
+                    $btn.prop('disabled', false).text('❌ Stop');
+                });
+            });
+
+            // Initial load of weekly schedule
+            loadWeeklySchedule();
 
             // Scrape Full Theatrical Week (Friday to Thursday)
             $('#btnScrapeWeek').on('click', function() {

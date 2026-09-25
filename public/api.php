@@ -518,6 +518,17 @@ try {
             echo json_encode($result);
             break;
 
+        case 'get_weekly_schedule':
+            $date = Security::sanitizeInput($_GET['date'] ?? $_POST['date'] ?? null, 'string');
+            $theatreId = Security::sanitizeInput($_GET['theatre_id'] ?? $_POST['theatre_id'] ?? null, 'int');
+            $search = Security::sanitizeInput($_GET['search'] ?? $_POST['search'] ?? null, 'string');
+            $filter = Security::sanitizeInput($_GET['filter'] ?? $_POST['filter'] ?? 'all', 'string');
+
+            $dashService = new Cinepulse\DashboardService();
+            $res = $dashService->getWeeklySchedule($date, $theatreId, $search, $filter);
+            echo json_encode($res);
+            break;
+
         case 'list_archives':
             $archiveService = new Cinepulse\ArchiveService();
             $archives = $archiveService->listArchives();

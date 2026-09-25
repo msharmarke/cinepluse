@@ -362,4 +362,109 @@ class DashboardService {
             'message' => "Successfully scraped theatrical week ({$startFridayStr} to {$endThursdayStr})! Saved {$totalSavedShowtimes} showtimes across " . count($locations) . " locations."
         ];
     }
+
+    /**
+     * Fetch weekly showtimes with tracking statuses and latest occupancy data
+     * 
+     * @param string $date Y-m-d format
+     * @param int|null $theatreId
+     * @param string|null $search
+     * @param string|null $filter ('all', 'tracked', 'untracked')
+     * @return array
+     */
+    public function getWeeklySchedule($date = null, $theatreId = null, $search = null, $filter = 'all') {
+        $date = $date ?: date('Y-m-d');
+        $params = [];
+        
+        $sql = "SELECT 
+            s.*,
+            t.id as tracker_id,
+            t.status as tracker_status,
+            h.occupancy_percentage as latest_occupancy,
+            h.seats_occupied as latest_occupied_seats,
+            h.seats_available as latest_available_seats,
+            h.seats_total_layout as latest_total_seats,
+            h.snapshot_time as latest_snapshot_time
+            FROM showtimes s
+            LEFT JOIN tracked_showtimes t 
+                ON s.theatre_id = t.theatre_id 
+                AND s.showtime_id = t.showtime_id 
+                AND DATE(s.show_start_time) = DATE(t.show_start_time)
+            LEFT JOIN (
+                SELECT h1.*
+                FROM showtime_snapshots_history h1
+                INNER JOIN (
+                    SELECT tracked_showtime_id, MAX(id) as max_id
+                    FROM showtime_snapshots_history
+                    GROUP BY tracked_showtime_id
+                ) latest ON h1.id = latest.max_id
+            ) h ON t.id = h.tracked_showtime_id
+            WHERE DATE(s.show_start_time) = ?";
+        
+        $params[] = $date;
+
+        if ($theatreId) {
+            $sql .= " AND s.theatre_id = ?";
+            $params[] = (int)$theatreId;
+        }
+
+        if ($search) {
+            $sql .= " AND (s.movie_name LIKE ? OR s.screen_name LIKE ? OR s.theatre_name LIKE ?)";
+            $searchParam = '%' . $search . '%';
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+            $params[] = $searchParam;
+        }
+
+        if ($filter === 'tracked') {
+            $sql .= " AND t.id IS NOT NULL";
+        } else if ($filter === 'untracked') {
+            $sql .= " AND t.id IS NULL";
+        }
+
+        $sql .= " ORDER BY s.movie_name ASC, s.show_start_time ASC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        // Group showtimes by movie_name
+        $grouped = [];
+        foreach ($rows as $row) {
+            $movie = $row['movie_name'];
+            if (!isset($grouped[$movie])) {
+                $grouped[$movie] = [
+                    'movie_name' => $movie,
+                    'runtime' => (int)($row['movie_runtime_minutes'] ?? 120),
+                    'experience_types' => @json_decode($row['experience_types'], true) ?: [],
+                    'showtimes' => []
+                ];
+            }
+
+            $grouped[$movie]['showtimes'][] = [
+                'id' => (int)$row['id'],
+                'theatre_id' => (int)$row['theatre_id'],
+                'theatre_name' => $row['theatre_name'],
+                'showtime_id' => $row['showtime_id'],
+                'screen_name' => $row['screen_name'],
+                'show_start_time' => $row['show_start_time'],
+                'show_start_formatted' => date('g:i A', strtotime($row['show_start_time'])),
+                'ticket_price' => (float)($row['ticket_price'] ?? 14.99),
+                'tracker_id' => $row['tracker_id'] ? (int)$row['tracker_id'] : null,
+                'tracker_status' => $row['tracker_status'] ?? null,
+                'latest_occupancy' => $row['latest_occupancy'] !== null ? round((float)$row['latest_occupancy'], 1) : null,
+                'latest_occupied_seats' => $row['latest_occupied_seats'] !== null ? (int)$row['latest_occupied_seats'] : null,
+                'latest_total_seats' => $row['latest_total_seats'] !== null ? (int)$row['latest_total_seats'] : null,
+                'latest_snapshot_time' => $row['latest_snapshot_time'] ?? null
+            ];
+        }
+
+        return [
+            'success' => true,
+            'date' => $date,
+            'total_showtimes' => count($rows),
+            'movies_count' => count($grouped),
+            'movies' => array_values($grouped)
+        ];
+    }
 }
