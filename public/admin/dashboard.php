@@ -649,6 +649,29 @@ try {
                 });
             });
 
+            // Tab switching handler via event delegation
+            $(document).on('click', '.arch-tab-btn', function() {
+                $('.arch-tab-btn').css({ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'rgba(255,255,255,0.7)' });
+                $(this).css({ background: 'var(--theme-primary, #e50914)', border: 'none', color: '#fff' });
+
+                var target = $(this).data('target');
+                $('.arch-tab-content').hide();
+                $(target).show();
+            });
+
+            // Movie Instant Search handler via event delegation
+            $(document).on('input', '#archMovieSearch', function() {
+                var query = $(this).val().toLowerCase().trim();
+                $('.arch-movie-card').each(function() {
+                    var title = String($(this).data('title') || '');
+                    if (!query || title.indexOf(query) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
             // View Archive Details Modal
             $(document).on('click', '.btn-view-archive', function() {
                 var archiveName = $(this).data('archive');
@@ -787,32 +810,6 @@ try {
                     }
                     html += '  </div>';
                     html += '</div>';
-
-                    $('#archModalBody').html(html);
-
-                    // Tab switching handler
-                    $('.arch-tab-btn').on('click', function() {
-                        $('.arch-tab-btn').css({ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'rgba(255,255,255,0.7)' });
-                        $(this).css({ background: 'var(--theme-primary, #e50914)', border: 'none', color: '#fff' });
-
-                        var target = $(this).data('target');
-                        $('.arch-tab-content').hide();
-                        $(target).show();
-                    });
-
-                    // Movie Instant Search handler
-                    $('#archMovieSearch').on('input', function() {
-                        var query = $(this).val().toLowerCase().trim();
-                        $('.arch-movie-card').each(function() {
-                            var title = $(this).data('title');
-                            if (!query || title.indexOf(query) !== -1) {
-                                $(this).show();
-                            } else {
-                                $(this).hide();
-                            }
-                        });
-                    });
-
 
                     $('#archModalBody').html(html);
                 }).fail(function() {
