@@ -388,8 +388,9 @@ try {
                         <input type="date" name="date_to" value="<?php echo htmlspecialchars($metrics['date_range']['to'] ?? date('Y-m-d')); ?>" class="date-input-custom">
                         <button type="submit" class="btn-dash btn-dash-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">Filter</button>
                     </form>
+                    <button id="btnScrapeWeek" class="btn-dash" style="background: linear-gradient(135deg, #e50914 0%, #b20710 100%);">🗓️ Scrape Week (Fri–Thu)</button>
                     <button id="btnTriggerCollect" class="btn-dash btn-dash-secondary">🔄 Pre-cache Schedules</button>
-                    <button id="btnTriggerTrack" class="btn-dash">▶ Run Daemon</button>
+                    <button id="btnTriggerTrack" class="btn-dash btn-dash-secondary">▶ Run Daemon</button>
                 </div>
             </div>
 
@@ -522,9 +523,16 @@ try {
 
                 <!-- Historical Archives Section -->
                 <div class="chart-box" style="margin-bottom: 3rem;">
-                    <div class="chart-box-header">
-                        <h3>📦 Historical Archives (<?php echo count($archivesList); ?> Archived Periods)</h3>
-                        <span style="font-size: 0.85rem; color: var(--text-muted);">Showtimes & seating occupancy history</span>
+                    <div class="chart-box-header" style="flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 0.5rem;">📦 Historical Archives (<?php echo count($archivesList); ?> Packages)</h3>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Timestamped database dumps, showtimes, & seating occupancy history</span>
+                        </div>
+                        <div>
+                            <button id="btnCreateArchive" class="btn-dash" style="background: #27ae60; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                                📦 Create New Archive Package
+                            </button>
+                        </div>
                     </div>
 
                     <?php if (empty($archivesList)): ?>
@@ -538,7 +546,7 @@ try {
                                         <th>Date Saved</th>
                                         <th>Showtimes Count</th>
                                         <th>Occupancy Logs</th>
-                                        <th>Action</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -549,9 +557,14 @@ try {
                                             <td style="color: #3498db; font-weight: 600;"><?php echo number_format($arch['showtimes_count']); ?> records</td>
                                             <td style="color: #2ecc71; font-weight: 600;"><?php echo number_format($arch['occupancy_count']); ?> logs</td>
                                             <td>
-                                                <button class="btn-dash btn-dash-secondary btn-import-archive" data-archive="<?php echo htmlspecialchars($arch['name']); ?>" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-                                                    📥 Load into DB
-                                                </button>
+                                                <div style="display: flex; gap: 0.5rem;">
+                                                    <button class="btn-dash btn-dash-secondary btn-view-archive" data-archive="<?php echo htmlspecialchars($arch['name']); ?>" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; background: rgba(54, 162, 235, 0.15); border-color: rgba(54, 162, 235, 0.4); color: #38bdf8;">
+                                                        👁️ View Details
+                                                    </button>
+                                                    <button class="btn-dash btn-dash-secondary btn-import-archive" data-archive="<?php echo htmlspecialchars($arch['name']); ?>" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                                                        📥 Load into DB
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -566,12 +579,201 @@ try {
         </main>
     </div>
 
+    <!-- Archive Content Viewer Modal -->
+    <div id="archiveViewModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999; justify-content: center; align-items: center; padding: 1.5rem; overflow-y: auto;">
+        <div style="background: var(--bg-secondary, #14171d); border: 1px solid var(--glass-border); border-radius: 16px; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);">
+            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">📦</span>
+                    <div>
+                        <h2 id="archModalTitle" style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #ffffff;">Archive Details</h2>
+                        <span id="archModalSubtitle" style="font-size: 0.82rem; color: var(--text-muted);">Package Metadata & Content Preview</span>
+                    </div>
+                </div>
+                <button id="closeArchiveModal" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            
+            <div id="archModalBody" style="padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading archive metadata...</div>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <button id="btnModalImportDb" class="btn-dash" style="display: none; background: #27ae60;">📥 Restore Package into Database</button>
+                <button id="btnModalCloseBottom" class="btn-dash btn-dash-secondary" style="margin-left: auto;">Close Viewer</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/assets/js/shared.js"></script>
     <script src="/assets/js/design-options-modal.js"></script>
     
     <script>
         $(document.body).ready(function() {
             var csrfToken = $('meta[name="csrf-token"]').attr('content');
+            var currentModalArchive = '';
+
+            // Scrape Full Theatrical Week (Friday to Thursday)
+            $('#btnScrapeWeek').on('click', function() {
+                var $btn = $(this);
+                if (!confirm('Scrape full theatrical week showtimes (Friday through Thursday) for all configured locations? This will update cached schedules and auto-register matching showtimes.')) {
+                    return;
+                }
+
+                $btn.prop('disabled', true).text('⌛ Scraping Week (Fri–Thu)...');
+                
+                $.post('/api', { action: 'scrape_theatrical_week', csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Weekly theatrical schedule scraping complete!');
+                    $btn.prop('disabled', false).text('🗓️ Scrape Week (Fri–Thu)');
+                    location.reload();
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to scrape theatrical week schedules.'));
+                    $btn.prop('disabled', false).text('🗓️ Scrape Week (Fri–Thu)');
+                });
+            });
+
+            // Create New Archive Package
+            $('#btnCreateArchive').on('click', function() {
+                var label = prompt('Enter an optional label or note for this archive package (e.g. "Week 38 Release"):');
+                if (label === null) return; // cancelled
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('⌛ Archiving...');
+
+                $.post('/api', { action: 'create_archive', label: label, csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Archive package created successfully!');
+                    $btn.prop('disabled', false).text('📦 Create New Archive Package');
+                    location.reload();
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to create archive package.'));
+                    $btn.prop('disabled', false).text('📦 Create New Archive Package');
+                });
+            });
+
+            // View Archive Details Modal
+            $(document).on('click', '.btn-view-archive', function() {
+                var archiveName = $(this).data('archive');
+                currentModalArchive = archiveName;
+
+                $('#archModalTitle').text(archiveName);
+                $('#archModalSubtitle').text('Loading package metadata...');
+                $('#archModalBody').html('<div style="text-align: center; padding: 2rem; color: var(--text-muted);">⌛ Inspecting archive files and extracting showtimes data...</div>');
+                $('#btnModalImportDb').hide();
+                $('#archiveViewModal').css('display', 'flex');
+
+                $.get('/api', { action: 'get_archive_details', archive_name: archiveName }, function(res) {
+                    if (!res.success || !res.details) {
+                        $('#archModalBody').html('<div style="color: #e74c3c;">Failed to inspect archive details.</div>');
+                        return;
+                    }
+
+                    var d = res.details;
+                    $('#archModalSubtitle').text('Created: ' + d.created + (d.min_date ? (' • Dates Covered: ' + d.min_date + ' to ' + d.max_date) : ''));
+                    $('#btnModalImportDb').show().data('archive', archiveName);
+
+                    var html = '';
+
+                    // Stat Grid
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem;">';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
+                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Showtimes</div>';
+                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #3498db; margin-top: 0.2rem;">' + (d.table_counts.showtimes || 0).toLocaleString() + '</div>';
+                    html += '  </div>';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
+                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Occupancy Logs</div>';
+                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #2ecc71; margin-top: 0.2rem;">' + (d.table_counts.showtime_occupancy_log || 0).toLocaleString() + '</div>';
+                    html += '  </div>';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
+                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Movies Count</div>';
+                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #f1c40f; margin-top: 0.2rem;">' + (d.movies ? d.movies.length : 0) + '</div>';
+                    html += '  </div>';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
+                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Theatres</div>';
+                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #e74c3c; margin-top: 0.2rem;">' + (d.theatres ? d.theatres.length : 0) + '</div>';
+                    html += '  </div>';
+                    html += '</div>';
+
+                    // Movies Tags
+                    if (d.movies && d.movies.length > 0) {
+                        html += '<div>';
+                        html += '  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700;">🎬 Movies Archived (' + d.movies.length + ')</h4>';
+                        html += '  <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">';
+                        d.movies.forEach(function(m) {
+                            html += '    <span style="background: rgba(229, 9, 20, 0.15); border: 1px solid rgba(229, 9, 20, 0.3); color: #f87171; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">' + $('<div>').text(m).html() + '</span>';
+                        });
+                        html += '  </div>';
+                        html += '</div>';
+                    }
+
+                    // Sample Showtimes Table
+                    if (d.sample_showtimes && d.sample_showtimes.length > 0) {
+                        html += '<div>';
+                        html += '  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700;">📋 Sample Archived Showtimes Preview</h4>';
+                        html += '  <div class="table-responsive-wrapper">';
+                        html += '    <table class="archive-table" style="font-size: 0.82rem;">';
+                        html += '      <thead><tr><th>Movie</th><th>Theatre</th><th>Auditorium</th><th>Start Time</th><th>Price</th></tr></thead>';
+                        html += '      <tbody>';
+                        d.sample_showtimes.forEach(function(s) {
+                            html += '      <tr>';
+                            html += '        <td style="font-weight: 600; color: #ffffff;">' + $('<div>').text(s.movie_name).html() + '</td>';
+                            html += '        <td style="color: var(--text-secondary);">' + $('<div>').text(s.theatre_name).html() + '</td>';
+                            html += '        <td style="color: var(--text-muted);">' + $('<div>').text(s.screen_name).html() + '</td>';
+                            html += '        <td style="color: #38bdf8;">' + $('<div>').text(s.show_start_time).html() + '</td>';
+                            html += '        <td style="color: #4ade80;">$' + $('<div>').text(s.ticket_price).html() + '</td>';
+                            html += '      </tr>';
+                        });
+                        html += '      </tbody>';
+                        html += '    </table>';
+                        html += '  </div>';
+                        html += '</div>';
+                    }
+
+                    // File Manifest List
+                    if (d.files && d.files.length > 0) {
+                        html += '<div>';
+                        html += '  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700;">📂 Package File Manifest</h4>';
+                        html += '  <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.82rem;">';
+                        d.files.forEach(function(f) {
+                            html += '    <div style="display: flex; justify-content: space-between; padding: 0.2rem 0;">';
+                            html += '      <span>📄 ' + $('<div>').text(f.name).html() + '</span>';
+                            html += '      <span style="color: var(--text-muted);">' + f.size_formatted + '</span>';
+                            html += '    </div>';
+                        });
+                        html += '  </div>';
+                        html += '</div>';
+                    }
+
+                    $('#archModalBody').html(html);
+                }).fail(function() {
+                    $('#archModalBody').html('<div style="color: #e74c3c;">Failed to load archive details from server.</div>');
+                });
+            });
+
+            // Close Archive Viewer Modal
+            $('#closeArchiveModal, #btnModalCloseBottom').on('click', function() {
+                $('#archiveViewModal').css('display', 'none');
+            });
+
+            // Restore DB from Modal
+            $('#btnModalImportDb').on('click', function() {
+                var archiveName = $(this).data('archive') || currentModalArchive;
+                if (!archiveName) return;
+                
+                if (!confirm('Restore package "' + archiveName + '" into the live database?')) {
+                    return;
+                }
+
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('⌛ Restoring...');
+
+                $.post('/api', { action: 'import_archive', archive_name: archiveName, csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Archive restored successfully!');
+                    $btn.prop('disabled', false).text('📥 Restore Package into Database');
+                    location.reload();
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to import archive.'));
+                    $btn.prop('disabled', false).text('📥 Restore Package into Database');
+                });
+            });
 
             // Trigger Pre-cache
             $('#btnTriggerCollect').on('click', function() {
@@ -602,7 +804,7 @@ try {
                 });
             });
 
-            // Load Historical Archive into DB
+            // Load Historical Archive into DB directly from table row
             $(document).on('click', '.btn-import-archive', function() {
                 var $btn = $(this);
                 var archiveName = $btn.data('archive');

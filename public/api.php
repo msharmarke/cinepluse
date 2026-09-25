@@ -510,6 +510,14 @@ try {
             ]);
             break;
 
+        case 'scrape_theatrical_week':
+            Security::verifyCsrfOrDie();
+            $startFriday = Security::sanitizeInput($_POST['start_friday'] ?? null, 'string');
+            $dashService = new Cinepulse\DashboardService();
+            $result = $dashService->scrapeFullTheatricalWeek($startFriday);
+            echo json_encode($result);
+            break;
+
         case 'list_archives':
             $archiveService = new Cinepulse\ArchiveService();
             $archives = $archiveService->listArchives();
@@ -518,6 +526,27 @@ try {
                 'archives' => $archives,
                 'total' => count($archives)
             ]);
+            break;
+
+        case 'create_archive':
+            Security::verifyCsrfOrDie();
+            $label = Security::sanitizeInput($_POST['label'] ?? '', 'string');
+            $archiveService = new Cinepulse\ArchiveService();
+            $res = $archiveService->createArchivePackage($label);
+            echo json_encode($res);
+            break;
+
+        case 'get_archive_details':
+            $archiveName = Security::sanitizeInput($_GET['archive_name'] ?? $_POST['archive_name'] ?? null, 'string');
+            if (!$archiveName) {
+                http_response_code(400);
+                echo json_encode(['error' => 'archive_name parameter is required.']);
+                exit;
+            }
+
+            $archiveService = new Cinepulse\ArchiveService();
+            $res = $archiveService->getArchiveDetails($archiveName);
+            echo json_encode($res);
             break;
 
         case 'import_archive':

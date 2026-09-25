@@ -270,4 +270,96 @@ class DashboardService {
             exit;
         }
     }
+
+    /**
+     * Scrape full theatrical week (Friday through Thursday) for all configured locations
+     * 
+     * @param string|null $startFriday Y-m-d format
+     * @return array Summary of scrape results
+     */
+    public function scrapeFullTheatricalWeek($startFriday = null) {
+        if ($startFriday && strtotime($startFriday)) {
+            $startFridaySec = strtotime($startFriday);
+        } else {
+            $todaySec = strtotime('today');
+            $dayOfWeek = (int)date('N', $todaySec); // 1 = Monday, 5 = Friday, 7 = Sunday
+            if ($dayOfWeek === 5) {
+                $startFridaySec = $todaySec;
+            } else if ($dayOfWeek < 5) {
+                $startFridaySec = strtotime('last Friday', $todaySec);
+            } else {
+                $startFridaySec = strtotime('last Friday', $todaySec);
+            }
+        }
+
+        $startFridayStr = date('Y-m-d', $startFridaySec);
+        $endThursdayStr = date('Y-m-d', strtotime('+6 days', $startFridaySec));
+
+        $locFile = dirname(__DIR__) . '/config/locations.json';
+        if (!file_exists($locFile)) {
+            throw new Exception("locations.json configuration file is missing.");
+        }
+
+        $locations = json_decode(file_get_contents($locFile), true) ?: [];
+        if (empty($locations)) {
+            throw new Exception("No theatres configured in locations.json.");
+        }
+
+        $api = new CineplexAPI();
+        $totalSavedShowtimes = 0;
+        $totalSuccesses = 0;
+        $totalFailures = 0;
+        $dayBreakdown = [];
+
+        for ($dayOffset = 0; $dayOffset < 7; $dayOffset++) {
+            $currentDate = date('Y-m-d', strtotime("+{$dayOffset} days", $startFridaySec));
+            $cineplexDate = date('m+d+Y', strtotime($currentDate));
+            $dayName = date('l', strtotime($currentDate));
+            $daySavedCount = 0;
+
+            foreach ($locations as $name => $id) {
+                try {
+                    $data = $api->fetchShowtimes($id, $cineplexDate, true);
+                    if (isset($data['error'])) {
+                        $totalFailures++;
+                    } else {
+                        $saved = ShowtimeService::saveShowtimesToDatabase($id, $name, $data);
+                        $totalSavedShowtimes += $saved;
+                        $daySavedCount += $saved;
+                        $totalSuccesses++;
+                    }
+                } catch (\Exception $ex) {
+                    $totalFailures++;
+                }
+                usleep(150000); // 150ms delay
+            }
+
+            $dayBreakdown[] = [
+                'date' => $currentDate,
+                'day_name' => $dayName,
+                'showtimes_saved' => $daySavedCount
+            ];
+        }
+
+        // Auto-register showtimes matching active movie trackers
+        $registeredTrackers = 0;
+        try {
+            $trackerService = new TrackerService();
+            $registeredTrackers = $trackerService->scanAndRegisterForAllMovieTrackers();
+        } catch (\Exception $e) {
+            // Non-fatal
+        }
+
+        return [
+            'success' => true,
+            'start_date' => $startFridayStr,
+            'end_date' => $endThursdayStr,
+            'total_saved_showtimes' => $totalSavedShowtimes,
+            'total_successes' => $totalSuccesses,
+            'total_failures' => $totalFailures,
+            'auto_registered_trackers' => $registeredTrackers,
+            'day_breakdown' => $dayBreakdown,
+            'message' => "Successfully scraped theatrical week ({$startFridayStr} to {$endThursdayStr})! Saved {$totalSavedShowtimes} showtimes across " . count($locations) . " locations."
+        ];
+    }
 }
