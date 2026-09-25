@@ -20,12 +20,12 @@ use Cinepulse\TrackerService;
 Security::startSession();
 
 // Setup shared utility functions
-function get_tracker_theatres() {
-    $locFile = dirname(__DIR__) . '/config/locations.json';
-    if (file_exists($locFile)) {
-        return json_decode(file_get_contents($locFile), true) ?: [];
-    }
-    return [];
+function get_tracker_theatres($activeOnly = false) {
+    return \Cinepulse\ShowtimeService::getTrackerTheatres($activeOnly);
+}
+
+function get_detailed_theatres() {
+    return \Cinepulse\ShowtimeService::getDetailedTheatres();
 }
 
 $action = Security::sanitizeInput($_GET['action'] ?? $_POST['action'] ?? null, 'string');
@@ -572,6 +572,72 @@ try {
             $archiveService = new Cinepulse\ArchiveService();
             $res = $archiveService->importArchive($archiveName);
             echo json_encode($res);
+            break;
+
+        case 'list_theatres':
+            $theatres = get_detailed_theatres();
+            $activeCount = count(array_filter($theatres, fn($t) => $t['enabled']));
+            echo json_encode([
+                'success' => true,
+                'theatres' => $theatres,
+                'total' => count($theatres),
+                'active_count' => $activeCount,
+                'disabled_count' => count($theatres) - $activeCount
+            ]);
+            break;
+
+        case 'toggle_theatre':
+            Security::verifyCsrfOrDie();
+            $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? null, 'int');
+            $enabledParam = $_POST['enabled'] ?? null;
+            
+            if (!$theatreId) {
+                http_response_code(400);
+                echo json_encode(['error' => 'theatre_id parameter is required.']);
+                exit;
+            }
+
+            $locFile = dirname(__DIR__) . '/config/locations.json';
+            if (!file_exists($locFile)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'locations.json file missing.']);
+                exit;
+            }
+
+            $locations = json_decode(file_get_contents($locFile), true) ?: [];
+            $found = false;
+            $newStatus = false;
+            $targetName = '';
+
+            foreach ($locations as $name => &$data) {
+                if (is_array($data)) {
+                    if ((int)($data['id'] ?? 0) === (int)$theatreId) {
+                        if ($enabledParam !== null) {
+                            $data['enabled'] = filter_var($enabledParam, FILTER_VALIDATE_BOOLEAN);
+                        } else {
+                            $data['enabled'] = !($data['enabled'] ?? true);
+                        }
+                        $newStatus = $data['enabled'];
+                        $targetName = $name;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($found) {
+                file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+                echo json_encode([
+                    'success' => true,
+                    'theatre_id' => $theatreId,
+                    'name' => $targetName,
+                    'enabled' => $newStatus,
+                    'message' => "Theatre '{$targetName}' active monitoring status updated to " . ($newStatus ? 'ACTIVE' : 'PAUSED')
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Theatre ID not found in locations configuration.']);
+            }
             break;
 
         default:

@@ -7,12 +7,76 @@ namespace Cinepulse;
 class ShowtimeService {
     
     /**
+     * Get theatre map [name => id]
+     * 
+     * @param bool $activeOnly Whether to filter enabled theatres only
+     * @return array
+     */
+    public static function getTrackerTheatres($activeOnly = false) {
+        $locFile = dirname(__DIR__) . '/config/locations.json';
+        if (!file_exists($locFile)) {
+            return [];
+        }
+        $raw = json_decode(file_get_contents($locFile), true) ?: [];
+        $map = [];
+        foreach ($raw as $name => $data) {
+            if (is_array($data)) {
+                $id = $data['id'] ?? null;
+                $enabled = $data['enabled'] ?? true;
+                if ($activeOnly && !$enabled) continue;
+                if ($id) $map[$name] = (int)$id;
+            } else {
+                $map[$name] = (int)$data;
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Get rich theatre catalog list
+     * 
+     * @return array
+     */
+    public static function getDetailedTheatres() {
+        $locFile = dirname(__DIR__) . '/config/locations.json';
+        if (!file_exists($locFile)) {
+            return [];
+        }
+        $raw = json_decode(file_get_contents($locFile), true) ?: [];
+        $list = [];
+        foreach ($raw as $name => $data) {
+            if (is_array($data)) {
+                $list[] = [
+                    'name' => $name,
+                    'id' => (int)($data['id'] ?? 0),
+                    'city' => $data['city'] ?? 'Unknown',
+                    'province' => $data['province'] ?? 'ON',
+                    'region' => $data['region'] ?? 'Canada',
+                    'screens' => $data['screens'] ?? ['Standard'],
+                    'enabled' => (bool)($data['enabled'] ?? true)
+                ];
+            } else {
+                $list[] = [
+                    'name' => $name,
+                    'id' => (int)$data,
+                    'city' => 'Unknown',
+                    'province' => 'ON',
+                    'region' => 'Canada',
+                    'screens' => ['Standard'],
+                    'enabled' => true
+                ];
+            }
+        }
+        return $list;
+    }
+
+    /**
      * Map location IDs to slugs
      * 
      * @return array
      */
     public static function getTheatreSlugMap() {
-        $locations = get_tracker_theatres();
+        $locations = self::getTrackerTheatres(false);
         $map = [];
         foreach ($locations as $name => $id) {
             $slug = strtolower($name);

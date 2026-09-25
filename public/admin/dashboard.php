@@ -19,11 +19,10 @@ $dashService = null;
 $daemonStatus = [];
 $metrics = [];
 $analytics = [];
-$locations = [];
-$locFile = dirname(dirname(__DIR__)) . '/config/locations.json';
-if (file_exists($locFile)) {
-    $locations = json_decode(file_get_contents($locFile), true) ?: [];
-}
+$detailedTheatres = \Cinepulse\ShowtimeService::getDetailedTheatres();
+$locations = \Cinepulse\ShowtimeService::getTrackerTheatres(false);
+$activeTheatresCount = count(array_filter($detailedTheatres, fn($t) => $t['enabled']));
+$disabledTheatresCount = count($detailedTheatres) - $activeTheatresCount;
 
 try {
     $dashService = new DashboardService();
@@ -482,6 +481,52 @@ try {
                         <div class="stat-label">Snapshots Logged</div>
                         <div class="stat-value" style="color: #9b59b6;"><?php echo number_format($metrics['total_snapshots'] ?? 0); ?></div>
                         <div class="stat-sub">Seating layouts archived</div>
+                    </div>
+                </div>
+
+                <!-- 🏛️ Theater Telemetry Scope & Trimming Controls Section -->
+                <div class="chart-box" style="margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px);">
+                    <div class="chart-box-header" style="flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; margin: 0;">
+                                <span>🏛️</span> Theater Telemetry Scope & Trimming Controls
+                            </h3>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+                                Manage active theaters for 15-minute seating occupancy polling and weekly schedule pre-caching. Trimming inactive locations keeps Cinepulse well within API rate limits.
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                                🟢 <span id="cntActiveTheatres"><?php echo $activeTheatresCount; ?></span> Active Monitored
+                            </span>
+                            <span style="background: rgba(149, 165, 166, 0.15); color: #bdc3c7; border: 1px solid rgba(149, 165, 166, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                                ⚪ <span id="cntDisabledTheatres"><?php echo $disabledTheatresCount; ?></span> Trimming Paused
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Theater Controls Search & Filter Bar -->
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center;">
+                        <div style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem;">
+                            <button class="prov-filter-btn active" data-prov="all" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: var(--theme-primary, #3b82f6); color: #fff;">All Provinces (41)</button>
+                            <button class="prov-filter-btn" data-prov="ON" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">Ontario (ON)</button>
+                            <button class="prov-filter-btn" data-prov="QC" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">Quebec (QC)</button>
+                            <button class="prov-filter-btn" data-prov="BC" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">British Columbia (BC)</button>
+                            <button class="prov-filter-btn" data-prov="AB" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">Alberta (AB)</button>
+                        </div>
+
+                        <input type="text" id="theatreSearchInput" placeholder="🔍 Search theater name, city, or ID..." class="date-input-custom" style="flex: 1; min-width: 200px;">
+                        
+                        <select id="theatreStatusFilter" class="date-input-custom" style="min-width: 160px;">
+                            <option value="all">⚡ All Telemetry Statuses</option>
+                            <option value="enabled">🟢 Active Only</option>
+                            <option value="disabled">⚪ Paused Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Theater Grid -->
+                    <div id="theatreControlGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; max-height: 480px; overflow-y: auto; padding-right: 0.4rem;">
+                        <!-- Rendered dynamically via JS -->
                     </div>
                 </div>
 
@@ -1248,7 +1293,132 @@ try {
                         }
                     }
                 });
-            <?php endif; ?>
+            // --- THEATER CONTROL CENTER JS LOGIC ---
+            var allTheatresList = [];
+            var currentProvFilter = 'all';
+
+            function loadTheatresGrid() {
+                $.getJSON('/api?action=list_theatres', function(res) {
+                    if (res && res.success) {
+                        allTheatresList = res.theatres || [];
+                        $('#cntActiveTheatres').text(res.active_count || 0);
+                        $('#cntDisabledTheatres').text(res.disabled_count || 0);
+                        renderTheatresGrid();
+                    }
+                });
+            }
+
+            function renderTheatresGrid() {
+                var search = $('#theatreSearchInput').val().toLowerCase().trim();
+                var statusFilter = $('#theatreStatusFilter').val();
+
+                var filtered = allTheatresList.filter(function(t) {
+                    if (currentProvFilter !== 'all' && t.province !== currentProvFilter) {
+                        return false;
+                    }
+                    if (statusFilter === 'enabled' && !t.enabled) return false;
+                    if (statusFilter === 'disabled' && t.enabled) return false;
+
+                    if (search.length > 0) {
+                        var matchName = t.name.toLowerCase().indexOf(search) !== -1;
+                        var matchCity = t.city.toLowerCase().indexOf(search) !== -1;
+                        var matchRegion = t.region.toLowerCase().indexOf(search) !== -1;
+                        var matchId = String(t.id).indexOf(search) !== -1;
+                        return matchName || matchCity || matchRegion || matchId;
+                    }
+                    return true;
+                });
+
+                if (filtered.length === 0) {
+                    $('#theatreControlGrid').html('<div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; color: var(--text-muted);">No theaters match your filter criteria.</div>');
+                    return;
+                }
+
+                var html = '';
+                filtered.forEach(function(t) {
+                    var isEnabled = t.enabled;
+                    var borderCol = isEnabled ? 'rgba(46, 204, 113, 0.4)' : 'rgba(255, 255, 255, 0.1)';
+                    var bgCol = isEnabled ? 'rgba(46, 204, 113, 0.04)' : 'rgba(0, 0, 0, 0.2)';
+                    
+                    var screenBadges = (t.screens || []).map(function(s) {
+                        return '<span style="font-size: 0.68rem; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 1px 6px; border-radius: 4px; font-weight: 600;">' + s + '</span>';
+                    }).join(' ');
+
+                    html += '<div style="background: ' + bgCol + '; border: 1px solid ' + borderCol + '; border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; transition: all 0.2s ease;">';
+                    
+                    html += '  <div>';
+                    html += '    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.4rem;">';
+                    html += '      <strong style="font-size: 0.98rem; color: #ffffff; letter-spacing: -0.01em;">' + t.name + '</strong>';
+                    html += '      <span style="font-size: 0.72rem; background: rgba(255,255,255,0.08); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-family: monospace;">ID #' + t.id + '</span>';
+                    html += '    </div>';
+                    
+                    html += '    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">';
+                    html += '      📍 ' + t.city + ', ' + t.province + ' &bull; <span style="color: #94a3b8;">' + t.region + '</span>';
+                    html += '    </div>';
+                    
+                    if (screenBadges) {
+                        html += '    <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.5rem;">' + screenBadges + '</div>';
+                    }
+                    html += '  </div>';
+
+                    html += '  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem; margin-top: 0.25rem;">';
+                    if (isEnabled) {
+                        html += '    <span style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; display: flex; align-items: center; gap: 0.3rem;">🟢 Active Monitored</span>';
+                        html += '    <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" data-target="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">⏸️ Pause</button>';
+                    } else {
+                        html += '    <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">⚪ Trimming Paused</span>';
+                        html += '    <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + t.name + '" data-target="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: var(--theme-primary, #3b82f6); color: #fff;">▶️ Enable</button>';
+                    }
+                    html += '  </div>';
+
+                    html += '</div>';
+                });
+
+                $('#theatreControlGrid').html(html);
+            }
+
+            // Province filter buttons click handler
+            $(document).on('click', '.prov-filter-btn', function() {
+                $('.prov-filter-btn').removeClass('active').css({ 'background': 'rgba(255,255,255,0.05)', 'color': 'var(--text-secondary)' });
+                $(this).addClass('active').css({ 'background': 'var(--theme-primary, #3b82f6)', 'color': '#fff' });
+                currentProvFilter = $(this).data('prov');
+                renderTheatresGrid();
+            });
+
+            $('#theatreSearchInput, #theatreStatusFilter').on('input change', function() {
+                renderTheatresGrid();
+            });
+
+            // Toggle Theatre active state AJAX call
+            $(document).on('click', '.btn-toggle-theatre', function() {
+                var $btn = $(this);
+                var theatreId = $btn.data('id');
+                var theatreName = $btn.data('name');
+                var targetState = $btn.data('target');
+
+                $btn.prop('disabled', true).text('⌛ Updating...');
+
+                $.post('/api', {
+                    action: 'toggle_theatre',
+                    theatre_id: theatreId,
+                    enabled: targetState,
+                    csrf_token: csrfToken
+                }, function(res) {
+                    if (res && res.success) {
+                        loadTheatresGrid();
+                        loadWeeklySchedule();
+                    } else {
+                        alert('Error: ' + (res.error || 'Failed to toggle theater status.'));
+                        loadTheatresGrid();
+                    }
+                }).fail(function(xhr) {
+                    alert('Error: ' + (xhr.responseJSON?.error || 'Failed to update theater status.'));
+                    loadTheatresGrid();
+                });
+            });
+
+            // Load initial theaters list
+            loadTheatresGrid();
         });
     </script>
 </body>
