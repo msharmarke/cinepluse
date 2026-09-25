@@ -37,4 +37,6 @@ reddit_client_secret = "YOUR_REDDIT_CLIENT_SECRET"
 reddit_username = "YOUR_REDDIT_USERNAME"
 reddit_password = "YOUR_REDDIT_PASSWORD"
 reddit_user_agent = "CinepulsePlanner/1.0 (by /u/YOUR_USERNAME)"
-reddit_subreddit = "movies"
+[admin]
+; Admin Authentication Settings
+password = "ms88"

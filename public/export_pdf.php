@@ -1,7 +1,7 @@
 <?php
 /**
- * Cinepulse — Per-Theater Weekly Schedule PDF Exporter
- * Generates a clean, publication-ready printable schedule for a specific theater across a theatrical week (Friday - Thursday).
+ * Cinepulse — Publication-Ready Executive Weekly PDF & Print Exporter
+ * Generates an executive, per-theater weekly schedule report formatted for A4/Letter PDF saving with page-break protection.
  */
 
 require_once dirname(__DIR__) . '/src/Autoloader.php';
@@ -53,11 +53,15 @@ if (!empty($_GET['start_date']) && strtotime($_GET['start_date'])) {
 
 $startFridayStr = date('Y-m-d', $startFridaySec);
 $endThursdayStr = date('Y-m-d', strtotime('+6 days', $startFridaySec));
+$oneDayPerPage = isset($_GET['one_per_page']) && $_GET['one_per_page'] === '1';
 
 // Fetch showtimes for all 7 days of the week
 $api = new CineplexAPI();
 $weekDays = [];
 $totalShowtimeCount = 0;
+$totalMoviesCount = 0;
+$uniqueExperiences = [];
+$allMovieTitlesMap = [];
 
 for ($i = 0; $i < 7; $i++) {
     $currentSec = strtotime("+{$i} days", $startFridaySec);
@@ -81,6 +85,7 @@ for ($i = 0; $i < 7; $i++) {
     foreach ($showtimesData as $movie) {
         $movieTitle = $movie['name'] ?? $movie['title'] ?? 'Unknown Title';
         $runtime = (int)($movie['runtimeInMinutes'] ?? $movie['runtime'] ?? $movie['duration'] ?? 120);
+        $allMovieTitlesMap[$movieTitle] = true;
 
         if (!isset($moviesList[$movieTitle])) {
             $moviesList[$movieTitle] = [
@@ -94,6 +99,7 @@ for ($i = 0; $i < 7; $i++) {
             foreach ($movie['experiences'] as $exp) {
                 $expTypes = $exp['experienceTypes'] ?? ['Standard'];
                 $expName = implode(', ', $expTypes);
+                $uniqueExperiences[$expName] = true;
                 
                 if (!empty($exp['sessions'])) {
                     foreach ($exp['sessions'] as $session) {
@@ -143,6 +149,7 @@ for ($i = 0; $i < 7; $i++) {
     ];
 }
 
+$totalMoviesCount = count($allMovieTitlesMap);
 $prevWeekStart = date('Y-m-d', strtotime('-7 days', $startFridaySec));
 $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
 ?>
@@ -151,63 +158,91 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎬 Weekly Showtimes Schedule — <?php echo htmlspecialchars($theatreName); ?> (<?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j, Y', strtotime('+6 days', $startFridaySec)); ?>)</title>
+    <title>📄 Executive PDF Report — <?php echo htmlspecialchars($theatreName); ?> (<?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j, Y', strtotime('+6 days', $startFridaySec)); ?>)</title>
     
-    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <!-- Open Graph & Social Meta -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="📄 Cinepulse — Weekly PDF Schedule & Analytics">
+    <meta property="og:title" content="📄 Cinepulse — Executive PDF Report Exporter">
     <meta property="og:description" content="Generate and download publication-ready weekly cinema showtime schedules and PDF reports.">
     <meta property="og:image" content="/assets/images/share/executive.jpg">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="📄 Cinepulse — Weekly PDF Schedule & Analytics">
+    <meta name="twitter:title" content="📄 Cinepulse — Executive PDF Report Exporter">
     <meta name="twitter:description" content="Generate and download publication-ready weekly cinema showtime schedules and PDF reports.">
     <meta name="twitter:image" content="/assets/images/share/executive.jpg">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
-    <link rel="stylesheet" href="assets/css/design-options-modal.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/design-options-modal.css">
+
     <style>
-        * {
-            box-sizing: border-box;
+        :root {
+            --pdf-bg: #0b0f19;
+            --pdf-card-bg: #111827;
+            --pdf-text: #f9fafb;
+            --pdf-text-muted: #9ca3af;
+            --pdf-border: #374151;
+            --pdf-accent: #3b82f6;
+            --pdf-accent-gold: #f59e0b;
         }
+
+        body.ink-saver-mode {
+            --pdf-bg: #f8fafc;
+            --pdf-card-bg: #ffffff;
+            --pdf-text: #0f172a;
+            --pdf-text-muted: #475569;
+            --pdf-border: #cbd5e1;
+            --pdf-accent: #2563eb;
+            --pdf-accent-gold: #d97706;
+        }
+
+        * { box-sizing: border-box; }
+        
         body {
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--pdf-bg);
+            color: var(--pdf-text);
             margin: 0;
             padding: 0;
             font-size: 14px;
-            line-height: 1.4;
+            line-height: 1.45;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         /* Top Interactive Controls (Hidden on Print) */
         .no-print-bar {
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
-            padding: 12px 24px;
+            background: rgba(17, 24, 39, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 14px 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 14px;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
+
         .no-print-bar h2 {
             margin: 0;
-            font-size: 1.1rem;
-            color: #38bdf8;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
             display: flex;
             align-items: center;
             gap: 8px;
         }
+
         .btn-action {
             background: #e50914;
             color: #ffffff;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 9px 18px;
+            border-radius: 8px;
             font-weight: 700;
             font-size: 0.88rem;
             cursor: pointer;
@@ -215,254 +250,474 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
         }
+
         .btn-action:hover {
-            background: #b91c1c;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(229, 9, 20, 0.45);
         }
+
         .btn-action-secondary {
-            background: #334155;
-            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: none;
         }
+
         .btn-action-secondary:hover {
-            background: #475569;
+            background: rgba(255, 255, 255, 0.18);
         }
+
         .select-custom {
             background: #0f172a;
-            color: #f8fafc;
-            border: 1px solid #475569;
-            padding: 7px 12px;
-            border-radius: 6px;
+            color: #ffffff;
+            border: 1px solid #334155;
+            padding: 8px 14px;
+            border-radius: 8px;
             font-family: inherit;
             font-size: 0.88rem;
+            font-weight: 600;
         }
 
-        /* Printable Document Container */
-        .pdf-container {
-            max-width: 1050px;
-            margin: 24px auto;
-            background: #ffffff;
-            color: #0f172a;
-            padding: 36px 40px;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        /* Main Document Wrapper */
+        .pdf-document-wrapper {
+            max-width: 1080px;
+            margin: 30px auto;
+            background: var(--pdf-card-bg);
+            color: var(--pdf-text);
+            padding: 40px 48px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--pdf-border);
+            position: relative;
         }
 
-        /* Document Header */
-        .pdf-header {
+        /* Cover & Header */
+        .pdf-cover-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 3px solid #0f172a;
-            padding-bottom: 16px;
-            margin-bottom: 24px;
-        }
-        .pdf-brand h1 {
-            margin: 0;
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.02em;
-        }
-        .pdf-brand p {
-            margin: 4px 0 0 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #475569;
-        }
-        .pdf-meta {
-            text-align: right;
-        }
-        .pdf-week-badge {
-            background: #0f172a;
-            color: #ffffff;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: inline-block;
-            margin-bottom: 6px;
-        }
-        .pdf-meta-sub {
-            font-size: 0.82rem;
-            color: #64748b;
+            border-bottom: 2px solid var(--pdf-border);
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+            gap: 20px;
         }
 
-        /* Daily Schedule Cards */
-        .day-block {
-            margin-bottom: 28px;
+        .brand-section h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.02em;
+            color: var(--pdf-text);
+            font-family: 'Space Grotesk', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-section h1 span.gold {
+            color: var(--pdf-accent-gold);
+        }
+
+        .brand-section p {
+            margin: 6px 0 0 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--pdf-accent);
+        }
+
+        .metadata-badge-group {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .date-badge {
+            background: var(--pdf-accent);
+            color: #ffffff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sub-meta-text {
+            font-size: 0.83rem;
+            color: var(--pdf-text-muted);
+            font-weight: 500;
+        }
+
+        /* Executive Metrics Strip */
+        .metrics-summary-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 32px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--pdf-border);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .summary-stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--pdf-text-muted);
+            font-weight: 700;
+        }
+
+        .summary-stat-value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--pdf-accent-gold);
+            margin-top: 2px;
+        }
+
+        /* Day Block Section Page-Break Protection */
+        .pdf-day-section {
+            margin-bottom: 36px;
             page-break-inside: avoid;
             break-inside: avoid;
         }
-        .day-header {
-            background: #f1f5f9;
-            border-left: 5px solid #e50914;
-            padding: 8px 14px;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 12px;
-            border-radius: 0 6px 6px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .day-header-count {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #64748b;
+
+        .pdf-day-section.force-page-break {
+            page-break-before: always;
+            break-before: page;
         }
 
-        /* Movie Row Layout */
-        .movie-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            padding: 10px 14px;
-            background: #ffffff;
-        }
-        .movie-header-line {
+        .day-header-banner {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 6px solid var(--pdf-accent-gold);
+            padding: 10px 18px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--pdf-text);
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 8px;
+            align-items: center;
+            border-top: 1px solid var(--pdf-border);
+            border-right: 1px solid var(--pdf-border);
+            border-bottom: 1px solid var(--pdf-border);
         }
-        .movie-title {
-            font-size: 1rem;
+
+        .day-showtime-counter {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--pdf-text-muted);
+            background: var(--pdf-bg);
+            padding: 4px 10px;
+            border-radius: 14px;
+        }
+
+        /* Movie Card Page-Break Protection */
+        .pdf-movie-card {
+            background: var(--pdf-card-bg);
+            border: 1px solid var(--pdf-border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            transition: border-color 0.2s;
+        }
+
+        .pdf-movie-card:hover {
+            border-color: var(--pdf-accent);
+        }
+
+        .movie-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed var(--pdf-border);
+            padding-bottom: 8px;
+        }
+
+        .movie-card-title {
+            font-size: 1.05rem;
             font-weight: 800;
-            color: #0f172a;
-        }
-        .movie-runtime {
-            font-size: 0.8rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-        .format-row {
+            color: var(--pdf-text);
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px dashed #f1f5f9;
+            gap: 8px;
+        }
+
+        .movie-card-runtime {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: var(--pdf-text-muted);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .experience-format-block {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 8px;
+            padding-top: 4px;
             flex-wrap: wrap;
         }
-        .format-label {
+
+        .experience-badge {
             font-size: 0.78rem;
-            font-weight: 700;
-            background: #e2e8f0;
-            color: #334155;
-            padding: 3px 8px;
-            border-radius: 4px;
+            font-weight: 800;
+            background: var(--pdf-accent);
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+
+        .showtime-pills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .pdf-time-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--pdf-border);
+            color: var(--pdf-text);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            font-family: 'Space Grotesk', monospace;
             white-space: nowrap;
         }
-        .showtimes-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-items: center;
-        }
-        .time-pill {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            color: #0f172a;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            font-family: monospace;
-        }
 
-        /* Footer */
-        .pdf-footer {
-            margin-top: 32px;
-            padding-top: 16px;
-            border-top: 1px solid #e2e8f0;
+        /* Document Footer */
+        .pdf-document-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--pdf-border);
             display: flex;
             justify-content: space-between;
-            font-size: 0.78rem;
-            color: #94a3b8;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--pdf-text-muted);
         }
 
-        /* Print Media Styles */
+        /* ============================================
+           EXPLICIT PRINT & PDF SAVING STYLES (@media print)
+           ============================================ */
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 15mm 15mm 15mm;
+            }
+
             body {
                 background: #ffffff !important;
                 color: #000000 !important;
+                font-size: 12pt !important;
             }
+
             .no-print-bar {
                 display: none !important;
             }
-            .pdf-container {
+
+            .pdf-document-wrapper {
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 max-width: 100% !important;
                 width: 100% !important;
+                border: none !important;
+                background: #ffffff !important;
+                color: #000000 !important;
             }
-            .day-block {
-                page-break-inside: avoid;
-                break-inside: avoid;
+
+            .pdf-cover-header {
+                border-bottom: 2pt solid #000000 !important;
             }
-            @page {
-                size: letter portrait;
-                margin: 0.4in;
+
+            .brand-section h1 {
+                color: #000000 !important;
+            }
+
+            .brand-section p {
+                color: #000000 !important;
+            }
+
+            .date-badge {
+                background: #000000 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .metrics-summary-strip {
+                background: #f8fafc !important;
+                border: 1pt solid #cbd5e1 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .summary-stat-value {
+                color: #000000 !important;
+            }
+
+            /* Explicit Page Break Protection Rules */
+            .pdf-day-section {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin-bottom: 18pt !important;
+            }
+
+            .pdf-movie-card {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border: 1pt solid #94a3b8 !important;
+                background: #ffffff !important;
+                margin-bottom: 10pt !important;
+            }
+
+            .movie-card-title {
+                color: #000000 !important;
+            }
+
+            .experience-badge {
+                background: #000000 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .pdf-time-pill {
+                border: 1pt solid #000000 !important;
+                background: #f1f5f9 !important;
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .day-header-banner {
+                background: #f1f5f9 !important;
+                border-left: 6pt solid #000000 !important;
+                border-top: 1pt solid #cbd5e1 !important;
+                border-right: 1pt solid #cbd5e1 !important;
+                border-bottom: 1pt solid #cbd5e1 !important;
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .pdf-document-footer {
+                border-top: 1pt solid #000000 !important;
+                color: #475569 !important;
             }
         }
     </style>
 </head>
-<body>
+<body class="ink-saver-mode">
 
-    <!-- Web Navigation & Trigger Bar (Hidden on Print) -->
+    <!-- Web Control Deck (Hidden when printing or saving PDF) -->
     <div class="no-print-bar">
-        <h2>📄 Weekly Schedule PDF Exporter</h2>
+        <h2>📄 Executive Weekly PDF Exporter</h2>
 
-        <form method="GET" action="export-pdf" style="display: flex; gap: 10px; align-items: center;">
-            <select name="locationId" class="select-custom" onchange="this.form.submit()">
-                <?php foreach ($locations as $name => $id): ?>
-                    <option value="<?php echo $id; ?>" <?php echo ((int)$theatreId === (int)$id) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($name); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="pdfSearchInput" class="select-custom" placeholder="🔍 Filter by movie title..." style="width: 220px;">
 
-            <select name="start_date" class="select-custom" onchange="this.form.submit()">
-                <option value="<?php echo $startFridayStr; ?>" selected>Theatrical Week: <?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j', strtotime('+6 days', $startFridaySec)); ?></option>
-                <option value="<?php echo $prevWeekStart; ?>">Previous Week (<?php echo date('M j', strtotime($prevWeekStart)); ?>)</option>
-                <option value="<?php echo $nextWeekStart; ?>">Next Week (<?php echo date('M j', strtotime($nextWeekStart)); ?>)</option>
-            </select>
-        </form>
+            <form method="GET" action="/export-pdf" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <select name="locationId" class="select-custom" onchange="this.form.submit()">
+                    <?php foreach ($locations as $name => $id): ?>
+                        <option value="<?php echo $id; ?>" <?php echo ((int)$theatreId === (int)$id) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <select name="start_date" class="select-custom" onchange="this.form.submit()">
+                    <option value="<?php echo $startFridayStr; ?>" selected>Theatrical Week: <?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j', strtotime('+6 days', $startFridaySec)); ?></option>
+                    <option value="<?php echo $prevWeekStart; ?>">Previous Week (<?php echo date('M j', strtotime($prevWeekStart)); ?>)</option>
+                    <option value="<?php echo $nextWeekStart; ?>">Next Week (<?php echo date('M j', strtotime($nextWeekStart)); ?>)</option>
+                </select>
+                
+                <input type="hidden" name="one_per_page" value="<?php echo $oneDayPerPage ? '0' : '1'; ?>">
+                <button type="submit" class="btn-action btn-action-secondary" style="font-size: 0.82rem;">
+                    📄 <?php echo $oneDayPerPage ? 'Continuous Flow' : '1 Day Per Page'; ?>
+                </button>
+            </form>
+        </div>
 
         <div style="display: flex; gap: 10px;">
-            <button onclick="window.print()" class="btn-action">🖨️ Print / Save as PDF</button>
-            <a href="dashboard" class="btn-action btn-action-secondary">📊 Back to Dashboard</a>
+            <button id="toggleInkSaverBtn" class="btn-action btn-action-secondary" type="button">
+                🌓 Toggle Theme
+            </button>
+            <button onclick="window.print()" class="btn-action" type="button">
+                🖨️ Save as PDF / Print
+            </button>
+            <a href="/admin/dashboard" class="btn-action btn-action-secondary">
+                📊 Dashboard
+            </a>
         </div>
     </div>
 
-    <!-- Main PDF Layout Document -->
-    <div class="pdf-container">
+    <!-- Main Printable PDF Container -->
+    <div class="pdf-container pdf-document-wrapper">
         
-        <!-- Header -->
-        <div class="pdf-header">
-            <div class="pdf-brand">
-                <h1>🎬 CINEPULSE THEATER SCHEDULE</h1>
+        <!-- Header Banner -->
+        <div class="pdf-cover-header">
+            <div class="brand-section">
+                <h1>🎬 CINEPULSE <span class="gold">EXECUTIVE SCHEDULE</span></h1>
                 <p>📍 <?php echo htmlspecialchars($theatreName); ?></p>
             </div>
-            <div class="pdf-meta">
-                <div class="pdf-week-badge">
+            <div class="metadata-badge-group">
+                <div class="date-badge">
                     🗓️ <?php echo date('F j', $startFridaySec); ?> – <?php echo date('F j, Y', strtotime('+6 days', $startFridaySec)); ?>
                 </div>
-                <div class="pdf-meta-sub">
-                    Total Weekly Showtimes: <strong><?php echo number_format($totalShowtimeCount); ?></strong> | Generated: <?php echo date('Y-m-d H:i'); ?>
+                <div class="sub-meta-text">
+                    Generated: <strong><?php echo date('Y-m-d H:i:s'); ?> EST</strong> | Location ID: <code><?php echo $theatreId; ?></code>
                 </div>
             </div>
         </div>
 
-        <!-- Days Schedule List -->
-        <?php foreach ($weekDays as $day): ?>
-            <div class="day-block">
-                <div class="day-header">
+        <!-- Metrics Summary Dashboard Strip -->
+        <div class="metrics-summary-strip">
+            <div class="summary-stat-item">
+                <div class="summary-stat-label">Total Showtimes</div>
+                <div class="summary-stat-value"><?php echo number_format($totalShowtimeCount); ?></div>
+            </div>
+            <div class="summary-stat-item">
+                <div class="summary-stat-label">Movies Playing</div>
+                <div class="summary-stat-value"><?php echo number_format($totalMoviesCount); ?></div>
+            </div>
+            <div class="summary-stat-item">
+                <div class="summary-stat-label">Formats Offered</div>
+                <div class="summary-stat-value"><?php echo count($uniqueExperiences); ?></div>
+            </div>
+            <div class="summary-stat-item">
+                <div class="summary-stat-label">Theatrical Week</div>
+                <div class="summary-stat-value" style="font-size: 1.05rem;"><?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j', strtotime('+6 days', $startFridaySec)); ?></div>
+            </div>
+        </div>
+
+        <!-- 7-Day Schedule Listings -->
+        <?php foreach ($weekDays as $index => $day): ?>
+            <div class="pdf-day-section <?php echo ($oneDayPerPage && $index > 0) ? 'force-page-break' : ''; ?>">
+                <div class="day-header-banner">
                     <span>📅 <?php echo htmlspecialchars($day['label']); ?></span>
-                    <span class="day-header-count">
+                    <span class="day-showtime-counter">
                         <?php 
                         $dayTotal = 0;
                         foreach ($day['movies'] as $m) {
@@ -470,29 +725,29 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
                                 $dayTotal += count($f['times']);
                             }
                         }
-                        echo $dayTotal . " showtimes";
+                        echo $dayTotal . " showtimes scheduled";
                         ?>
                     </span>
                 </div>
 
                 <?php if (empty($day['movies'])): ?>
-                    <div style="padding: 10px 14px; font-style: italic; color: #94a3b8; border: 1px dashed #cbd5e1; border-radius: 6px;">
-                        No showtimes scheduled or cached for this date.
+                    <div style="padding: 14px 18px; font-style: italic; color: var(--pdf-text-muted); border: 1px dashed var(--pdf-border); border-radius: 8px;">
+                        No cached showtimes available for this date.
                     </div>
                 <?php else: ?>
                     <?php foreach ($day['movies'] as $movie): ?>
-                        <div class="movie-card">
-                            <div class="movie-header-line">
-                                <span class="movie-title">🎬 <?php echo htmlspecialchars($movie['title']); ?></span>
-                                <span class="movie-runtime">⏱️ <?php echo $movie['runtime']; ?> mins</span>
+                        <div class="pdf-movie-card searchable-movie-item" data-title="<?php echo htmlspecialchars(strtolower($movie['title'])); ?>">
+                            <div class="movie-card-header">
+                                <span class="movie-card-title">🎬 <?php echo htmlspecialchars($movie['title']); ?></span>
+                                <span class="movie-card-runtime">⏱️ <?php echo $movie['runtime']; ?> mins</span>
                             </div>
 
                             <?php foreach ($movie['formats'] as $format): ?>
-                                <div class="format-row">
-                                    <span class="format-label">✨ <?php echo htmlspecialchars($format['experience']); ?> (<?php echo htmlspecialchars($format['auditorium']); ?>)</span>
-                                    <div class="showtimes-pills">
+                                <div class="experience-format-block">
+                                    <span class="experience-badge">✨ <?php echo htmlspecialchars($format['experience']); ?> (<?php echo htmlspecialchars($format['auditorium']); ?>)</span>
+                                    <div class="showtime-pills-row">
                                         <?php foreach ($format['times'] as $t): ?>
-                                            <span class="time-pill"><?php echo $t['time']; ?></span>
+                                            <span class="pdf-time-pill"><?php echo $t['time']; ?></span>
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
@@ -503,17 +758,35 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             </div>
         <?php endforeach; ?>
 
-        <!-- Document Footer -->
-        <div class="pdf-footer">
-            <span>Cinepulse Modern Showtime Exporter & System Analytics</span>
+        <!-- Publication Footer -->
+        <div class="pdf-document-footer">
+            <span>🎬 Cinepulse Executive Showtime Exporter & Analytics</span>
             <span>https://cinepluse.msharmarke.com/</span>
-            <span>Page 1 of 1</span>
+            <span>Confidential & Internal Use</span>
         </div>
 
     </div>
 
     <script>
-        // Trigger print dialog after document is fully loaded if ?print=1 is passed
+        // Live Movie Search Filter
+        $('#pdfSearchInput').on('keyup input', function() {
+            const query = $(this).val().toLowerCase().trim();
+            $('.searchable-movie-item').each(function() {
+                const title = $(this).data('title');
+                if (!query || title.indexOf(query) !== -1) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+
+        // Toggle Ink Saver vs Executive Dark Mode
+        $('#toggleInkSaverBtn').on('click', function() {
+            $('body').toggleClass('ink-saver-mode');
+        });
+
+        // Trigger print dialog after page load if ?print=1 is passed
         window.addEventListener('load', function() {
             var urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('print') === '1') {
@@ -523,7 +796,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             }
         });
     </script>
-    <script src="assets/js/shared.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
