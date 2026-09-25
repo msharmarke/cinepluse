@@ -10,6 +10,7 @@ use Cinepulse\DashboardService;
 use Cinepulse\ArchiveService;
 
 Security::startSession();
+Security::requireAdmin();
 
 // Setup DB status
 $dbConfigured = true;
@@ -363,6 +364,7 @@ try {
                 <a href="/admin/tracker">📈 Tracker</a>
                 <a href="/admin/dashboard" class="active">📊 Dashboard</a>
                 <a href="/admin/scan-logs">🔍 Scan Logs</a>
+                <a href="/admin/logout" style="color: #ef4444;">🔒 Logout</a>
             </nav>
             <div style="padding: 1rem 1.5rem; margin-top: auto;">
                 <button id="openThemeModal" class="btn-dash btn-dash-secondary" style="width: 100%; justify-content: center;">🎨 Customize Theme</button>

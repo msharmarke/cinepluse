@@ -106,4 +106,72 @@ class Security {
                 return !empty($val) ? $val : $default;
         }
     }
+
+    /**
+     * Check if current session has admin authentication
+     * 
+     * @return bool
+     */
+    public static function isAdminAuthenticated() {
+        self::startSession();
+        return !empty($_SESSION['admin_authenticated']);
+    }
+
+    /**
+     * Enforce admin authentication, redirecting to /admin/login if unauthenticated
+     */
+    public static function requireAdmin() {
+        self::startSession();
+        if (!self::isAdminAuthenticated()) {
+            $target = $_SERVER['REQUEST_URI'] ?? '/admin/dashboard';
+            header('Location: /admin/login?redirect=' . urlencode($target));
+            exit;
+        }
+    }
+
+    /**
+     * Verify submitted admin password against config.ini setting or default
+     * 
+     * @param string $inputPassword
+     * @return bool
+     */
+    public static function verifyAdminPassword($inputPassword) {
+        if (empty($inputPassword)) return false;
+
+        $adminPass = getenv('ADMIN_PASSWORD');
+        if (!$adminPass) {
+            $configFile = dirname(__DIR__) . '/config/config.ini';
+            if (file_exists($configFile)) {
+                $ini = parse_ini_file($configFile, true);
+                if (isset($ini['admin']['password']) && !empty($ini['admin']['password'])) {
+                    $adminPass = $ini['admin']['password'];
+                }
+            }
+        }
+        if (!$adminPass) {
+            $adminPass = 'admin'; // Default password
+        }
+
+        return hash_equals($adminPass, $inputPassword) || password_verify($inputPassword, $adminPass);
+    }
+
+    /**
+     * Grant admin authentication session
+     */
+    public static function loginAdmin() {
+        self::startSession();
+        session_regenerate_id(true);
+        $_SESSION['admin_authenticated'] = true;
+        $_SESSION['admin_login_time'] = time();
+    }
+
+    /**
+     * Revoke admin authentication session
+     */
+    public static function logoutAdmin() {
+        self::startSession();
+        unset($_SESSION['admin_authenticated']);
+        unset($_SESSION['admin_login_time']);
+        session_destroy();
+    }
 }

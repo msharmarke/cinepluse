@@ -11,6 +11,7 @@ use Cinepulse\CineplexAPI;
 use Cinepulse\ShowtimeService;
 
 Security::startSession();
+Security::requireAdmin();
 
 // Setup DB connection
 $db_configured = true;
@@ -286,6 +287,7 @@ if ($db_configured && !$tables_missing) {
                 <a href="/admin/tracker" class="active">📈 Tracker</a>
                 <a href="/admin/dashboard">📊 Dashboard</a>
                 <a href="/admin/scan-logs">🔍 Scan Logs</a>
+                <a href="/admin/logout" style="color: #ef4444;">🔒 Logout</a>
             </nav>
         </aside>
 

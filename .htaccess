@@ -4,6 +4,8 @@
     RewriteEngine On
 
     # Admin routes
+    RewriteRule ^admin/login/?$ public/admin/login.php [L,QSA]
+    RewriteRule ^admin/logout/?$ public/admin/logout.php [L,QSA]
     RewriteRule ^admin/dashboard/?$ public/admin/dashboard.php [L,QSA]
     RewriteRule ^admin/tracker/?$ public/admin/tracker.php [L,QSA]
     RewriteRule ^admin/scan-logs/?$ public/admin/tracker_scan_logs.php [L,QSA]

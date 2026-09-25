@@ -4,6 +4,9 @@ require_once dirname(dirname(__DIR__)) . '/src/Autoloader.php';
 use Cinepulse\Security;
 use Cinepulse\TrackerService;
 
+Security::startSession();
+Security::requireAdmin();
+
 $db_configured = false;
 $tables_missing = false;
 $db_error = '';
@@ -143,6 +146,7 @@ try {
                 <a href="/admin/tracker">📈 Tracker</a>
                 <a href="/admin/dashboard">📊 Dashboard</a>
                 <a href="/admin/scan-logs" class="active">🔍 Scan Logs</a>
+                <a href="/admin/logout" style="color: #ef4444;">🔒 Logout</a>
             </nav>
         </aside>
 
