@@ -1293,6 +1293,8 @@ try {
                         }
                     }
                 });
+            <?php endif; ?>
+
             // --- THEATER CONTROL CENTER JS LOGIC ---
             var allTheatresList = [];
             var currentProvFilter = 'all';
