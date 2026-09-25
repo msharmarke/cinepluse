@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/src/Autoloader.php';
+require_once dirname(dirname(__DIR__)) . '/src/Autoloader.php';
 
 use Cinepulse\Security;
 use Cinepulse\TrackerService;
@@ -37,9 +37,10 @@ try {
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/design-options-modal.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Outfit', sans-serif; }
@@ -126,12 +127,12 @@ try {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="schedule">📅 Schedule</a>
-                <a href="movies">🎬 Movies</a>
-                <a href="planner">🍿 Planner</a>
-                <a href="tracker">📈 Tracker</a>
-                <a href="dashboard">📊 Dashboard</a>
-                <a href="scan-logs" class="active">🔍 Scan Logs</a>
+                <a href="/schedule">📅 Schedule</a>
+                <a href="/movies">🎬 Movies</a>
+                <a href="/planner">🍿 Planner</a>
+                <a href="/admin/tracker">📈 Tracker</a>
+                <a href="/admin/dashboard">📊 Dashboard</a>
+                <a href="/admin/scan-logs" class="active">🔍 Scan Logs</a>
             </nav>
         </aside>
 
@@ -261,7 +262,7 @@ try {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         location.reload();
                     } else {
@@ -276,7 +277,7 @@ try {
             });
         });
     </script>
-    <script src="assets/js/shared.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

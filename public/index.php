@@ -175,12 +175,12 @@ if ($db_configured && !$tables_missing) {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="schedule" class="active">📅 Schedule</a>
-                <a href="movies">🎬 Movies</a>
-                <a href="planner">🍿 Planner</a>
-                <a href="tracker">📈 Tracker</a>
-                <a href="dashboard">📊 Dashboard</a>
-                <a href="scan-logs">🔍 Scan Logs</a>
+                <a href="/schedule" class="active">📅 Schedule</a>
+                <a href="/movies">🎬 Movies</a>
+                <a href="/planner">🍿 Planner</a>
+                <a href="/admin/tracker">📈 Tracker</a>
+                <a href="/admin/dashboard">📊 Dashboard</a>
+                <a href="/admin/scan-logs">🔍 Scan Logs</a>
             </nav>
         </aside>
 

@@ -6,15 +6,24 @@
     RewriteEngine On
     RewriteBase /
 
-    # Custom route aliases
-    RewriteRule ^dashboard/?$ dashboard.php [L,QSA]
+    # Admin routes
+    RewriteRule ^admin/dashboard/?$ admin/dashboard.php [L,QSA]
+    RewriteRule ^admin/tracker/?$ admin/tracker.php [L,QSA]
+    RewriteRule ^admin/scan-logs/?$ admin/tracker_scan_logs.php [L,QSA]
+    RewriteRule ^admin/?$ admin/dashboard.php [L,QSA]
+
+    # Legacy/shortcut admin aliases
+    RewriteRule ^dashboard/?$ admin/dashboard.php [L,QSA]
+    RewriteRule ^tracker/?$ admin/tracker.php [L,QSA]
+    RewriteRule ^scan-logs/?$ admin/tracker_scan_logs.php [L,QSA]
+
+    # Public consumer routes
     RewriteRule ^schedule/?$ index.php [L,QSA]
     RewriteRule ^movies/?$ movies.php [L,QSA]
     RewriteRule ^planner/?$ double-feature.php [L,QSA]
-    RewriteRule ^tracker/?$ tracker.php [L,QSA]
-    RewriteRule ^scan-logs/?$ tracker_scan_logs.php [L,QSA]
     RewriteRule ^watch-party/?$ watch-party.php [L,QSA]
     RewriteRule ^export-pdf/?$ export_pdf.php [L,QSA]
+    RewriteRule ^api/?$ api.php [L,QSA]
 
     # Automatically route extensionless files to .php if the file exists
     RewriteCond %{REQUEST_FILENAME} !-d

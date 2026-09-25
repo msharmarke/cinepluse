@@ -3,7 +3,7 @@
  * Cinepulse — System Monitoring & Analytics Dashboard
  */
 
-require_once dirname(__DIR__) . '/src/Autoloader.php';
+require_once dirname(dirname(__DIR__)) . '/src/Autoloader.php';
 
 use Cinepulse\Security;
 use Cinepulse\DashboardService;
@@ -19,7 +19,7 @@ $daemonStatus = [];
 $metrics = [];
 $analytics = [];
 $locations = [];
-$locFile = dirname(__DIR__) . '/config/locations.json';
+$locFile = dirname(dirname(__DIR__)) . '/config/locations.json';
 if (file_exists($locFile)) {
     $locations = json_decode(file_get_contents($locFile), true) ?: [];
 }
@@ -47,17 +47,17 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php echo Security::csrfMeta(); ?>
-    <title>📊 Dashboard — Cinepulse System Analytics</title>
+    <title>📊 Admin Dashboard — Cinepulse System Analytics</title>
     
     <!-- External Dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Cinepulse Layout Stylesheets -->
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
-    <link rel="stylesheet" href="assets/css/design-options-modal.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/design-options-modal.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -347,12 +347,12 @@ try {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="schedule">📅 Schedule</a>
-                <a href="movies">🎬 Movies</a>
-                <a href="planner">🍿 Planner</a>
-                <a href="tracker">📈 Tracker</a>
-                <a href="dashboard" class="active">📊 Dashboard</a>
-                <a href="scan-logs">🔍 Scan Logs</a>
+                <a href="/schedule">📅 Schedule</a>
+                <a href="/movies">🎬 Movies</a>
+                <a href="/planner">🍿 Planner</a>
+                <a href="/admin/tracker">📈 Tracker</a>
+                <a href="/admin/dashboard" class="active">📊 Dashboard</a>
+                <a href="/admin/scan-logs">🔍 Scan Logs</a>
             </nav>
             <div style="padding: 1rem 1.5rem; margin-top: auto;">
                 <button id="openThemeModal" class="btn-dash btn-dash-secondary" style="width: 100%; justify-content: center;">🎨 Customize Theme</button>
@@ -370,7 +370,7 @@ try {
                 </div>
 
                 <div class="controls-group">
-                    <form method="GET" action="dashboard" class="date-filter-form">
+                    <form method="GET" action="/admin/dashboard" class="date-filter-form">
                         <input type="date" name="date_from" value="<?php echo htmlspecialchars($metrics['date_range']['from'] ?? date('Y-m-d', strtotime('-30 days'))); ?>" class="date-input-custom">
                         <span style="color: var(--text-muted); font-size: 0.85rem;">to</span>
                         <input type="date" name="date_to" value="<?php echo htmlspecialchars($metrics['date_range']['to'] ?? date('Y-m-d')); ?>" class="date-input-custom">

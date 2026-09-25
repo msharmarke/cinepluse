@@ -4,7 +4,7 @@
  */
 
 // Initialize Autoloader
-require_once dirname(__DIR__) . '/src/Autoloader.php';
+require_once dirname(dirname(__DIR__)) . '/src/Autoloader.php';
 
 use Cinepulse\Security;
 use Cinepulse\CineplexAPI;
@@ -32,7 +32,7 @@ try {
 
 // Fetch locations list
 $locations = [];
-$locFile = dirname(__DIR__) . '/config/locations.json';
+$locFile = dirname(dirname(__DIR__)) . '/config/locations.json';
 if (file_exists($locFile)) {
     $locations = json_decode(file_get_contents($locFile), true) ?: [];
 }
@@ -116,10 +116,10 @@ if ($db_configured && !$tables_missing) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
-    <link rel="stylesheet" href="assets/css/design-options-modal.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/design-options-modal.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Outfit', sans-serif; }
@@ -270,12 +270,12 @@ if ($db_configured && !$tables_missing) {
                 <p>Command Center Analytics</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="schedule">📅 Schedule</a>
-                <a href="movies">🎬 Movies</a>
-                <a href="planner">🍿 Planner</a>
-                <a href="tracker" class="active">📈 Tracker</a>
-                <a href="dashboard">📊 Dashboard</a>
-                <a href="scan-logs">🔍 Scan Logs</a>
+                <a href="/schedule">📅 Schedule</a>
+                <a href="/movies">🎬 Movies</a>
+                <a href="/planner">🍿 Planner</a>
+                <a href="/admin/tracker" class="active">📈 Tracker</a>
+                <a href="/admin/dashboard">📊 Dashboard</a>
+                <a href="/admin/scan-logs">🔍 Scan Logs</a>
             </nav>
         </aside>
 
@@ -1368,5 +1368,7 @@ if ($db_configured && !$tables_missing) {
             });
         });
     </script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

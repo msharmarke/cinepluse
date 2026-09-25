@@ -302,43 +302,29 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBtnState();
     }
 
-    // --- Dynamic Mobile Bottom Navigation Injection ---
+    // --- Dynamic Mobile Bottom Navigation Injection (Public Clean UX) ---
     (function setupMobileBottomNav() {
         if (document.querySelector('.mobile-bottom-nav')) return;
 
         const path = window.location.pathname.toLowerCase();
         
-        const isSchedule = path.includes('schedule') || path.endsWith('/') || path.includes('index');
+        const isSchedule = path.includes('schedule') || path === '/' || path.includes('index');
         const isMovies = path.includes('movies');
-        const isTracker = path.includes('tracker') && !path.includes('scan-logs');
-        const isDashboard = path.includes('dashboard');
         const isPdf = path.includes('export');
 
         const navHTML = `
             <nav class="mobile-bottom-nav">
                 <ul>
                     <li>
-                        <a href="schedule" class="${isSchedule ? 'active' : ''}">
+                        <a href="/schedule" class="${isSchedule ? 'active' : ''}">
                             <span class="nav-icon">📅</span>
                             <span>Schedule</span>
                         </a>
                     </li>
                     <li>
-                        <a href="movies" class="${isMovies ? 'active' : ''}">
+                        <a href="/movies" class="${isMovies ? 'active' : ''}">
                             <span class="nav-icon">🎬</span>
                             <span>Movies</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="tracker" class="${isTracker ? 'active' : ''}">
-                            <span class="nav-icon">📈</span>
-                            <span>Tracker</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="dashboard" class="${isDashboard ? 'active' : ''}">
-                            <span class="nav-icon">📊</span>
-                            <span>Dashboard</span>
                         </a>
                     </li>
                     <li>
@@ -348,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </a>
                     </li>
                     <li>
-                        <a href="export-pdf" class="${isPdf ? 'active' : ''}">
+                        <a href="/export-pdf" class="${isPdf ? 'active' : ''}">
                             <span class="nav-icon">📄</span>
                             <span>PDF</span>
                         </a>
