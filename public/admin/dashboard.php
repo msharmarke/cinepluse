@@ -670,77 +670,149 @@ try {
                     $('#archModalSubtitle').text('Created: ' + d.created + (d.min_date ? (' • Dates Covered: ' + d.min_date + ' to ' + d.max_date) : ''));
                     $('#btnModalImportDb').show().data('archive', archiveName);
 
+                    var movies = d.movies || [];
+                    var theatres = d.theatres || [];
+                    var samples = d.sample_showtimes || [];
+                    var files = d.files || [];
+
                     var html = '';
 
-                    // Stat Grid
-                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem;">';
-                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
-                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Showtimes</div>';
-                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #3498db; margin-top: 0.2rem;">' + (d.table_counts.showtimes || 0).toLocaleString() + '</div>';
+                    // 1. Top Stat Grid
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 12px; text-align: center;">';
+                    html += '    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Total Showtimes</div>';
+                    html += '    <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8; margin-top: 0.2rem;">' + (d.table_counts.showtimes || 0).toLocaleString() + '</div>';
                     html += '  </div>';
-                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
-                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Occupancy Logs</div>';
-                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #2ecc71; margin-top: 0.2rem;">' + (d.table_counts.showtime_occupancy_log || 0).toLocaleString() + '</div>';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 12px; text-align: center;">';
+                    html += '    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Occupancy Snapshots</div>';
+                    html += '    <div style="font-size: 1.5rem; font-weight: 800; color: #4ade80; margin-top: 0.2rem;">' + (d.table_counts.showtime_occupancy_log || 0).toLocaleString() + '</div>';
                     html += '  </div>';
-                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
-                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Movies Count</div>';
-                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #f1c40f; margin-top: 0.2rem;">' + (d.movies ? d.movies.length : 0) + '</div>';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 12px; text-align: center;">';
+                    html += '    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Movies Catalogue</div>';
+                    html += '    <div style="font-size: 1.5rem; font-weight: 800; color: #facc15; margin-top: 0.2rem;">' + movies.length + '</div>';
                     html += '  </div>';
-                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; text-align: center;">';
-                    html += '    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Theatres</div>';
-                    html += '    <div style="font-size: 1.4rem; font-weight: 800; color: #e74c3c; margin-top: 0.2rem;">' + (d.theatres ? d.theatres.length : 0) + '</div>';
+                    html += '  <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 12px; text-align: center;">';
+                    html += '    <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Theatres Tracked</div>';
+                    html += '    <div style="font-size: 1.5rem; font-weight: 800; color: #f87171; margin-top: 0.2rem;">' + theatres.length + '</div>';
                     html += '  </div>';
                     html += '</div>';
 
-                    // Movies Tags
-                    if (d.movies && d.movies.length > 0) {
-                        html += '<div>';
-                        html += '  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700;">🎬 Movies Archived (' + d.movies.length + ')</h4>';
-                        html += '  <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">';
-                        d.movies.forEach(function(m) {
-                            html += '    <span style="background: rgba(229, 9, 20, 0.15); border: 1px solid rgba(229, 9, 20, 0.3); color: #f87171; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">' + $('<div>').text(m).html() + '</span>';
-                        });
-                        html += '  </div>';
-                        html += '</div>';
-                    }
+                    // 2. Tabbed Navigation Bar
+                    html += '<div style="display: flex; gap: 0.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem; margin-bottom: 1.25rem; overflow-x: auto;">';
+                    html += '  <button class="arch-tab-btn active" data-target="#tabMovies" style="background: var(--theme-primary, #e50914); border: none; color: #fff; padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">🎬 Movies Catalog (' + movies.length + ')</button>';
+                    html += '  <button class="arch-tab-btn" data-target="#tabTheatres" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: rgba(255,255,255,0.7); padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">🏛️ Theatres (' + theatres.length + ')</button>';
+                    html += '  <button class="arch-tab-btn" data-target="#tabShowtimes" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: rgba(255,255,255,0.7); padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">📋 Showtimes Sample</button>';
+                    html += '  <button class="arch-tab-btn" data-target="#tabFiles" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: rgba(255,255,255,0.7); padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">📂 Files & Manifest</button>';
+                    html += '</div>';
 
-                    // Sample Showtimes Table
-                    if (d.sample_showtimes && d.sample_showtimes.length > 0) {
-                        html += '<div>';
-                        html += '  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700;">📋 Sample Archived Showtimes Preview</h4>';
-                        html += '  <div class="table-responsive-wrapper">';
-                        html += '    <table class="archive-table" style="font-size: 0.82rem;">';
-                        html += '      <thead><tr><th>Movie</th><th>Theatre</th><th>Auditorium</th><th>Start Time</th><th>Price</th></tr></thead>';
+                    // TAB 1: Movies Catalogue Grid with Instant Search
+                    html += '<div id="tabMovies" class="arch-tab-content">';
+                    html += '  <div style="margin-bottom: 1rem;">';
+                    html += '    <input type="text" id="archMovieSearch" placeholder="🔍 Search archived movies by title..." style="width: 100%; padding: 0.6rem 1rem; border-radius: 10px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: #fff; font-size: 0.88rem; font-family: inherit;">';
+                    html += '  </div>';
+                    html += '  <div id="archMovieGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.75rem; max-height: 380px; overflow-y: auto; padding-right: 4px;">';
+                    if (movies.length === 0) {
+                        html += '    <div style="color: var(--text-muted); font-size: 0.9rem;">No movie titles extracted from archive.</div>';
+                    } else {
+                        movies.forEach(function(m) {
+                            var safeName = $('<div>').text(m).html();
+                            html += '    <div class="arch-movie-card" data-title="' + safeName.toLowerCase() + '" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.75rem; backdrop-filter: blur(8px); transition: all 0.2s ease;">';
+                            html += '      <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(229, 9, 20, 0.15); border: 1px solid rgba(229, 9, 20, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">🎬</div>';
+                            html += '      <div style="font-weight: 600; font-size: 0.85rem; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + safeName + '</div>';
+                            html += '    </div>';
+                        });
+                    }
+                    html += '  </div>';
+                    html += '</div>';
+
+                    // TAB 2: Theatres Breakdown
+                    html += '<div id="tabTheatres" class="arch-tab-content" style="display: none;">';
+                    html += '  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; max-height: 380px; overflow-y: auto;">';
+                    if (theatres.length === 0) {
+                        html += '    <div style="color: var(--text-muted); font-size: 0.9rem;">No theatre locations extracted from archive.</div>';
+                    } else {
+                        theatres.forEach(function(t) {
+                            var safeT = $('<div>').text(t).html();
+                            html += '    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 0.85rem 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.75rem;">';
+                            html += '      <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">🏛️</div>';
+                            html += '      <div style="font-weight: 600; font-size: 0.88rem; color: #ffffff;">' + safeT + '</div>';
+                            html += '    </div>';
+                        });
+                    }
+                    html += '  </div>';
+                    html += '</div>';
+
+                    // TAB 3: Sample Showtimes Table
+                    html += '<div id="tabShowtimes" class="arch-tab-content" style="display: none;">';
+                    if (samples.length === 0) {
+                        html += '  <div style="color: var(--text-muted); font-size: 0.9rem;">No sample showtime records available for preview.</div>';
+                    } else {
+                        html += '  <div class="table-responsive-wrapper" style="max-height: 380px; overflow-y: auto;">';
+                        html += '    <table class="archive-table" style="font-size: 0.83rem;">';
+                        html += '      <thead><tr><th>Movie Title</th><th>Theatre Location</th><th>Auditorium</th><th>Show Start Time</th><th>Ticket Price</th></tr></thead>';
                         html += '      <tbody>';
-                        d.sample_showtimes.forEach(function(s) {
+                        samples.forEach(function(s) {
                             html += '      <tr>';
-                            html += '        <td style="font-weight: 600; color: #ffffff;">' + $('<div>').text(s.movie_name).html() + '</td>';
+                            html += '        <td style="font-weight: 700; color: #ffffff;">' + $('<div>').text(s.movie_name).html() + '</td>';
                             html += '        <td style="color: var(--text-secondary);">' + $('<div>').text(s.theatre_name).html() + '</td>';
                             html += '        <td style="color: var(--text-muted);">' + $('<div>').text(s.screen_name).html() + '</td>';
-                            html += '        <td style="color: #38bdf8;">' + $('<div>').text(s.show_start_time).html() + '</td>';
-                            html += '        <td style="color: #4ade80;">$' + $('<div>').text(s.ticket_price).html() + '</td>';
+                            html += '        <td style="color: #38bdf8; font-weight: 600;">' + $('<div>').text(s.show_start_time).html() + '</td>';
+                            html += '        <td style="color: #4ade80; font-weight: 600;">$' + $('<div>').text(s.ticket_price).html() + '</td>';
                             html += '      </tr>';
                         });
                         html += '      </tbody>';
                         html += '    </table>';
                         html += '  </div>';
                         html += '</div>';
-                    }
 
-                    // File Manifest List
-                    if (d.files && d.files.length > 0) {
-                        html += '<div>';
-                        html += '  <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 700;">📂 Package File Manifest</h4>';
-                        html += '  <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.82rem;">';
-                        d.files.forEach(function(f) {
-                            html += '    <div style="display: flex; justify-content: space-between; padding: 0.2rem 0;">';
-                            html += '      <span>📄 ' + $('<div>').text(f.name).html() + '</span>';
-                            html += '      <span style="color: var(--text-muted);">' + f.size_formatted + '</span>';
-                            html += '    </div>';
-                        });
-                        html += '  </div>';
-                        html += '</div>';
+                    // TAB 4: Files Manifest & Readme
+                    html += '<div id="tabFiles" class="arch-tab-content" style="display: none;">';
+                    html += '  <div style="display: flex; flex-direction: column; gap: 1rem;">';
+                    html += '    <div>';
+                    html += '      <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; font-weight: 700;">📂 Archive Package Files</h4>';
+                    html += '      <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 0.75rem 1rem; border-radius: 10px; font-family: monospace; font-size: 0.83rem;">';
+                    files.forEach(function(f) {
+                        html += '        <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);">';
+                        html += '          <span>📄 ' + $('<div>').text(f.name).html() + '</span>';
+                        html += '          <span style="color: var(--text-muted);">' + f.size_formatted + '</span>';
+                        html += '        </div>';
+                    });
+                    html += '      </div>';
+                    html += '    </div>';
+                    if (d.readme) {
+                        html += '    <div>';
+                        html += '      <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; font-weight: 700;">📜 README.md Metadata</h4>';
+                        html += '      <pre style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 0.85rem; border-radius: 10px; font-size: 0.82rem; color: #a7f3d0; white-space: pre-wrap; font-family: monospace; margin: 0;">' + $('<div>').text(d.readme).html() + '</pre>';
+                        html += '    </div>';
                     }
+                    html += '  </div>';
+                    html += '</div>';
+
+                    $('#archModalBody').html(html);
+
+                    // Tab switching handler
+                    $('.arch-tab-btn').on('click', function() {
+                        $('.arch-tab-btn').css({ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'rgba(255,255,255,0.7)' });
+                        $(this).css({ background: 'var(--theme-primary, #e50914)', border: 'none', color: '#fff' });
+
+                        var target = $(this).data('target');
+                        $('.arch-tab-content').hide();
+                        $(target).show();
+                    });
+
+                    // Movie Instant Search handler
+                    $('#archMovieSearch').on('input', function() {
+                        var query = $(this).val().toLowerCase().trim();
+                        $('.arch-movie-card').each(function() {
+                            var title = $(this).data('title');
+                            if (!query || title.indexOf(query) !== -1) {
+                                $(this).show();
+                            } else {
+                                $(this).hide();
+                            }
+                        });
+                    });
+
 
                     $('#archModalBody').html(html);
                 }).fail(function() {
