@@ -1,8 +1,11 @@
-// shared.js
-
 // Apply dark mode, theme, and font immediately (before DOMContentLoaded) to prevent flash
 (function() {
     function getDarkMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const darkParam = urlParams.get('dark');
+        if (darkParam !== null) {
+            return darkParam === '1';
+        }
         const saved = localStorage.getItem('design-dark-mode');
         if (saved !== null) {
             return saved === '1';
@@ -17,16 +20,84 @@
         document.documentElement.classList.remove('dark');
     }
 
-    // Restore saved theme
-    const savedTheme = localStorage.getItem('design-theme') || 'cinematic';
+    // Restore saved theme (Query parameter takes priority for style-locking links)
+    const urlParams = new URLSearchParams(window.location.search);
+    const themeParam = urlParams.get('theme');
+    const savedTheme = themeParam || localStorage.getItem('design-theme') || 'cinematic';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    if (themeParam) {
+        localStorage.setItem('design-theme', themeParam);
+    }
 
     // Restore saved font
-    const savedFont = localStorage.getItem('design-font');
+    const fontParam = urlParams.get('font');
+    const savedFont = fontParam || localStorage.getItem('design-font');
     if (savedFont) {
         document.documentElement.setAttribute('data-font', savedFont);
+        if (fontParam) {
+            localStorage.setItem('design-font', fontParam);
+        }
     }
 })();
+
+// Global Sharing & Toast Helper
+window.shareCinepulseView = function(extraParams) {
+    const url = new URL(window.location.href);
+    const activeTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('design-theme') || 'cinematic';
+    const activeFont = document.documentElement.getAttribute('data-font') || localStorage.getItem('design-font');
+    const isDark = document.documentElement.classList.contains('dark') ? '1' : '0';
+    
+    url.searchParams.set('theme', activeTheme);
+    url.searchParams.set('dark', isDark);
+    if (activeFont) url.searchParams.set('font', activeFont);
+    
+    if (extraParams && typeof extraParams === 'object') {
+        Object.entries(extraParams).forEach(([k, v]) => url.searchParams.set(k, v));
+    }
+
+    const shareData = {
+        title: '🎬 Cinepulse — Showtime & Analytics',
+        text: `Check out this showtime schedule on Cinepulse (Theme: ${activeTheme.toUpperCase()})!`,
+        url: url.href
+    };
+
+    if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        navigator.share(shareData).catch(() => {
+            copyCinepulseUrl(url.href);
+        });
+    } else {
+        copyCinepulseUrl(url.href);
+    }
+};
+
+function copyCinepulseUrl(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCinepulseToast('🔗 Theme-Locked Link Copied to Clipboard!');
+        }).catch(() => {
+            prompt('Copy this theme-locked link:', text);
+        });
+    } else {
+        prompt('Copy this theme-locked link:', text);
+    }
+}
+
+function showCinepulseToast(msg) {
+    let toast = document.getElementById('cinepulse-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'cinepulse-toast';
+        toast.style.cssText = 'position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.95); color: white; padding: 10px 22px; border-radius: 30px; font-weight: 700; font-size: 0.88rem; z-index: 100000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px); transition: opacity 0.3s ease;';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    toast.style.display = 'block';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => { toast.style.display = 'none'; }, 300);
+    }, 2500);
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- Dark Mode Toggle Logic ---

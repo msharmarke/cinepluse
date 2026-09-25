@@ -118,8 +118,9 @@ class DesignOptionsModal {
                         </section>
                     </div>
                     
-                    <div class="design-modal-footer">
-                        <button class="btn btn-primary" onclick="designModal.close()">Done</button>
+                    <div class="design-modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="window.shareCinepulseView();">🔗 Share Theme Link</button>
+                        <button class="btn btn-primary" onclick="window.designModal.close()">Done</button>
                     </div>
                 </div>
             </div>
@@ -222,6 +223,13 @@ class DesignOptionsModal {
         this.loadTheme(theme);
         this.saveTheme(theme);
         this.updateActiveTheme();
+        
+        // Sync URL parameter so sharing link contains active theme
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('theme', theme);
+            window.history.replaceState({}, '', url.toString());
+        } catch(e) {}
     }
 
     loadTheme(theme) {
