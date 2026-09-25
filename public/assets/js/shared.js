@@ -38,6 +38,38 @@
             localStorage.setItem('design-font', fontParam);
         }
     }
+
+    // Helper to get share image URL for theme
+    window.getThemeShareImageUrl = function(theme) {
+        const t = theme || document.documentElement.getAttribute('data-theme') || 'cinematic';
+        const validThemes = ['cinematic', 'portal', 'command-center', 'terminal', 'minimalist', 'executive'];
+        const targetTheme = validThemes.includes(t) ? t : 'cinematic';
+        return window.location.origin + '/assets/images/share/' + targetTheme + '.jpg';
+    };
+
+    // Sync Open Graph & Twitter share meta image tags dynamically
+    function syncShareMetaTags() {
+        const activeTheme = document.documentElement.getAttribute('data-theme') || 'cinematic';
+        const imageUrl = window.getThemeShareImageUrl(activeTheme);
+
+        let ogImg = document.querySelector('meta[property="og:image"]');
+        if (!ogImg) {
+            ogImg = document.createElement('meta');
+            ogImg.setAttribute('property', 'og:image');
+            document.head.appendChild(ogImg);
+        }
+        ogImg.setAttribute('content', imageUrl);
+
+        let twImg = document.querySelector('meta[name="twitter:image"]');
+        if (!twImg) {
+            twImg = document.createElement('meta');
+            twImg.setAttribute('name', 'twitter:image');
+            document.head.appendChild(twImg);
+        }
+        twImg.setAttribute('content', imageUrl);
+    }
+    syncShareMetaTags();
+    window.syncShareMetaTags = syncShareMetaTags;
 })();
 
 // Global Sharing & Toast Helper
@@ -55,6 +87,8 @@ window.shareCinepulseView = function(extraParams) {
         Object.entries(extraParams).forEach(([k, v]) => url.searchParams.set(k, v));
     }
 
+    const shareImageUrl = window.getThemeShareImageUrl(activeTheme);
+
     const shareData = {
         title: '🎬 Cinepulse — Showtime & Analytics',
         text: `Check out this showtime schedule on Cinepulse (Theme: ${activeTheme.toUpperCase()})!`,
@@ -63,14 +97,14 @@ window.shareCinepulseView = function(extraParams) {
 
     if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
         navigator.share(shareData).catch(() => {
-            copyCinepulseUrl(url.href);
+            copyCinepulseUrl(url.href, shareImageUrl);
         });
     } else {
-        copyCinepulseUrl(url.href);
+        copyCinepulseUrl(url.href, shareImageUrl);
     }
 };
 
-function copyCinepulseUrl(text) {
+function copyCinepulseUrl(text, shareImageUrl) {
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => {
             showCinepulseToast('🔗 Theme-Locked Link Copied to Clipboard!');

@@ -234,6 +234,9 @@ class DesignOptionsModal {
 
     loadTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
+        if (typeof window.syncShareMetaTags === 'function') {
+            window.syncShareMetaTags();
+        }
     }
 
     updateActiveTheme() {

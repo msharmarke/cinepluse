@@ -89,6 +89,16 @@ if ($db_configured && !$tables_missing) {
     <?php echo Security::csrfMeta(); ?>
     <title>🎬 Cinepulse — Movies Browser</title>
     
+    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🎬 Cinepulse — Showtime & Seating Analytics">
+    <meta property="og:description" content="Browse live cinema showtimes, explore 3D interactive seating heatmaps, and customize your experience across 6 award-winning themes.">
+    <meta property="og:image" content="/assets/images/share/cinematic.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="🎬 Cinepulse — Showtime & Seating Analytics">
+    <meta name="twitter:description" content="Browse live cinema showtimes, explore 3D interactive seating heatmaps, and customize your experience across 6 award-winning themes.">
+    <meta name="twitter:image" content="/assets/images/share/cinematic.jpg">
+    
     <!-- Third Party Assets -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     

@@ -152,6 +152,16 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎬 Weekly Showtimes Schedule — <?php echo htmlspecialchars($theatreName); ?> (<?php echo date('M j', $startFridaySec); ?> - <?php echo date('M j, Y', strtotime('+6 days', $startFridaySec)); ?>)</title>
+    
+    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="📄 Cinepulse — Weekly PDF Schedule & Analytics">
+    <meta property="og:description" content="Generate and download publication-ready weekly cinema showtime schedules and PDF reports.">
+    <meta property="og:image" content="/assets/images/share/executive.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="📄 Cinepulse — Weekly PDF Schedule & Analytics">
+    <meta name="twitter:description" content="Generate and download publication-ready weekly cinema showtime schedules and PDF reports.">
+    <meta name="twitter:image" content="/assets/images/share/executive.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/design-system.css">
     <link rel="stylesheet" href="assets/css/themes.css">

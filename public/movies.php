@@ -120,6 +120,16 @@ if ($movie_name_filter && $location_id) {
     <?php echo Security::csrfMeta(); ?>
     <title>🎬 Cinepulse — Global Movies</title>
     
+    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🎬 Cinepulse — Global Movies Directory">
+    <meta property="og:description" content="Explore currently playing movies, theater availability, and live seating maps across Cinepulse locations.">
+    <meta property="og:image" content="/assets/images/share/portal.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="🎬 Cinepulse — Global Movies Directory">
+    <meta name="twitter:description" content="Explore currently playing movies, theater availability, and live seating maps across Cinepulse locations.">
+    <meta name="twitter:image" content="/assets/images/share/portal.jpg">
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <link rel="stylesheet" href="assets/css/style.css">

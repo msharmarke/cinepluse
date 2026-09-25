@@ -34,6 +34,16 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php echo Security::csrfMeta(); ?>
     <title>🔍 Cinepulse — Scraper Execution Scan Logs</title>
+    
+    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🔍 Cinepulse — Scraper Execution Scan Logs">
+    <meta property="og:description" content="Audit log history of API scraping triggers, date queries, and auto-monitored showtime registrations.">
+    <meta property="og:image" content="/assets/images/share/terminal.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="🔍 Cinepulse — Scraper Execution Scan Logs">
+    <meta name="twitter:description" content="Audit log history of API scraping triggers, date queries, and auto-monitored showtime registrations.">
+    <meta name="twitter:image" content="/assets/images/share/terminal.jpg">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

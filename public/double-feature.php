@@ -103,6 +103,16 @@ if (!empty($showtimes_data)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍿 Cinepulse — Double Features</title>
+    
+    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🍿 Cinepulse — Double Feature Movie Planner">
+    <meta property="og:description" content="Plan back-to-back double feature movie marathons with zero buffer conflicts and instant timetable generation.">
+    <meta property="og:image" content="/assets/images/share/cinematic.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="🍿 Cinepulse — Double Feature Movie Planner">
+    <meta name="twitter:description" content="Plan back-to-back double feature movie marathons with zero buffer conflicts and instant timetable generation.">
+    <meta name="twitter:image" content="/assets/images/share/cinematic.jpg">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/design-system.css">
     <link rel="stylesheet" href="assets/css/themes.css">

@@ -49,6 +49,16 @@ try {
     <?php echo Security::csrfMeta(); ?>
     <title>📊 Admin Dashboard — Cinepulse System Analytics</title>
     
+    <!-- Open Graph & Twitter Social Share Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="📊 Cinepulse — Admin Analytics & Monitoring">
+    <meta property="og:description" content="Real-time system telemetry, seating occupancy analytics, daemon status, and database archives for Cinepulse.">
+    <meta property="og:image" content="/assets/images/share/command-center.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="📊 Cinepulse — Admin Analytics & Monitoring">
+    <meta name="twitter:description" content="Real-time system telemetry, seating occupancy analytics, daemon status, and database archives for Cinepulse.">
+    <meta name="twitter:image" content="/assets/images/share/command-center.jpg">
+    
     <!-- External Dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

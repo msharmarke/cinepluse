@@ -153,20 +153,39 @@
 .theme-preview {
     width: 100%;
     height: 120px;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     margin-bottom: var(--space-3);
     position: relative;
     overflow: hidden;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.cinematic-preview {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    border-radius: var(--radius-sm);
+.theme-card[data-theme="cinematic"] .theme-preview {
+    background: url('/assets/images/share/cinematic.jpg') center/cover no-repeat !important;
 }
 
-.neon-preview {
-    background: linear-gradient(135deg, #00f5ff 0%, #ff00ff 50%, #ff0080 100%);
-    box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+.theme-card[data-theme="portal"] .theme-preview {
+    background: url('/assets/images/share/portal.jpg') center/cover no-repeat !important;
+}
+
+.theme-card[data-theme="command-center"] .theme-preview {
+    background: url('/assets/images/share/command-center.jpg') center/cover no-repeat !important;
+}
+
+.theme-card[data-theme="terminal"] .theme-preview {
+    background: url('/assets/images/share/terminal.jpg') center/cover no-repeat !important;
+}
+
+.theme-card[data-theme="minimalist"] .theme-preview {
+    background: url('/assets/images/share/minimalist.jpg') center/cover no-repeat !important;
+}
+
+.theme-card[data-theme="executive"] .theme-preview {
+    background: url('/assets/images/share/executive.jpg') center/cover no-repeat !important;
 }
 
 .ocean-preview {
