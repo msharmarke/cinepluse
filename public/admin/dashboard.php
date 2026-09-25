@@ -477,7 +477,7 @@ try {
                             Export raw historical seating occupancy snapshots CSV, or generate a publication-ready per-theater weekly schedule PDF.
                         </p>
                         
-                        <form method="GET" action="export-pdf" target="_blank" style="margin-bottom: 1.25rem; background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
+                        <form method="GET" action="/export-pdf" target="_blank" style="margin-bottom: 1.25rem; background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);">
                             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                                 <select name="locationId" class="date-input-custom" style="flex: 1; min-width: 180px;">
                                     <?php foreach ($locations as $name => $id): ?>
@@ -492,10 +492,10 @@ try {
                         </form>
 
                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                            <a href="api.php?action=export_csv&type=occupancy&date_from=<?php echo urlencode($metrics['date_range']['from']); ?>&date_to=<?php echo urlencode($metrics['date_range']['to']); ?>" class="btn-dash btn-dash-secondary">
+                            <a href="/api?action=export_csv&type=occupancy&date_from=<?php echo urlencode($metrics['date_range']['from']); ?>&date_to=<?php echo urlencode($metrics['date_range']['to']); ?>" class="btn-dash btn-dash-secondary">
                                 📊 Download Occupancy CSV
                             </a>
-                            <a href="api.php?action=export_csv&type=showtimes&date_from=<?php echo urlencode($metrics['date_range']['from']); ?>&date_to=<?php echo urlencode($metrics['date_range']['to']); ?>" class="btn-dash btn-dash-secondary">
+                            <a href="/api?action=export_csv&type=showtimes&date_from=<?php echo urlencode($metrics['date_range']['from']); ?>&date_to=<?php echo urlencode($metrics['date_range']['to']); ?>" class="btn-dash btn-dash-secondary">
                                 🎬 Download Showtimes CSV
                             </a>
                         </div>
@@ -564,8 +564,8 @@ try {
         </main>
     </div>
 
-    <script src="assets/js/shared.js"></script>
-    <script src="assets/js/design-options-modal.js"></script>
+    <script src="/assets/js/shared.js"></script>
+    <script src="/assets/js/design-options-modal.js"></script>
     
     <script>
         $(document.body).ready(function() {
@@ -576,7 +576,7 @@ try {
                 var $btn = $(this);
                 $btn.prop('disabled', true).text('⌛ Pre-caching...');
                 
-                $.post('api.php', { action: 'trigger_cron_collect', csrf_token: csrfToken }, function(res) {
+                $.post('/api', { action: 'trigger_cron_collect', csrf_token: csrfToken }, function(res) {
                     alert(res.message || 'Task started.');
                     $btn.prop('disabled', false).text('🔄 Pre-cache Schedules');
                 }).fail(function(xhr) {
@@ -590,7 +590,7 @@ try {
                 var $btn = $(this);
                 $btn.prop('disabled', true).text('⌛ Running...');
                 
-                $.post('api.php', { action: 'trigger_cron_track', csrf_token: csrfToken }, function(res) {
+                $.post('/api', { action: 'trigger_cron_track', csrf_token: csrfToken }, function(res) {
                     alert(res.message || 'Daemon started.');
                     $btn.prop('disabled', false).text('▶ Run Daemon');
                     setTimeout(function() { location.reload(); }, 1500);
@@ -610,7 +610,7 @@ try {
                 }
                 
                 $btn.prop('disabled', true).text('⌛ Importing...');
-                $.post('api.php', { action: 'import_archive', archive_name: archiveName, csrf_token: csrfToken }, function(res) {
+                $.post('/api', { action: 'import_archive', archive_name: archiveName, csrf_token: csrfToken }, function(res) {
                     alert(res.message || 'Archive imported successfully!');
                     $btn.prop('disabled', false).text('📥 Load into DB');
                     location.reload();
