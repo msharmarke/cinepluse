@@ -681,24 +681,40 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedSeats.clear();
         maxSelection = layout.maxSeatSelectionAllowed || 8;
 
-        // Info Header
+        // Header Action Bar
         const header = document.createElement('div');
         header.className = 'theatre-header';
-        header.style.cssText = 'position: relative; padding: 10px; margin-bottom: 10px; text-align: center;';
-        header.innerHTML = `<h2>🎬 ${movieTitle}</h2><p>${auditorium} - ${movieTime}</p>`;
+        header.style.cssText = 'position: relative; padding: 12px 15px; margin-bottom: 12px; text-align: center; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-light);';
+        header.innerHTML = `
+            <h2 style="margin:0; font-size: 1.2rem; color: var(--text-primary);">🎬 ${movieTitle}</h2>
+            <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.85rem;">${auditorium} — ${movieTime}</p>
+        `;
         
         const refreshBtn = document.createElement('button');
         refreshBtn.className = 'seat-map-refresh-btn';
         refreshBtn.innerHTML = '🔄 Refresh';
-        refreshBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; padding: 6px 12px; font-size: 0.85rem;';
+        refreshBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; padding: 5px 10px; font-size: 0.8rem; border-radius: 6px;';
         refreshBtn.onclick = () => openLiveMapModal(theatreId, showtimeId, movieTitle, movieTime, auditorium);
         header.appendChild(refreshBtn);
         
         liveMapRenderArea.appendChild(header);
 
+        // Mobile Stage Controls Toolbar
+        const stageControls = document.createElement('div');
+        stageControls.className = 'seat-stage-controls';
+        stageControls.style.cssText = 'display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; z-index: 10; position: relative;';
+        stageControls.innerHTML = `
+            <button class="btn btn-secondary btn-zoom-fit" style="padding: 5px 12px; font-size: 0.78rem; border-radius: 20px;">📱 Fit Screen</button>
+            <button class="btn btn-secondary btn-zoom-in" style="padding: 5px 12px; font-size: 0.78rem; border-radius: 20px;">🔍 Zoom +</button>
+            <button class="btn btn-secondary btn-zoom-out" style="padding: 5px 12px; font-size: 0.78rem; border-radius: 20px;">🔍 Zoom -</button>
+            <button class="btn btn-secondary btn-zoom-reset" style="padding: 5px 12px; font-size: 0.78rem; border-radius: 20px;">🎯 100%</button>
+        `;
+        liveMapRenderArea.appendChild(stageControls);
+
         // Legend
         const legend = document.createElement('div');
         legend.className = 'seat-legend';
+        legend.style.cssText = 'margin-bottom: 12px; padding: 8px 12px;';
         legend.innerHTML = `
             <div class="legend-item"><div class="legend-seat available"></div><span>Available</span></div>
             <div class="legend-item"><div class="legend-seat occupied"></div><span>Occupied</span></div>
@@ -707,20 +723,24 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         liveMapRenderArea.appendChild(legend);
 
-        // Screen
+        // Curved Cinema Screen
         const screen = document.createElement('div');
-        screen.className = 'screen';
-        screen.textContent = 'Screen';
+        screen.className = 'screen curved-screen';
+        screen.style.cssText = 'border-top-left-radius: 50% 15px; border-top-right-radius: 50% 15px; background: linear-gradient(180deg, var(--theme-primary, #3b82f6) 0%, rgba(31, 41, 55, 0.9) 100%); text-shadow: 0 0 10px rgba(255,255,255,0.8); margin: 10px auto 20px auto; width: 85%; max-width: 550px; padding: 8px; text-align: center; font-weight: 800; letter-spacing: 2px; color: white; box-shadow: 0 -4px 18px rgba(59, 130, 246, 0.35); font-size: 0.85rem;';
+        screen.textContent = '────── 🎥 MOVIE SCREEN ──────';
         liveMapRenderArea.appendChild(screen);
 
-        // Layout grid wrapper
+        // Scroll Viewport Stage
+        const viewportStage = document.createElement('div');
+        viewportStage.className = 'seat-viewport-stage';
+        viewportStage.style.cssText = 'overflow: auto; width: 100%; border-radius: 12px; padding: 15px 5px; background: var(--bg-primary); border: 1px solid var(--border-light); position: relative; -webkit-overflow-scrolling: touch; text-align: center; min-height: 240px;';
+
         const chartWrapper = document.createElement('div');
         chartWrapper.className = 'seat-chart';
         
-        const optimalSeatSize = Math.max(16, Math.min(Math.floor(500 / layout.totalColumns), 28));
-        chartWrapper.style.gridTemplateColumns = `40px repeat(${layout.totalColumns}, ${optimalSeatSize}px)`;
-        chartWrapper.style.gap = '5px';
-        chartWrapper.style.margin = '20px auto';
+        let currentScale = 1.0;
+        const baseSeatSize = Math.max(22, Math.min(Math.floor(400 / layout.totalColumns), 30));
+        chartWrapper.style.cssText = `display: inline-grid; grid-template-columns: 42px repeat(${layout.totalColumns}, ${baseSeatSize}px); gap: 5px; transform-origin: top center; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); margin: 0 auto; padding: 10px;`;
         
         const grid = Array(layout.totalRows).fill().map(() => Array(layout.totalColumns).fill(null));
         const allRows = [...(layout.standardSeats?.rows || []), ...(layout.dboxSeats?.rows || [])];
@@ -743,9 +763,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const isWalkway = grid[i]?.[0] === 'walkway';
             
             if (isWalkway) {
-                gridHtml += `<div class="walkway" style="grid-column: 1 / -1; height: 10px; background: rgba(0,0,0,0.05); margin: 3px 0;"></div>`;
+                gridHtml += `<div class="walkway" style="grid-column: 1 / -1; height: 12px; background: rgba(255,255,255,0.05); margin: 3px 0; border-radius: 4px;"></div>`;
             } else {
-                gridHtml += `<div class="row-label-side" style="font-size:0.8rem; font-weight:700; align-self:center; text-align:center;">${rowLabel || ''}</div>`;
+                gridHtml += `<div class="row-label-side" style="font-size:0.75rem; font-weight:800; align-self:center; text-align:center; position: sticky; left: 0; z-index: 5; background: var(--bg-tertiary); border: 1px solid var(--border-medium); border-radius: 6px; height: ${baseSeatSize}px; line-height: ${baseSeatSize}px; box-shadow: 2px 0 6px rgba(0,0,0,0.2);">${rowLabel || ''}</div>`;
                 
                 for (let j = 0; j < layout.totalColumns; j++) {
                     const seat = grid[i]?.[j];
@@ -754,16 +774,100 @@ document.addEventListener('DOMContentLoaded', function() {
                         const labelParts = seat.label ? seat.label.match(/^([A-Z]+)(\d+)$/i) : null;
                         const seatNum = labelParts ? labelParts[2] : seat.label;
                         
-                        gridHtml += `<div class="seat ${status.toLowerCase()}" data-seat-id="${seat.id}" data-seat-label="${seat.label}" data-status="${status}" data-row="${rowLabel || '?'}" style="width:${optimalSeatSize}px; height:${optimalSeatSize}px; font-size:8px; line-height:${optimalSeatSize}px;">${seatNum || ''}</div>`;
+                        gridHtml += `<div class="seat ${status.toLowerCase()}" data-seat-id="${seat.id}" data-seat-label="${seat.label}" data-status="${status}" data-row="${rowLabel || '?'}" style="width:${baseSeatSize}px; height:${baseSeatSize}px; font-size:10px; font-weight: 700; line-height:${baseSeatSize}px; border-radius: 6px;">${seatNum || ''}</div>`;
                     } else {
-                        gridHtml += '<div class="empty"></div>';
+                        gridHtml += `<div class="empty" style="width:${baseSeatSize}px; height:${baseSeatSize}px;"></div>`;
                     }
                 }
             }
         }
         
         chartWrapper.innerHTML = gridHtml;
-        liveMapRenderArea.appendChild(chartWrapper);
+        viewportStage.appendChild(chartWrapper);
+        liveMapRenderArea.appendChild(viewportStage);
+
+        // Selection Summary Drawer Container
+        const summaryDrawer = document.createElement('div');
+        summaryDrawer.className = 'seat-selection-summary-drawer';
+        summaryDrawer.style.cssText = 'margin-top: 12px; padding: 10px 14px; background: var(--glass-bg); border: 1px solid var(--border-light); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.85rem;';
+        summaryDrawer.innerHTML = `
+            <div id="selected-seats-info">
+                <strong style="color: var(--text-primary);">🎟 Selected:</strong> <span style="color: var(--text-secondary);" id="selected-seats-list">None</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" id="clear-selected-seats-btn" style="padding: 4px 10px; font-size: 0.78rem;">Clear</button>
+            </div>
+        `;
+        liveMapRenderArea.appendChild(summaryDrawer);
+
+        // Zoom Stage Controls Handlers
+        const applyScale = (s) => {
+            currentScale = Math.max(0.4, Math.min(2.5, s));
+            chartWrapper.style.transform = `scale(${currentScale})`;
+        };
+
+        stageControls.querySelector('.btn-zoom-fit').addEventListener('click', () => {
+            const containerWidth = viewportStage.clientWidth - 20;
+            const contentWidth = (layout.totalColumns * baseSeatSize) + 50;
+            const fitScale = Math.min(1.0, containerWidth / contentWidth);
+            applyScale(fitScale);
+        });
+
+        stageControls.querySelector('.btn-zoom-in').addEventListener('click', () => applyScale(currentScale + 0.2));
+        stageControls.querySelector('.btn-zoom-out').addEventListener('click', () => applyScale(currentScale - 0.2));
+        stageControls.querySelector('.btn-zoom-reset').addEventListener('click', () => applyScale(1.0));
+
+        // Auto Fit on Mobile Load
+        if (window.innerWidth < 768) {
+            setTimeout(() => {
+                const containerWidth = viewportStage.clientWidth - 20;
+                const contentWidth = (layout.totalColumns * baseSeatSize) + 50;
+                const fitScale = Math.min(1.0, Math.max(0.45, containerWidth / contentWidth));
+                applyScale(fitScale);
+            }, 100);
+        }
+
+        // Seat Click Selection & Summary Updates
+        chartWrapper.addEventListener('click', function(e) {
+            const seat = e.target.closest('.seat');
+            if (!seat || seat.dataset.status !== 'Available') return;
+            
+            const seatId = seat.dataset.seatId;
+
+            if (selectedSeats.has(seatId)) {
+                selectedSeats.delete(seatId);
+                seat.classList.remove('selected');
+            } else {
+                if (selectedSeats.size >= maxSelection) {
+                    alert(`Maximum selection limit is ${maxSelection} seats.`);
+                    return;
+                }
+                selectedSeats.add(seatId);
+                seat.classList.add('selected');
+            }
+
+            // Update Summary List
+            const listEl = document.getElementById('selected-seats-list');
+            if (listEl) {
+                if (selectedSeats.size === 0) {
+                    listEl.textContent = 'None';
+                } else {
+                    const selArray = Array.from(selectedSeats).map(id => {
+                        const sEl = chartWrapper.querySelector(`.seat[data-seat-id="${id}"]`);
+                        return sEl ? `${sEl.dataset.row}${sEl.dataset.seatLabel}` : id;
+                    });
+                    listEl.innerHTML = `<strong style="color: var(--theme-primary, #3b82f6);">${selArray.join(', ')}</strong> (${selectedSeats.size} seats)`;
+                }
+            }
+        });
+
+        document.getElementById('clear-selected-seats-btn')?.addEventListener('click', () => {
+            selectedSeats.clear();
+            chartWrapper.querySelectorAll('.seat.selected').forEach(s => s.classList.remove('selected'));
+            const listEl = document.getElementById('selected-seats-list');
+            if (listEl) listEl.textContent = 'None';
+        });
+    }
 
         // Tooltip listeners
         $('.seat').hover(function() {
