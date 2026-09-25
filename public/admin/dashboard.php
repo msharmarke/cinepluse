@@ -137,13 +137,27 @@ try {
             border: 1px solid var(--glass-border);
         }
         .date-input-custom {
-            padding: 0.4rem 0.6rem;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            background: #14171d !important;
+            color: #ffffff !important;
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.15));
             font-size: 0.85rem;
             font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .date-input-custom:focus {
+            border-color: var(--theme-primary, #e50914);
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.25);
+        }
+        select.date-input-custom option,
+        .date-input-custom option,
+        select option {
+            background-color: #14171d !important;
+            color: #ffffff !important;
+            padding: 10px 14px !important;
         }
 
         /* Status Banner */
