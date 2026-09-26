@@ -318,6 +318,11 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             line-height: 1.45;
         }
 
+        /* Hide extraneous design options modal/pills in PDF exporter */
+        .theme-options-modal, .theme-pills-bar, #themeOptionsModal, .theme-presets-bar, #themeSwitcherContainer {
+            display: none !important;
+        }
+
         /* Clean, Non-Overlapping Header Controls Bar */
         .no-print-bar {
             background: rgba(15, 23, 42, 0.98);
@@ -861,6 +866,5 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
         });
     </script>
     <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
-    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
