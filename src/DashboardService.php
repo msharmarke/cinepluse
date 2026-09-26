@@ -439,6 +439,38 @@ class DashboardService {
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
+        // If no showtimes cached in DB for this date, trigger live on-demand API fetch across active locations
+        if (empty($rows) && !$search && $filter === 'all') {
+            $activeLocationsMap = \Cinepulse\ShowtimeService::getTrackerTheatres(true);
+            if (!empty($activeLocationsMap)) {
+                $api = new CineplexAPI();
+                $cineplexDate = date('m+d+Y', strtotime($date));
+                
+                $targets = $theatreId 
+                    ? array_filter($activeLocationsMap, fn($id) => (int)$id === (int)$theatreId)
+                    : $activeLocationsMap;
+
+                if (empty($targets) && $theatreId) {
+                    $targets = ['Location #' . $theatreId => (int)$theatreId];
+                }
+
+                foreach ($targets as $tName => $tId) {
+                    try {
+                        $raw = $api->fetchShowtimes($tId, $cineplexDate, true);
+                        if (!isset($raw['error'])) {
+                            ShowtimeService::saveShowtimesToDatabase($tId, $tName, $raw);
+                        }
+                    } catch (\Exception $e) {
+                        // Skip location on network error
+                    }
+                }
+
+                // Re-execute query after on-demand pull
+                $stmt->execute($params);
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            }
+        }
+
         // Group showtimes by movie_name
         $grouped = [];
         foreach ($rows as $row) {
