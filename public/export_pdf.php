@@ -94,78 +94,19 @@ for ($i = 0; $i < 7; $i++) {
     $auditoriumMatrix = [];
     $allDaySessions = [];
 
-    if (!empty($cachedDbShowtimes[$currentDate])) {
-        // Build from database cache
-        foreach ($cachedDbShowtimes[$currentDate] as $row) {
-            $movieTitle = $row['movie_name'] ?? 'Unknown Title';
-            $allMovieTitlesMap[$movieTitle] = true;
-            $expName = $row['experience_type'] ?? 'Standard';
-            $aud = $row['auditorium_name'] ?? 'Auditorium';
-            $uniqueExperiences[$expName] = true;
-            $uniqueAuditoriums[$aud] = true;
-
-            $startTime = strtotime($currentDate . ' ' . ($row['show_start_time'] ?? '12:00:00'));
-            $runtime = (int)($row['runtime_minutes'] ?? 120);
-            $endTime = $startTime + ($runtime * 60);
-
-            $startFormatted = date('g:i A', $startTime);
-            $endFormatted = date('g:i A', $endTime);
-            $timeRange = $startFormatted . ' – ' . $endFormatted;
-
-            $sessionData = [
-                'movie' => $movieTitle,
-                'runtime' => $runtime,
-                'experience' => $expName,
-                'auditorium' => $aud,
-                'start' => $startTime,
-                'start_formatted' => $startFormatted,
-                'end' => $endTime,
-                'end_formatted' => $endFormatted,
-                'time_range' => $timeRange,
-                'session_id' => $row['showtime_id'] ?? ''
-            ];
-
-            $allDaySessions[] = $sessionData;
-            $auditoriumMatrix[$aud][] = $sessionData;
-
-            if (!isset($moviesList[$movieTitle])) {
-                $moviesList[$movieTitle] = [
-                    'title' => $movieTitle,
-                    'runtime' => $runtime,
-                    'formats' => []
-                ];
-            }
-
-            $key = $expName . ' | ' . $aud;
-            if (!isset($moviesList[$movieTitle]['formats'][$key])) {
-                $moviesList[$movieTitle]['formats'][$key] = [
-                    'experience' => $expName,
-                    'auditorium' => $aud,
-                    'times' => []
-                ];
-            }
-
-            $moviesList[$movieTitle]['formats'][$key]['times'][] = [
-                'time' => $startFormatted,
-                'end_time' => $endFormatted,
-                'time_range' => $timeRange,
-                'timestamp' => $startTime,
-                'session_id' => $row['showtime_id'] ?? ''
-            ];
-            $totalShowtimeCount++;
+    // Fetch Live API showtimes first for complete daily theatre schedule across all auditoriums
+    $showtimesData = [];
+    try {
+        $raw = $api->fetchShowtimes($theatreId, $cineplexDate);
+        if (!isset($raw['error'])) {
+            $showtimesData = $raw[0]['dates'][0]['movies'] ?? [];
         }
-    } else {
-        // Fallback to Live API
+    } catch (Exception $e) {
         $showtimesData = [];
-        try {
-            $raw = $api->fetchShowtimes($theatreId, $cineplexDate);
-            if (!isset($raw['error'])) {
-                $showtimesData = $raw[0]['dates'][0]['movies'] ?? [];
-            }
-        } catch (Exception $e) {
-            $showtimesData = [];
-        }
+    }
 
+    if (!empty($showtimesData)) {
+        // Parse complete API showtimes across all auditoriums
         foreach ($showtimesData as $movie) {
             $movieTitle = $movie['name'] ?? $movie['title'] ?? 'Unknown Title';
             $runtime = (int)($movie['runtimeInMinutes'] ?? $movie['runtime'] ?? $movie['duration'] ?? 120);
@@ -234,6 +175,66 @@ for ($i = 0; $i < 7; $i++) {
                     }
                 }
             }
+        }
+    } else if (!empty($cachedDbShowtimes[$currentDate])) {
+        // Fallback to database cache if Live API is unavailable or returns empty
+        foreach ($cachedDbShowtimes[$currentDate] as $row) {
+            $movieTitle = $row['movie_name'] ?? 'Unknown Title';
+            $allMovieTitlesMap[$movieTitle] = true;
+            $expName = $row['experience_type'] ?? 'Standard';
+            $aud = $row['auditorium_name'] ?? 'Auditorium';
+            $uniqueExperiences[$expName] = true;
+            $uniqueAuditoriums[$aud] = true;
+
+            $startTime = strtotime($currentDate . ' ' . ($row['show_start_time'] ?? '12:00:00'));
+            $runtime = (int)($row['runtime_minutes'] ?? 120);
+            $endTime = $startTime + ($runtime * 60);
+
+            $startFormatted = date('g:i A', $startTime);
+            $endFormatted = date('g:i A', $endTime);
+            $timeRange = $startFormatted . ' – ' . $endFormatted;
+
+            $sessionData = [
+                'movie' => $movieTitle,
+                'runtime' => $runtime,
+                'experience' => $expName,
+                'auditorium' => $aud,
+                'start' => $startTime,
+                'start_formatted' => $startFormatted,
+                'end' => $endTime,
+                'end_formatted' => $endFormatted,
+                'time_range' => $timeRange,
+                'session_id' => $row['showtime_id'] ?? ''
+            ];
+
+            $allDaySessions[] = $sessionData;
+            $auditoriumMatrix[$aud][] = $sessionData;
+
+            if (!isset($moviesList[$movieTitle])) {
+                $moviesList[$movieTitle] = [
+                    'title' => $movieTitle,
+                    'runtime' => $runtime,
+                    'formats' => []
+                ];
+            }
+
+            $key = $expName . ' | ' . $aud;
+            if (!isset($moviesList[$movieTitle]['formats'][$key])) {
+                $moviesList[$movieTitle]['formats'][$key] = [
+                    'experience' => $expName,
+                    'auditorium' => $aud,
+                    'times' => []
+                ];
+            }
+
+            $moviesList[$movieTitle]['formats'][$key]['times'][] = [
+                'time' => $startFormatted,
+                'end_time' => $endFormatted,
+                'time_range' => $timeRange,
+                'timestamp' => $startTime,
+                'session_id' => $row['showtime_id'] ?? ''
+            ];
+            $totalShowtimeCount++;
         }
     }
 
@@ -319,7 +320,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
         }
 
         /* Hide extraneous design options modal/pills in PDF exporter */
-        .theme-options-modal, .theme-pills-bar, #themeOptionsModal, .theme-presets-bar, #themeSwitcherContainer {
+        .theme-options-modal, .theme-pills-bar, #themeOptionsModal, .theme-presets-bar, #themeSwitcherContainer, .dark-mode-toggle, .desktop-theme-bar {
             display: none !important;
         }
 
@@ -360,17 +361,18 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             background: #e50914;
             color: #ffffff;
             border: none;
-            padding: 8px 16px;
+            padding: 10px 18px !important;
             border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-weight: 800 !important;
+            font-size: 0.88rem !important;
             cursor: pointer;
             text-decoration: none;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            white-space: nowrap;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
         }
         .btn-action:hover {
             transform: translateY(-1px);
@@ -383,7 +385,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
 
         /* Main PDF Document Container */
         .pdf-document-wrapper {
-            max-width: 1280px;
+            max-width: 1320px;
             margin: 30px auto;
             background: var(--pdf-card-bg);
             color: var(--pdf-text);
@@ -392,7 +394,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--pdf-border);
         }
 
-        /* PDF Day Sheet Container */
+        /* PDF Day Sheet Container (Dedicated PDF Page per Day) */
         .pdf-day-sheet {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--pdf-border);
@@ -400,6 +402,15 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             padding: 24px;
             margin-bottom: 32px;
             backdrop-filter: blur(12px);
+            page-break-before: always !important;
+            break-before: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .pdf-day-sheet:first-of-type {
+            page-break-before: auto !important;
+            break-before: auto !important;
         }
 
         .sheet-header {
@@ -451,7 +462,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             border: 1px solid var(--pdf-border);
             border-radius: 12px;
             padding: 16px;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.35);
             overflow-x: auto;
         }
 
@@ -491,7 +502,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
         .timeline-screen-row {
             display: flex;
             align-items: center;
-            height: 40px;
+            height: 38px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             margin-bottom: 4px;
         }
@@ -511,10 +522,17 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
             flex: 1;
             height: 32px;
             position: relative;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             overflow: hidden;
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent calc(100% / 18 - 1px),
+                rgba(255, 255, 255, 0.06) calc(100% / 18 - 1px),
+                rgba(255, 255, 255, 0.06) calc(100% / 18)
+            );
         }
 
         .timeline-pill-capsule {
@@ -606,11 +624,12 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
         }
 
         @media print {
-            .no-print-bar { display: none !important; }
+            .no-print-bar, .dark-mode-toggle, .desktop-theme-bar { display: none !important; }
             body { background: #ffffff !important; color: #000000 !important; }
             .pdf-document-wrapper { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; background: #fff !important; color: #000 !important; }
-            .pdf-day-sheet { background: #fff !important; border-color: #000 !important; }
+            .pdf-day-sheet { background: #fff !important; border-color: #000 !important; page-break-before: always !important; break-before: page !important; }
             .timeline-grid-card { background: #fff !important; border-color: #cbd5e1 !important; }
+            .aud-track-col { background-image: repeating-linear-gradient(90deg, transparent, transparent calc(100% / 18 - 1px), #cbd5e1 calc(100% / 18 - 1px), #cbd5e1 calc(100% / 18)) !important; }
             .pdf-aud-card { background: #fff !important; border-color: #cbd5e1 !important; }
             .pdf-time-range { color: #d97706 !important; }
         }
@@ -747,7 +766,7 @@ $nextWeekStart = date('Y-m-d', strtotime('+7 days', $startFridaySec));
 
                     <!-- Screen Rows per Auditorium -->
                     <?php if (empty($day['auditorium_matrix'])): ?>
-                        <div style="padding: 2rem; text-align: center; color: var(--pdf-text-muted); font-style: italic;">No pre-cached showtime data available for this date.</div>
+                        <div style="padding: 2rem; text-align: center; color: var(--pdf-text-muted); font-style: italic;">No showtime data available for this date.</div>
                     <?php else: ?>
                         <?php foreach ($day['auditorium_matrix'] as $audName => $sessions): ?>
                             <div class="timeline-screen-row">
