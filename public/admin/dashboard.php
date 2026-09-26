@@ -807,6 +807,79 @@ try {
         </div>
     </div>
 
+    <!-- Edit Theater Location Modal -->
+    <div id="editTheatreModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 99999; justify-content: center; align-items: center; padding: 1.5rem; overflow-y: auto;">
+        <div style="background: var(--bg-secondary, #14171d); border: 1px solid var(--glass-border); border-radius: 16px; max-width: 540px; width: 100%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);">
+            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">✏️</span>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #ffffff;">Edit Cineplex Location</h2>
+                        <span style="font-size: 0.82rem; color: var(--text-muted);">Modify venue metadata, format tags, or Cineplex ID</span>
+                    </div>
+                </div>
+                <button id="closeEditTheatreModal" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            
+            <form id="formEditTheatre" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="editOriginalName">
+                <input type="hidden" id="editOriginalId">
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">THEATER ID (NUMERIC CINEPLEX ID)</label>
+                    <input type="number" id="editTheatreId" required class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">THEATER FULL NAME</label>
+                    <input type="text" id="editTheatreName" required class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">CITY</label>
+                        <input type="text" id="editTheatreCity" required class="date-input-custom" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">PROVINCE</label>
+                        <select id="editTheatreProvince" class="date-input-custom" style="width: 100%;">
+                            <option value="ON">Ontario (ON)</option>
+                            <option value="QC">Quebec (QC)</option>
+                            <option value="BC">British Columbia (BC)</option>
+                            <option value="AB">Alberta (AB)</option>
+                            <option value="MB">Manitoba (MB)</option>
+                            <option value="NS">Nova Scotia (NS)</option>
+                            <option value="SK">Saskatchewan (SK)</option>
+                            <option value="NB">New Brunswick (NB)</option>
+                            <option value="NL">Newfoundland (NL)</option>
+                            <option value="PE">Prince Edward Island (PE)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">REGION / METRO AREA</label>
+                    <input type="text" id="editTheatreRegion" class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">SPECIAL AUDITORIUM FORMATS (COMMA SEPARATED)</label>
+                    <input type="text" id="editTheatreScreens" class="date-input-custom" style="width: 100%;">
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                    <input type="checkbox" id="editTheatreEnabled" style="width: 18px; height: 18px; accent-color: #3b82f6; cursor: pointer;">
+                    <label for="editTheatreEnabled" style="font-size: 0.9rem; font-weight: 600; color: #ffffff; cursor: pointer;">Enable active telemetry monitoring</label>
+                </div>
+
+                <div style="padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;">
+                    <button type="button" id="cancelEditTheatre" class="btn-dash btn-dash-secondary">Cancel</button>
+                    <button type="submit" id="btnSubmitEditTheatre" class="btn-dash" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">💾 Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="/assets/js/shared.js"></script>
     <script src="/assets/js/design-options-modal.js"></script>
     
@@ -1479,18 +1552,25 @@ try {
                     }
                     html += '  </div>';
 
-                    html += '  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem; margin-top: 0.25rem;">';
+                    var screenJoined = (t.screens || []).join(', ');
+                    var escapedName = $('<div>').text(t.name).html();
+                    var escapedCity = $('<div>').text(t.city).html();
+                    var escapedRegion = $('<div>').text(t.region).html();
+
+                    html += '  <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem; margin-top: 0.25rem; flex-wrap: wrap; gap: 0.5rem;">';
                     if (isEnabled) {
                         html += '    <span style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; display: flex; align-items: center; gap: 0.3rem;">🟢 Active Monitored</span>';
                         html += '    <div style="display: flex; gap: 0.35rem;">';
-                        html += '      <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" data-target="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">⏸️ Pause</button>';
-                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
+                        html += '      <button class="btn-edit-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-city="' + escapedCity + '" data-province="' + t.province + '" data-region="' + escapedRegion + '" data-screens="' + $('<div>').text(screenJoined).html() + '" data-enabled="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✏️ Edit</button>';
+                        html += '      <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-target="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">⏸️ Pause</button>';
+                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
                         html += '    </div>';
                     } else {
                         html += '    <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">⚪ Trimming Paused</span>';
                         html += '    <div style="display: flex; gap: 0.35rem;">';
-                        html += '      <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + t.name + '" data-target="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: var(--theme-primary, #3b82f6); color: #fff;">▶️ Enable</button>';
-                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + t.name + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
+                        html += '      <button class="btn-edit-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-city="' + escapedCity + '" data-province="' + t.province + '" data-region="' + escapedRegion + '" data-screens="' + $('<div>').text(screenJoined).html() + '" data-enabled="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✏️ Edit</button>';
+                        html += '      <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + escapedName + '" data-target="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: var(--theme-primary, #3b82f6); color: #fff;">▶️ Enable</button>';
+                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
                         html += '    </div>';
                     }
                     html += '  </div>';
@@ -1581,6 +1661,68 @@ try {
                     var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to add location.';
                     alert('Error: ' + errMsg);
                     $btn.prop('disabled', false).text('➕ Add Location');
+                });
+            });
+
+            // Open Edit Theater Modal Handler
+            $(document).on('click', '.btn-edit-theatre', function() {
+                var $btn = $(this);
+                var id = $btn.attr('data-id');
+                var name = $btn.attr('data-name');
+                var city = $btn.attr('data-city');
+                var province = $btn.attr('data-province');
+                var region = $btn.attr('data-region');
+                var screens = $btn.attr('data-screens');
+                var enabled = $btn.attr('data-enabled') === 'true';
+
+                $('#editOriginalId').val(id);
+                $('#editOriginalName').val(name);
+                $('#editTheatreId').val(id);
+                $('#editTheatreName').val(name);
+                $('#editTheatreCity').val(city);
+                $('#editTheatreProvince').val(province);
+                $('#editTheatreRegion').val(region);
+                $('#editTheatreScreens').val(screens);
+                $('#editTheatreEnabled').prop('checked', enabled);
+
+                $('#editTheatreModal').css('display', 'flex');
+            });
+
+            $('#closeEditTheatreModal, #cancelEditTheatre').on('click', function() {
+                $('#editTheatreModal').hide();
+            });
+
+            $('#formEditTheatre').on('submit', function(e) {
+                e.preventDefault();
+                var $btn = $('#btnSubmitEditTheatre');
+                $btn.prop('disabled', true).text('⌛ Saving Changes...');
+
+                $.post('/api', {
+                    action: 'edit_theatre',
+                    original_id: $('#editOriginalId').val(),
+                    original_name: $('#editOriginalName').val(),
+                    theatre_id: $('#editTheatreId').val(),
+                    name: $('#editTheatreName').val(),
+                    city: $('#editTheatreCity').val(),
+                    province: $('#editTheatreProvince').val(),
+                    region: $('#editTheatreRegion').val() || 'Canada',
+                    screens: $('#editTheatreScreens').val() || 'Standard',
+                    enabled: $('#editTheatreEnabled').is(':checked'),
+                    csrf_token: csrfToken
+                }, function(res) {
+                    if (res && res.success) {
+                        $('#editTheatreModal').hide();
+                        alert(res.message || 'Location updated successfully!');
+                        loadTheatresGrid();
+                        loadWeeklySchedule();
+                    } else {
+                        alert('Error: ' + (res.error || 'Failed to update location.'));
+                    }
+                    $btn.prop('disabled', false).text('💾 Save Changes');
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to update location.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).text('💾 Save Changes');
                 });
             });
 

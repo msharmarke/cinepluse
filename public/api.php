@@ -679,6 +679,75 @@ try {
             ]);
             break;
 
+        case 'edit_theatre':
+            Security::verifyCsrfOrDie();
+            $originalName = Security::sanitizeInput($_POST['original_name'] ?? null, 'string');
+            $originalId = Security::sanitizeInput($_POST['original_id'] ?? null, 'int');
+            $name = Security::sanitizeInput($_POST['name'] ?? null, 'string');
+            $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? null, 'int');
+            $city = Security::sanitizeInput($_POST['city'] ?? 'Unknown', 'string');
+            $province = Security::sanitizeInput($_POST['province'] ?? 'ON', 'string');
+            $region = Security::sanitizeInput($_POST['region'] ?? 'Canada', 'string');
+            $screensStr = Security::sanitizeInput($_POST['screens'] ?? 'Standard', 'string');
+            $enabled = isset($_POST['enabled']) ? filter_var($_POST['enabled'], FILTER_VALIDATE_BOOLEAN) : true;
+
+            if (!$name || !$theatreId) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Theater Name and ID are required.']);
+                exit;
+            }
+
+            $locFile = dirname(__DIR__) . '/config/locations.json';
+            if (!file_exists($locFile)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'locations.json file missing.']);
+                exit;
+            }
+
+            $locations = json_decode(file_get_contents($locFile), true) ?: [];
+
+            // Find key to replace/update
+            $keyToUpdate = null;
+            foreach ($locations as $k => $d) {
+                $id = is_array($d) ? ($d['id'] ?? null) : $d;
+                if (($originalId && (int)$id === (int)$originalId) || 
+                    ($originalName && strtolower(trim($k)) === strtolower(trim($originalName))) ||
+                    ((int)$id === (int)$theatreId)) {
+                    $keyToUpdate = $k;
+                    break;
+                }
+            }
+
+            if ($keyToUpdate !== null && $keyToUpdate !== $name) {
+                unset($locations[$keyToUpdate]);
+            }
+
+            $screensArr = array_map('trim', explode(',', $screensStr));
+            $screensArr = array_values(array_filter($screensArr));
+            if (empty($screensArr)) $screensArr = ['Standard'];
+
+            $locations[$name] = [
+                'id' => (int)$theatreId,
+                'city' => $city,
+                'province' => strtoupper($province),
+                'region' => $region,
+                'screens' => $screensArr,
+                'enabled' => $enabled
+            ];
+
+            $bytes = @file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+            if ($bytes === false) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to write updated location to locations.json.']);
+                exit;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Theater '{$name}' (ID #{$theatreId}) updated successfully."
+            ]);
+            break;
+
         case 'delete_theatre':
             Security::verifyCsrfOrDie();
             $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? $_POST['id'] ?? null, 'int');
