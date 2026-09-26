@@ -416,6 +416,15 @@ class DashboardService {
                 foreach ($activeTheatreIds as $actId) {
                     $params[] = (int)$actId;
                 }
+            } else {
+                return [
+                    'success' => true,
+                    'date' => $date,
+                    'total_showtimes' => 0,
+                    'movies_count' => 0,
+                    'movies' => [],
+                    'message' => 'No active locations selected. Please enable your chosen theaters in the Location Management roster below.'
+                ];
             }
         }
 

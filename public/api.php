@@ -748,6 +748,36 @@ try {
             ]);
             break;
 
+        case 'pause_all_theatres':
+            Security::verifyCsrfOrDie();
+            $locFile = dirname(__DIR__) . '/config/locations.json';
+            if (!file_exists($locFile)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'locations.json file missing.']);
+                exit;
+            }
+
+            $locations = json_decode(file_get_contents($locFile), true) ?: [];
+            foreach ($locations as $name => &$data) {
+                if (is_array($data)) {
+                    $data['enabled'] = false;
+                }
+            }
+            unset($data);
+
+            $bytesWritten = @file_put_contents($locFile, json_encode($locations, JSON_PRETTY_PRINT));
+            if ($bytesWritten === false) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to write to locations.json file.']);
+                exit;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'All locations have been archived and paused. Select and enable your chosen theaters from the roster below!'
+            ]);
+            break;
+
         case 'delete_theatre':
             Security::verifyCsrfOrDie();
             $theatreId = Security::sanitizeInput($_POST['theatre_id'] ?? $_POST['id'] ?? null, 'int');

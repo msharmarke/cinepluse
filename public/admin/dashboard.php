@@ -498,6 +498,9 @@ try {
                             </span>
                         </div>
                         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <button id="btnPauseAllTheatres" class="btn-dash btn-dash-secondary" style="font-size: 0.82rem; padding: 0.45rem 0.85rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">
+                                📦 Archive / Pause All Locations
+                            </button>
                             <button id="btnOpenAddTheatreModal" class="btn-dash" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); font-size: 0.85rem; padding: 0.45rem 0.9rem;">
                                 ➕ Add New Location
                             </button>
@@ -1757,6 +1760,26 @@ try {
                     var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to delete theater.';
                     alert('Error: ' + errMsg);
                     loadTheatresGrid();
+                });
+            });
+
+            // Archive / Pause All Theatres Handler
+            $('#btnPauseAllTheatres').on('click', function() {
+                if (!confirm('Archive and pause telemetry for ALL locations? You will then be able to enable ONLY your chosen handpicked locations.')) {
+                    return;
+                }
+                var $btn = $(this);
+                $btn.prop('disabled', true).text('⌛ Archiving All...');
+
+                $.post('/api', { action: 'pause_all_theatres', csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'All locations archived.');
+                    loadTheatresGrid();
+                    loadWeeklySchedule();
+                    $btn.prop('disabled', false).text('📦 Archive / Pause All Locations');
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to pause locations.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).text('📦 Archive / Pause All Locations');
                 });
             });
 
