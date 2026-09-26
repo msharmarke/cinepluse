@@ -486,20 +486,20 @@ try {
                     </div>
                 </div>
 
-                <!-- 🏛️ Theater Telemetry Scope & Trimming Controls Section -->
-                <div class="chart-box" style="margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px);">
+                <!-- 🏛️ Theater Telemetry Scope & Location Archive Controls Section -->
+                <div class="chart-box" style="margin-bottom: 2rem; border: 1px solid rgba(245, 158, 11, 0.35); background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);">
                     <div class="chart-box-header" style="flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.25rem;">
                         <div>
                             <h3 style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; margin: 0;">
-                                <span>🏛️</span> Theater Telemetry Scope & Trimming Controls
+                                <span>🏛️</span> Theater Telemetry Scope & Location Archive
                             </h3>
                             <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
-                                Manage active theaters for 15-minute seating occupancy polling and weekly schedule pre-caching. Trimming inactive locations keeps Cinepulse well within API rate limits.
+                                Manage active theaters for seating occupancy polling and schedule tracking. Unarchive cinemas from your catalog below to start live tracking.
                             </span>
                         </div>
                         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                             <button id="btnPauseAllTheatres" class="btn-dash btn-dash-secondary" style="font-size: 0.82rem; padding: 0.45rem 0.85rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">
-                                📦 Archive / Pause All Locations
+                                📦 Archive All Locations
                             </button>
                             <button id="btnOpenAddTheatreModal" class="btn-dash" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); font-size: 0.85rem; padding: 0.45rem 0.9rem;">
                                 ➕ Add New Location
@@ -507,29 +507,31 @@ try {
                             <span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
                                 🟢 <span id="cntActiveTheatres"><?php echo $activeTheatresCount; ?></span> Active Monitored
                             </span>
-                            <span style="background: rgba(149, 165, 166, 0.15); color: #bdc3c7; border: 1px solid rgba(149, 165, 166, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
-                                ⚪ <span id="cntDisabledTheatres"><?php echo $disabledTheatresCount; ?></span> Trimming Paused
+                            <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                                📦 <span id="cntDisabledTheatres"><?php echo $disabledTheatresCount; ?></span> In Location Archive
                             </span>
                         </div>
                     </div>
 
-                    <!-- Theater Controls Search & Filter Bar -->
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center;">
-                        <div style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem;">
-                            <button class="prov-filter-btn active" data-prov="all" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: var(--theme-primary, #3b82f6); color: #fff;">All Provinces (41)</button>
+                    <!-- Location View Switcher Tabs & Filters Bar -->
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                            <button class="prov-filter-btn active" data-prov="all" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: var(--theme-primary, #3b82f6); color: #fff;">All Provinces (40)</button>
                             <button class="prov-filter-btn" data-prov="ON" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">Ontario (ON)</button>
                             <button class="prov-filter-btn" data-prov="QC" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">Quebec (QC)</button>
                             <button class="prov-filter-btn" data-prov="BC" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">British Columbia (BC)</button>
                             <button class="prov-filter-btn" data-prov="AB" style="padding: 0.4rem 0.85rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-secondary);">Alberta (AB)</button>
                         </div>
 
-                        <input type="text" id="theatreSearchInput" placeholder="🔍 Search theater name, city, or ID..." class="date-input-custom" style="flex: 1; min-width: 200px;">
-                        
-                        <select id="theatreStatusFilter" class="date-input-custom" style="min-width: 160px;">
-                            <option value="all">⚡ All Telemetry Statuses</option>
-                            <option value="enabled">🟢 Active Only</option>
-                            <option value="disabled">⚪ Paused Only</option>
-                        </select>
+                        <div style="display: flex; gap: 0.75rem; flex: 1; max-width: 500px;">
+                            <input type="text" id="theatreSearchInput" placeholder="🔍 Search theater name, city, or ID..." class="date-input-custom" style="flex: 1; min-width: 200px;">
+                            
+                            <select id="theatreStatusFilter" class="date-input-custom" style="min-width: 170px;">
+                                <option value="disabled" selected>📦 Location Archive Only</option>
+                                <option value="enabled">🟢 Active Monitored Only</option>
+                                <option value="all">⚡ All Statuses</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Theater Grid -->
@@ -1564,16 +1566,16 @@ try {
                     if (isEnabled) {
                         html += '    <span style="font-size: 0.78rem; color: #2ecc71; font-weight: 700; display: flex; align-items: center; gap: 0.3rem;">🟢 Active Monitored</span>';
                         html += '    <div style="display: flex; gap: 0.35rem;">';
-                        html += '      <button class="btn-edit-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-city="' + escapedCity + '" data-province="' + t.province + '" data-region="' + escapedRegion + '" data-screens="' + $('<div>').text(screenJoined).html() + '" data-enabled="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✏️ Edit</button>';
-                        html += '      <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-target="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">⏸️ Pause</button>';
-                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
+                        html += '      <button class="btn-edit-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-city="' + escapedCity + '" data-province="' + t.province + '" data-region="' + escapedRegion + '" data-screens="' + $('<div>').text(screenJoined).html() + '" data-enabled="true" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✏️ Edit</button>';
+                        html += '      <button class="btn-toggle-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-target="false" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">📦 Move to Archive</button>';
+                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
                         html += '    </div>';
                     } else {
-                        html += '    <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">⚪ Trimming Paused</span>';
+                        html += '    <span style="font-size: 0.78rem; color: #f59e0b; font-weight: 700; display: flex; align-items: center; gap: 0.3rem;">📦 Location Archive</span>';
                         html += '    <div style="display: flex; gap: 0.35rem;">';
-                        html += '      <button class="btn-edit-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-city="' + escapedCity + '" data-province="' + t.province + '" data-region="' + escapedRegion + '" data-screens="' + $('<div>').text(screenJoined).html() + '" data-enabled="false" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✏️ Edit</button>';
-                        html += '      <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + escapedName + '" data-target="true" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; background: var(--theme-primary, #3b82f6); color: #fff;">▶️ Enable</button>';
-                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" style="padding: 0.3rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
+                        html += '      <button class="btn-edit-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" data-city="' + escapedCity + '" data-province="' + t.province + '" data-region="' + escapedRegion + '" data-screens="' + $('<div>').text(screenJoined).html() + '" data-enabled="false" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">✏️ Edit</button>';
+                        html += '      <button class="btn-toggle-theatre btn-dash" data-id="' + t.id + '" data-name="' + escapedName + '" data-target="true" style="padding: 0.35rem 0.75rem; font-size: 0.76rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; font-weight: 800;">⚡ Enable / Unarchive</button>';
+                        html += '      <button class="btn-delete-theatre btn-dash btn-dash-secondary" data-id="' + t.id + '" data-name="' + escapedName + '" style="padding: 0.35rem 0.65rem; font-size: 0.76rem; border-color: rgba(239, 68, 68, 0.4); color: #f87171;">🗑️ Delete</button>';
                         html += '    </div>';
                     }
                     html += '  </div>';

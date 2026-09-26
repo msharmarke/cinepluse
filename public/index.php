@@ -32,8 +32,9 @@ try {
 }
 
 // Fetch list of theaters
-$locations = ShowtimeService::getTrackerTheatres(false);
 $activeLocations = ShowtimeService::getTrackerTheatres(true);
+$allLocations = ShowtimeService::getTrackerTheatres(false);
+$locations = !empty($activeLocations) ? $activeLocations : $allLocations;
 
 // Default query parameters: pick first active location if available
 $defaultLocId = !empty($activeLocations) ? reset($activeLocations) : (!empty($locations) ? reset($locations) : 7402);
@@ -268,6 +269,19 @@ if (!function_exists('getMovieColor')) {
                 <div style="background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; padding: 1.25rem; border-radius: 12px; color: #ff6b6b; margin-bottom: 1.5rem;">
                     <h4 style="margin:0 0 0.4rem 0;">⚠ Database Connection Error</h4>
                     <p style="margin:0; font-size: 0.88rem;"><?php echo htmlspecialchars($db_error ?? ''); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (empty($activeLocations)): ?>
+                <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); padding: 1rem 1.25rem; border-radius: 14px; color: #f59e0b; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; backdrop-filter: blur(8px);">
+                    <div style="display: flex; align-items: center; gap: 0.85rem;">
+                        <span style="font-size: 1.8rem;">📦</span>
+                        <div>
+                            <strong style="font-size: 1.05rem; color: #fbbf24; display: block;">Location Archive Mode Active</strong>
+                            <span style="font-size: 0.86rem; color: rgba(255,255,255,0.75);">All cinema locations are currently archived. Visit the Admin Dashboard Location Archive to select and unarchive your active theaters.</span>
+                        </div>
+                    </div>
+                    <a href="/admin/dashboard" class="btn-dash" style="background: #f59e0b; color: #000; font-weight: 800; padding: 0.5rem 1.1rem; border-radius: 9px; text-decoration: none; font-size: 0.85rem;">🏛️ Manage Location Archive</a>
                 </div>
             <?php endif; ?>
 
