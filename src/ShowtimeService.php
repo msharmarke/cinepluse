@@ -18,6 +18,17 @@ class ShowtimeService {
             return [];
         }
         $raw = json_decode(file_get_contents($locFile), true) ?: [];
+        
+        // Sort raw entries: enabled first, then name
+        uksort($raw, function($a, $b) use ($raw) {
+            $eA = is_array($raw[$a]) ? (bool)($raw[$a]['enabled'] ?? true) : true;
+            $eB = is_array($raw[$b]) ? (bool)($raw[$b]['enabled'] ?? true) : true;
+            if ($eA !== $eB) {
+                return $eB <=> $eA; // Enabled first
+            }
+            return strnatcasecmp($a, $b);
+        });
+
         $map = [];
         foreach ($raw as $name => $data) {
             if (is_array($data)) {
@@ -67,6 +78,15 @@ class ShowtimeService {
                 ];
             }
         }
+
+        // Default order: enabled first, then alphabetical by name
+        usort($list, function($a, $b) {
+            if ($a['enabled'] !== $b['enabled']) {
+                return $b['enabled'] <=> $a['enabled'];
+            }
+            return strnatcasecmp($a['name'], $b['name']);
+        });
+
         return $list;
     }
 

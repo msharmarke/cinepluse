@@ -255,6 +255,7 @@ if (!function_exists('getMovieColor')) {
                 <a href="/planner">🍿 Planner</a>
                 <a href="/admin/tracker">📈 Tracker</a>
                 <a href="/admin/dashboard">📊 Dashboard</a>
+                <a href="/admin/locations">📍 Locations</a>
                 <a href="/admin/scan-logs">🔍 Scan Logs</a>
             </nav>
             <div style="padding: 1rem 1.5rem; margin-top: auto;">

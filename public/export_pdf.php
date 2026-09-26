@@ -12,15 +12,14 @@ use Cinepulse\ShowtimeService;
 
 Security::startSession();
 
-// Fetch theater locations map
-$locations = [];
-$locFile = dirname(__DIR__) . '/config/locations.json';
-if (file_exists($locFile)) {
-    $locations = json_decode(file_get_contents($locFile), true) ?: [];
-}
+// Fetch theater locations map (enabled locations first)
+$activeLocations = ShowtimeService::getTrackerTheatres(true);
+$allLocations = ShowtimeService::getTrackerTheatres(false);
+$locations = !empty($activeLocations) ? $activeLocations : $allLocations;
 
-// Get requested theater ID (default: 7411 - Brampton / first available)
-$theatreId = Security::sanitizeInput($_GET['locationId'] ?? $_GET['location_id'] ?? 7411, 'int');
+// Default to first active theater ID if available
+$defaultTheatreId = !empty($activeLocations) ? reset($activeLocations) : (!empty($allLocations) ? reset($allLocations) : 7402);
+$theatreId = Security::sanitizeInput($_GET['locationId'] ?? $_GET['location_id'] ?? $defaultTheatreId, 'int');
 
 // Find theatre name
 $theatreName = 'Cineplex Cinema';
@@ -55,6 +54,20 @@ $startFridayStr = date('Y-m-d', $startFridaySec);
 $endThursdayStr = date('Y-m-d', strtotime('+6 days', $startFridaySec));
 $oneDayPerPage = isset($_GET['one_per_page']) && $_GET['one_per_page'] === '1';
 
+// Check DB cache for pre-cached showtimes first
+$cachedDbShowtimes = [];
+try {
+    $db = \Cinepulse\Database::getInstance()->getConnection();
+    $stmt = $db->prepare("SELECT * FROM showtimes WHERE theatre_id = ? AND show_date BETWEEN ? AND ? ORDER BY show_start_time ASC");
+    $stmt->execute([$theatreId, $startFridayStr, $endThursdayStr]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    foreach ($rows as $row) {
+        $cachedDbShowtimes[$row['show_date']][] = $row;
+    }
+} catch (Exception $e) {
+    $cachedDbShowtimes = [];
+}
+
 // Fetch showtimes for all 7 days of the week
 $api = new CineplexAPI();
 $weekDays = [];
@@ -70,58 +83,97 @@ for ($i = 0; $i < 7; $i++) {
     $dayLabel = date('l, F j, Y', $currentSec);
     $dayName = date('l', $currentSec);
 
-    $showtimesData = [];
-    try {
-        $raw = $api->fetchShowtimes($theatreId, $cineplexDate);
-        if (!isset($raw['error'])) {
-            $showtimesData = $raw[0]['dates'][0]['movies'] ?? [];
-        }
-    } catch (Exception $e) {
-        $showtimesData = [];
-    }
-
-    // Group showtimes for this day by Movie
     $moviesList = [];
-    foreach ($showtimesData as $movie) {
-        $movieTitle = $movie['name'] ?? $movie['title'] ?? 'Unknown Title';
-        $runtime = (int)($movie['runtimeInMinutes'] ?? $movie['runtime'] ?? $movie['duration'] ?? 120);
-        $allMovieTitlesMap[$movieTitle] = true;
 
-        if (!isset($moviesList[$movieTitle])) {
-            $moviesList[$movieTitle] = [
-                'title' => $movieTitle,
-                'runtime' => $runtime,
-                'formats' => []
+    if (!empty($cachedDbShowtimes[$currentDate])) {
+        // Build from database cache
+        foreach ($cachedDbShowtimes[$currentDate] as $row) {
+            $movieTitle = $row['movie_name'] ?? 'Unknown Title';
+            $allMovieTitlesMap[$movieTitle] = true;
+            $expName = $row['experience_type'] ?? 'Standard';
+            $aud = $row['auditorium_name'] ?? 'Auditorium';
+            $uniqueExperiences[$expName] = true;
+
+            $startTime = strtotime($currentDate . ' ' . ($row['show_start_time'] ?? '12:00:00'));
+            $startFormatted = date('g:i A', $startTime);
+
+            if (!isset($moviesList[$movieTitle])) {
+                $moviesList[$movieTitle] = [
+                    'title' => $movieTitle,
+                    'runtime' => (int)($row['runtime_minutes'] ?? 120),
+                    'formats' => []
+                ];
+            }
+
+            $key = $expName . ' | ' . $aud;
+            if (!isset($moviesList[$movieTitle]['formats'][$key])) {
+                $moviesList[$movieTitle]['formats'][$key] = [
+                    'experience' => $expName,
+                    'auditorium' => $aud,
+                    'times' => []
+                ];
+            }
+
+            $moviesList[$movieTitle]['formats'][$key]['times'][] = [
+                'time' => $startFormatted,
+                'timestamp' => $startTime,
+                'session_id' => $row['showtime_id'] ?? ''
             ];
+            $totalShowtimeCount++;
+        }
+    } else {
+        // Fallback to Live API
+        $showtimesData = [];
+        try {
+            $raw = $api->fetchShowtimes($theatreId, $cineplexDate);
+            if (!isset($raw['error'])) {
+                $showtimesData = $raw[0]['dates'][0]['movies'] ?? [];
+            }
+        } catch (Exception $e) {
+            $showtimesData = [];
         }
 
-        if (!empty($movie['experiences'])) {
-            foreach ($movie['experiences'] as $exp) {
-                $expTypes = $exp['experienceTypes'] ?? ['Standard'];
-                $expName = implode(', ', $expTypes);
-                $uniqueExperiences[$expName] = true;
-                
-                if (!empty($exp['sessions'])) {
-                    foreach ($exp['sessions'] as $session) {
-                        $aud = $session['auditorium'] ?? $session['auditoriumName'] ?? 'Auditorium';
-                        $startTime = strtotime($session['showStartDateTime']);
-                        $startFormatted = date('g:i A', $startTime);
+        foreach ($showtimesData as $movie) {
+            $movieTitle = $movie['name'] ?? $movie['title'] ?? 'Unknown Title';
+            $runtime = (int)($movie['runtimeInMinutes'] ?? $movie['runtime'] ?? $movie['duration'] ?? 120);
+            $allMovieTitlesMap[$movieTitle] = true;
 
-                        $key = $expName . ' | ' . $aud;
-                        if (!isset($moviesList[$movieTitle]['formats'][$key])) {
-                            $moviesList[$movieTitle]['formats'][$key] = [
-                                'experience' => $expName,
-                                'auditorium' => $aud,
-                                'times' => []
+            if (!isset($moviesList[$movieTitle])) {
+                $moviesList[$movieTitle] = [
+                    'title' => $movieTitle,
+                    'runtime' => $runtime,
+                    'formats' => []
+                ];
+            }
+
+            if (!empty($movie['experiences'])) {
+                foreach ($movie['experiences'] as $exp) {
+                    $expTypes = $exp['experienceTypes'] ?? ['Standard'];
+                    $expName = implode(', ', $expTypes);
+                    $uniqueExperiences[$expName] = true;
+                    
+                    if (!empty($exp['sessions'])) {
+                        foreach ($exp['sessions'] as $session) {
+                            $aud = $session['auditorium'] ?? $session['auditoriumName'] ?? 'Auditorium';
+                            $startTime = strtotime($session['showStartDateTime']);
+                            $startFormatted = date('g:i A', $startTime);
+
+                            $key = $expName . ' | ' . $aud;
+                            if (!isset($moviesList[$movieTitle]['formats'][$key])) {
+                                $moviesList[$movieTitle]['formats'][$key] = [
+                                    'experience' => $expName,
+                                    'auditorium' => $aud,
+                                    'times' => []
+                                ];
+                            }
+
+                            $moviesList[$movieTitle]['formats'][$key]['times'][] = [
+                                'time' => $startFormatted,
+                                'timestamp' => $startTime,
+                                'session_id' => $session['vistaSessionId'] ?? ''
                             ];
+                            $totalShowtimeCount++;
                         }
-
-                        $moviesList[$movieTitle]['formats'][$key]['times'][] = [
-                            'time' => $startFormatted,
-                            'timestamp' => $startTime,
-                            'session_id' => $session['vistaSessionId'] ?? ''
-                        ];
-                        $totalShowtimeCount++;
                     }
                 }
             }

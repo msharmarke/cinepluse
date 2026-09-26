@@ -398,6 +398,7 @@ try {
                 <a href="/planner">🍿 Planner</a>
                 <a href="/admin/tracker">📈 Tracker</a>
                 <a href="/admin/dashboard" class="active">📊 Dashboard</a>
+                <a href="/admin/locations">📍 Locations</a>
                 <a href="/admin/scan-logs">🔍 Scan Logs</a>
                 <a href="/admin/logout" style="color: #ef4444;">🔒 Logout</a>
             </nav>
