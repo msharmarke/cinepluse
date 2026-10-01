@@ -113,9 +113,9 @@ if (!empty($showtimes_data)) {
     <meta name="twitter:title" content="🍿 Cinepulse — Double Feature Movie Planner">
     <meta name="twitter:description" content="Plan back-to-back double feature movie marathons with zero buffer conflicts and instant timetable generation.">
     <meta name="twitter:image" content="/assets/images/share/cinematic.jpg">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -495,8 +495,8 @@ if (!empty($showtimes_data)) {
     </div>
 
     <!-- Reusing Modals & JS from Main App -->
-    <script src="assets/js/shared.js?v=<?php echo time(); ?>" defer></script>
-    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>" defer></script>
-    <script src="assets/js/main.js?v=<?php echo time(); ?>" defer></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>" defer></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>" defer></script>
+    <script src="/assets/js/main.js?v=<?php echo time(); ?>" defer></script>
 </body>
 </html>

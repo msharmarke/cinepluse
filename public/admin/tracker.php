@@ -854,9 +854,9 @@ if ($db_configured && !$tables_missing) {
     <div id="tooltip" class="tooltip" style="display: none; position: absolute; background: rgba(0,0,0,0.85); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; z-index: 10000; box-shadow: var(--shadow-md);"></div>
 
     <!-- JavaScript Hooks -->
-    <script src="assets/js/shared.js" defer></script>
-    <script src="assets/js/design-options-modal.js" defer></script>
-    <script src="assets/js/tracker.js" defer></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/tracker.js?v=<?php echo time(); ?>"></script>
     <script>
         // Inline script to bind Ajax addition trigger
         $(function() {
@@ -1379,5 +1379,6 @@ if ($db_configured && !$tables_missing) {
 
     <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
     <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/tracker.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

@@ -162,10 +162,10 @@ if (!function_exists('getMovieColor')) {
     <title>🎬 Cinepulse — Streamlined Showtime Explorer</title>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
-    <link rel="stylesheet" href="assets/css/design-options-modal.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/design-options-modal.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -585,9 +585,9 @@ if (!function_exists('getMovieColor')) {
     <div id="tooltip" class="tooltip" style="display: none; position: absolute; background: rgba(0,0,0,0.85); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; z-index: 10000; box-shadow: var(--shadow-md);"></div>
 
     <!-- Client-side Scripts -->
-    <script src="assets/js/shared.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/main.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/main.js?v=<?php echo time(); ?>"></script>
 
     <script>
         $(document).ready(function() {

@@ -132,10 +132,10 @@ if ($movie_name_filter && $location_id) {
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/design-system.css">
-    <link rel="stylesheet" href="assets/css/themes.css">
-    <link rel="stylesheet" href="assets/css/design-options-modal.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/design-system.css">
+    <link rel="stylesheet" href="/assets/css/themes.css">
+    <link rel="stylesheet" href="/assets/css/design-options-modal.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Outfit', sans-serif; }
@@ -332,8 +332,8 @@ if ($movie_name_filter && $location_id) {
     <div id="tooltip" class="tooltip" style="display: none; position: absolute; background: rgba(0,0,0,0.85); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; z-index: 10000; box-shadow: var(--shadow-md);"></div>
 
     <!-- Client-side Scripts -->
-    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>" defer></script>
-    <script src="assets/js/main.js?v=<?php echo time(); ?>" defer></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>" defer></script>
+    <script src="/assets/js/main.js?v=<?php echo time(); ?>" defer></script>
     <script>
         // Simple client-side search for global movie list
         document.getElementById('global-movie-search')?.addEventListener('input', function(e) {
@@ -410,7 +410,7 @@ if ($movie_name_filter && $location_id) {
             });
         <?php endif; ?>
     </script>
-    <script src="assets/js/shared.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
