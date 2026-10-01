@@ -2033,3 +2033,17 @@ body {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* Analysis & Timeline Scrubber Modal Styling */
+.analysis-split { display: flex; flex-wrap: wrap; gap: 20px; min-height: 520px; }
+.analysis-chart-side { flex: 1; min-width: 320px; display: flex; flex-direction: column; justify-content: space-between; }
+.analysis-seatmap-side { flex: 1.2; min-width: 340px; display: flex; flex-direction: column; }
+.timeline-scrubber {
+    background: var(--bg-tertiary, rgba(255,255,255,0.05)); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 15px; border: 1px solid var(--glass-border);
+}
+.timeline-scrubber input[type="range"] { flex: 1; cursor: pointer; }
+.timeline-scrubber button { padding: 6px 12px; font-size: 0.85rem; }
+.history-table-container {
+    max-height: 180px; overflow-y: auto; margin-top: 15px; border: 1px solid var(--border-light, rgba(255,255,255,0.1)); border-radius: 8px;
+}

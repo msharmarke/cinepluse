@@ -606,9 +606,9 @@ try {
                                             <button class="btn-dash btn-dash-secondary btn-dash-snap-single" data-id="<?php echo $mon['id']; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" title="Capture immediate seat snapshot">
                                                 📸 Snapshot
                                             </button>
-                                            <a href="/admin/tracker" class="btn-dash btn-dash-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" title="View history graphs">
+                                            <button class="btn-dash btn-dash-secondary view-analysis-btn" data-tracker-id="<?php echo $mon['id']; ?>" data-movie-name="<?php echo htmlspecialchars($mon['movie_name']); ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" title="View history graphs & seating logs">
                                                 📊 Analyze
-                                            </a>
+                                            </button>
                                             <button class="btn-dash btn-dash-stop-monitor" data-id="<?php echo $mon['id']; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171;" title="Stop monitoring showtime">
                                                 ❌ Stop
                                             </button>
@@ -2101,5 +2101,75 @@ try {
             loadTheatresGrid();
         });
     </script>
+
+    <!-- ANALYSIS & TIMELINE SCRUBBER MODAL WINDOW -->
+    <div id="analysis-modal" class="modal-overlay">
+        <div class="modal-content glass-card" style="max-width: 1200px; width: 95%;">
+            <button id="analysis-modal-close-btn" class="modal-close" aria-label="Close modal">&times;</button>
+            <h2 id="analysis-modal-title" style="margin-top:0; border-bottom:1px solid var(--border-light); padding-bottom:10px;">📊 History Analysis</h2>
+            
+            <div class="analysis-split">
+                <!-- Left Side: Trends and Statistics Log List -->
+                <div class="analysis-chart-side">
+                    <div>
+                        <h4 style="margin:0 0 10px 0;">Occupancy Progression Trend</h4>
+                        <div style="height: 250px; position: relative; margin-bottom: 20px; background: rgba(0,0,0,0.02); border-radius: 8px; border:1px solid var(--border-light); padding:10px;">
+                            <canvas id="history-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="margin:0 0 5px 0;">Logs List</h4>
+                        <div class="history-table-container">
+                            <table style="width:100%; border-collapse: collapse; text-align:left; font-size:0.85rem;">
+                                <thead>
+                                    <tr style="background:var(--bg-tertiary); border-bottom:1px solid var(--border-light);">
+                                        <th style="padding:8px;">Snapshot Time</th>
+                                        <th style="padding:8px;">Occupancy %</th>
+                                        <th style="padding:8px;">Occupied</th>
+                                        <th style="padding:8px;">Available</th>
+                                        <th style="padding:8px;">Broken</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side: Interactive Scrubber and Map View -->
+                <div class="analysis-seatmap-side">
+                    <h4 style="margin:0 0 10px 0;">🗺 Seatmap Snapshot Viewer</h4>
+                    
+                    <!-- Slider scrubber controls -->
+                    <div class="timeline-scrubber">
+                        <button id="scrubber-prev-btn" class="button-secondary">◀ Prev</button>
+                        <input type="range" id="snapshot-range-slider" min="0" max="0" value="0">
+                        <button id="scrubber-next-btn" class="button-secondary">Next ▶</button>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <span style="font-size:0.85rem; color:var(--text-secondary);">Snapshot Time:</span>
+                        <strong id="scrubber-current-time" style="font-size:0.9rem; color:var(--text-primary);">N/A</strong>
+                    </div>
+
+                    <div id="live-map-render-area" style="flex:1; min-height: 280px; overflow-y: auto; background: var(--bg-tertiary); border-radius:8px; padding:15px; border:1px solid var(--border-light);">
+                        <!-- Seat layout rendered dynamically -->
+                    </div>
+                    
+                    <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <button id="take-instant-snap-btn" class="button-primary" style="font-size:0.85rem; padding: 8px 15px;">🔄 Take Instant Snapshot</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hover tooltip element -->
+    <div id="tooltip" class="tooltip" style="display: none; position: absolute; background: rgba(0,0,0,0.85); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; z-index: 10000; box-shadow: var(--shadow-md);"></div>
+
+    <script src="/assets/js/tracker.js" defer></script>
 </body>
 </html>
