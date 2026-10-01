@@ -3,11 +3,14 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Production Status](https://img.shields.io/badge/Production-Live-success.svg)](https://cinepluse.msharmarke.com/)
+[![Master Docs](https://img.shields.io/badge/Documentation-Master%20SSOT-brightgreen.svg)](docs/CINEPULSE_MASTER_DOCUMENTATION.md)
 
 **Cinepulse** is a modern, modular PHP application designed to interface with the Cineplex API (`apis.cineplex.com`). It allows users and developers to browse theatrical showtimes, match back-to-back double feature layout combinations, chart auditorium seating occupancy over time, and manage automated release tracking with system analytics.
 
+📖 **Single Source of Truth Documentation**: See [`docs/CINEPULSE_MASTER_DOCUMENTATION.md`](docs/CINEPULSE_MASTER_DOCUMENTATION.md) for full architectural specs, process flows, rate limit guidelines, and theater rosters.
+
 🌐 **Live Production Deployment**: [https://cinepluse.msharmarke.com](https://cinepluse.msharmarke.com/)  
-📊 **Live System Analytics Dashboard**: [https://cinepluse.msharmarke.com/dashboard.php](https://cinepluse.msharmarke.com/dashboard.php)
+📊 **Live System Analytics Dashboard**: [https://cinepluse.msharmarke.com/admin/dashboard](https://cinepluse.msharmarke.com/admin/dashboard)
 
 ---
 
@@ -18,14 +21,14 @@
 * **📈 Live Interactive Seat Maps**: Visual seating availability maps per auditorium session (occupied, available, broken, total layout capacity).
 * **⚡ Double Feature Scheduler**: Smart layover planner computing proximity gaps between movies, with warnings for tight breaks (<10m), long waits (>120m), or auditorium transfers.
 * **🤖 Automated Release Tracking**: Auto-registers upcoming showtimes matching user-configured movie pattern rules and experience filters (IMAX, VIP, UltraAVX, D-BOX, 3D).
-* **📦 Historical Archive Engine**: Browse, inspect, and import historical showtimes and occupancy logs across 22+ archived periods (from 2025 to present).
+* **📦 Historical Archive Engine**: Browse, inspect, and import historical showtimes and occupancy logs across archived periods.
 
 ---
 
 ## 🏗️ Project Structure
 
 ```
-cinepluse/
+cinepluse-main/
 ├── bin/                          # CLI Cron Scripts & Daemons
 │   ├── collect_showtimes.php     # Pre-caches theatrical week schedules (Friday -> Thursday)
 │   └── track_occupancy.php       # 15-minute seating snapshot daemon & alert dispatcher
@@ -34,16 +37,20 @@ cinepluse/
 │   ├── config.ini.example        # Database & credentials template
 │   └── locations.json            # Unified list of tracked Cineplex theaters
 │
+├── docs/                         # Master Documentation & Architecture Guides
+│   ├── CINEPULSE_MASTER_DOCUMENTATION.md   # ⭐ Living Master System Documentation (SSOT)
+│   ├── CINEPULSE_EVOLUTION_AND_ARCHIVE_JOURNAL.md
+│   ├── CINEPULSE_SYSTEM_AND_RATE_LIMIT_DOCS.md
+│   ├── THEATRE_TRACKING_AND_EXPANSION_ROSTER.md
+│   └── RETHINKING_OCCUPANCY_TRACKING_PLAN.md
+│
 ├── public/                       # Web Document Root (Publicly Exposed)
+│   ├── admin/                    # Secure Admin Dashboard & Controls
+│   ├── assets/                   # CSS (design system, themes) & JavaScript modules
 │   ├── index.php                 # Showtime browser & live interactive seat map viewer
-│   ├── dashboard.php             # Analytics dashboard, daemon status & CSV export
-│   ├── tracker.php               # Occupancy monitors dashboard & snapshot scrubber
-│   ├── double-feature.php        # Double-feature layover matcher & gap calculator
-│   ├── movies.php                # Global playing movies directory
-│   ├── tracker_scan_logs.php     # Scraper execution audit log viewer
-│   ├── watch-party.php           # Group movie planning interface
 │   ├── api.php                   # Central AJAX JSON API dispatcher
-│   └── assets/                   # CSS (design system, themes) & JavaScript modules
+│   ├── export_pdf.php            # Consolidated daily screen timeline PDF export generator
+│   └── double-feature.php        # Double-feature layover matcher & gap calculator
 │
 ├── src/                          # Backend PSR-4 Core Logic (`namespace Cinepulse`)
 │   ├── Autoloader.php            # PSR-4 dynamic class loader
@@ -55,11 +62,14 @@ cinepluse/
 │   ├── DashboardService.php      # Metrics aggregation, chart datasets & CSV exporter
 │   └── ArchiveService.php        # Historical archive scanner and database importer
 │
-├── archives/                     # Historical archive packages (SQL & CSV backups)
-├── snapshots/                    # Flat seatmap JSON snapshot files (git-ignored)
+├── tests/                        # Automated & Manual Test Scripts
+│   ├── test_api.php              # API endpoint structural tester
+│   └── test_archive_import.php   # Archive import/restore tester
+│
+├── archives/                     # Historical archive packages & backups/ directory
 ├── cache/                        # API response JSON caches (git-ignored)
 ├── deploy.sh                     # Production VPS deployment helper script
-├── schema.sql                    # MySQL schema initialization script
+├── schema.sql                    # SQLite schema initialization script
 ├── README.md                     # Application guide (This document)
 └── DEVELOPER.md                  # Developer reference & extension manual
 ```

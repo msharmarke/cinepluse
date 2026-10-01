@@ -37,6 +37,30 @@ try {
     $archiveService = new ArchiveService();
     $archivesList = $archiveService->listArchives();
 
+    // Query Active Monitored Showtimes & Movie Release Trackers
+    $activeMonitors = [];
+    $movieReleaseTrackers = [];
+    try {
+        $trackerService = new \Cinepulse\TrackerService();
+        $movieReleaseTrackers = $trackerService->getMovieTrackers();
+        
+        $pdo = \Cinepulse\Database::getInstance()->getConnection();
+        $stmt_act = $pdo->prepare("SELECT t.*, 
+            (SELECT occupancy_percentage FROM showtime_snapshots_history WHERE tracked_showtime_id = t.id ORDER BY snapshot_time DESC LIMIT 1) as last_occupancy,
+            (SELECT snapshot_time FROM showtime_snapshots_history WHERE tracked_showtime_id = t.id ORDER BY snapshot_time DESC LIMIT 1) as last_snapshot_time,
+            (SELECT seats_occupied FROM showtime_snapshots_history WHERE tracked_showtime_id = t.id ORDER BY snapshot_time DESC LIMIT 1) as last_seats_occupied,
+            (SELECT calculated_capacity FROM showtime_snapshots_history WHERE tracked_showtime_id = t.id ORDER BY snapshot_time DESC LIMIT 1) as capacity,
+            (SELECT COUNT(*) FROM showtime_snapshots_history WHERE tracked_showtime_id = t.id) as snapshot_count
+            FROM tracked_showtimes t 
+            WHERE t.status = 'active'
+            ORDER BY t.show_start_time ASC");
+        $stmt_act->execute();
+        $activeMonitors = $stmt_act->fetchAll() ?: [];
+    } catch (\Exception $ex) {
+        $activeMonitors = [];
+        $movieReleaseTrackers = [];
+    }
+
     // Calculate current theatrical week days (Friday -> Thursday)
     $todaySec = strtotime('today');
     $dayOfWeek = (int)date('N', $todaySec); // 1 = Mon, 5 = Fri, 7 = Sun
@@ -484,6 +508,161 @@ try {
                         <div class="stat-label">Snapshots Logged</div>
                         <div class="stat-value" style="color: #9b59b6;"><?php echo number_format($metrics['total_snapshots'] ?? 0); ?></div>
                         <div class="stat-sub">Seating layouts archived</div>
+                    </div>
+                </div>
+
+                <!-- 📈 Active Telemetry Monitors & Release Trackers Section -->
+                <div class="chart-box" style="margin-bottom: 2rem; border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);">
+                    <div class="chart-box-header" style="flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.3rem; margin: 0;">
+                                <span>📈</span> Active Telemetry Monitors & Release Trackers
+                            </h3>
+                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">
+                                Real-time seating availability monitors and automated movie release tracking rules active on your system.
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                            <button id="btnSnapshotAllActiveDash" class="btn-dash" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); font-size: 0.85rem; padding: 0.45rem 0.9rem;">
+                                📸 Snapshot All Active Monitors
+                            </button>
+                            <a href="/admin/tracker" class="btn-dash btn-dash-secondary" style="font-size: 0.85rem; padding: 0.45rem 0.9rem;">
+                                ⚙️ Full Tracker Control Panel &rarr;
+                            </a>
+                            <span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                                🟢 <span><?php echo count($activeMonitors); ?></span> Active Monitors
+                            </span>
+                            <span style="background: rgba(147, 51, 234, 0.15); color: #a855f7; border: 1px solid rgba(147, 51, 234, 0.4); padding: 0.4rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                                🎬 <span><?php echo count($movieReleaseTrackers); ?></span> Release Rules
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Tracker Type Switcher Pills -->
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.75rem;">
+                        <button id="tabShowtimeMonitors" class="btn-dash" style="background: var(--theme-primary, #3b82f6); font-size: 0.85rem; padding: 0.4rem 0.9rem; border-radius: 8px;">
+                            📺 Monitored Showtime Sessions (<?php echo count($activeMonitors); ?>)
+                        </button>
+                        <button id="tabReleaseTrackers" class="btn-dash btn-dash-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.9rem; border-radius: 8px;">
+                            🤖 Automatic Release Tracker Rules (<?php echo count($movieReleaseTrackers); ?>)
+                        </button>
+                    </div>
+
+                    <!-- View 1: Active Showtime Monitors Grid -->
+                    <div id="viewShowtimeMonitors">
+                        <?php if (empty($activeMonitors)): ?>
+                            <div style="text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed var(--glass-border);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+                                <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.1rem;">No Active Showtime Monitors</h4>
+                                <p style="margin: 0; color: var(--text-muted); font-size: 0.88rem;">Select any showtime session from the Weekly Schedule Explorer below or the Schedule page to promote it to active telemetry monitoring.</p>
+                            </div>
+                        <?php else: ?>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+                                <?php foreach ($activeMonitors as $mon): 
+                                    $occ = isset($mon['last_occupancy']) ? floatval($mon['last_occupancy']) : null;
+                                    $showTs = strtotime($mon['show_start_time']);
+                                    $dateFormatted = date('D, M j @ g:i A', $showTs);
+                                    
+                                    // Status color calculations
+                                    $badgeBg = 'rgba(59, 130, 246, 0.15)';
+                                    $badgeColor = '#60a5fa';
+                                    if ($occ !== null) {
+                                        if ($occ >= 75) { $badgeBg = 'rgba(239, 68, 68, 0.2)'; $badgeColor = '#f87171'; }
+                                        elseif ($occ >= 40) { $badgeBg = 'rgba(245, 158, 11, 0.2)'; $badgeColor = '#fbbf24'; }
+                                        else { $badgeBg = 'rgba(16, 185, 129, 0.2)'; $badgeColor = '#34d399'; }
+                                    }
+                                ?>
+                                    <div class="stat-card" style="padding: 1.25rem; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25);">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                            <div>
+                                                <h4 style="margin: 0 0 0.25rem 0; font-size: 1.05rem; font-weight: 700; color: #ffffff; line-height: 1.3;">
+                                                    <?php echo htmlspecialchars($mon['movie_name']); ?>
+                                                </h4>
+                                                <span style="font-size: 0.82rem; color: var(--text-muted); display: block;">
+                                                    🏢 <?php echo htmlspecialchars($mon['theatre_name']); ?>
+                                                </span>
+                                            </div>
+                                            <?php if ($occ !== null): ?>
+                                                <span style="background: <?php echo $badgeBg; ?>; color: <?php echo $badgeColor; ?>; border: 1px solid <?php echo $badgeColor; ?>40; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; white-space: nowrap;">
+                                                    <?php echo number_format($occ, 1); ?>% occupied
+                                                </span>
+                                            <?php else: ?>
+                                                <span style="background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem;">
+                                                    Pending
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <div style="font-size: 0.85rem; color: #3b82f6; font-weight: 600; margin-bottom: 0.75rem;">
+                                            🗓️ <?php echo $dateFormatted; ?>
+                                        </div>
+
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 6px;">
+                                            <span>💺 Capacity: <strong><?php echo isset($mon['capacity']) ? number_format($mon['capacity']) : 'N/A'; ?></strong></span>
+                                            <span>📸 Snaps: <strong><?php echo number_format($mon['snapshot_count'] ?? 0); ?></strong></span>
+                                        </div>
+
+                                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                            <button class="btn-dash btn-dash-secondary btn-dash-snap-single" data-id="<?php echo $mon['id']; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" title="Capture immediate seat snapshot">
+                                                📸 Snapshot
+                                            </button>
+                                            <a href="/admin/tracker" class="btn-dash btn-dash-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" title="View history graphs">
+                                                📊 Analyze
+                                            </a>
+                                            <button class="btn-dash btn-dash-stop-monitor" data-id="<?php echo $mon['id']; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171;" title="Stop monitoring showtime">
+                                                ❌ Stop
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- View 2: Automatic Movie Release Rules Grid -->
+                    <div id="viewReleaseTrackers" style="display: none;">
+                        <?php if (empty($movieReleaseTrackers)): ?>
+                            <div style="text-align: center; padding: 2.5rem 1rem; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed var(--glass-border);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                                <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.1rem;">No Automatic Movie Release Rules Configured</h4>
+                                <p style="margin: 0; color: var(--text-muted); font-size: 0.88rem;">Configure automated movie rules to automatically promote new blockbusters and premium formats to your active monitor queue.</p>
+                            </div>
+                        <?php else: ?>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+                                <?php foreach ($movieReleaseTrackers as $rule): ?>
+                                    <div class="stat-card" style="padding: 1.25rem; border: 1px solid rgba(147, 51, 234, 0.3); background: rgba(0,0,0,0.25);">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                            <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #ffffff;">
+                                                🎬 <?php echo htmlspecialchars($rule['movie_name']); ?>
+                                            </h4>
+                                            <span style="background: <?php echo ($rule['status'] === 'active') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'; ?>; color: <?php echo ($rule['status'] === 'active') ? '#34d399' : '#fbbf24'; ?>; border: 1px solid <?php echo ($rule['status'] === 'active') ? '#34d39940' : '#fbbf2440'; ?>; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">
+                                                <?php echo htmlspecialchars($rule['status']); ?>
+                                            </span>
+                                        </div>
+
+                                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
+                                            🏛️ Theater: <strong><?php echo htmlspecialchars($rule['theatre_name']); ?></strong>
+                                        </div>
+
+                                        <div style="font-size: 0.82rem; color: #a855f7; font-weight: 600; margin-bottom: 0.75rem;">
+                                            🍿 Experience: <strong><?php echo htmlspecialchars($rule['experience_filter'] ?: 'All Formats'); ?></strong>
+                                        </div>
+
+                                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                                            <button class="btn-dash btn-dash-secondary btn-scan-rule" data-id="<?php echo $rule['id']; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" title="Scan API for upcoming showtimes matching this rule">
+                                                🔍 Scan Now
+                                            </button>
+                                            <button class="btn-dash btn-dash-secondary btn-toggle-rule" data-id="<?php echo $rule['id']; ?>" data-status="<?php echo ($rule['status'] === 'active') ? 'paused' : 'active'; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+                                                <?php echo ($rule['status'] === 'active') ? '⏸️ Pause' : '▶️ Resume'; ?>
+                                            </button>
+                                            <button class="btn-dash btn-del-rule" data-id="<?php echo $rule['id']; ?>" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171;">
+                                                ❌ Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1385,6 +1564,106 @@ try {
                     var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to trigger pre-caching.';
                     alert('Error: ' + errMsg);
                     $btn.prop('disabled', false).text('🔄 Pre-cache Schedules');
+                });
+            });
+
+            // Trackers Tab Switcher
+            $('#tabShowtimeMonitors').on('click', function() {
+                $(this).removeClass('btn-dash-secondary').css('background', 'var(--theme-primary, #3b82f6)');
+                $('#tabReleaseTrackers').addClass('btn-dash-secondary').css('background', '');
+                $('#viewShowtimeMonitors').show();
+                $('#viewReleaseTrackers').hide();
+            });
+
+            $('#tabReleaseTrackers').on('click', function() {
+                $(this).removeClass('btn-dash-secondary').css('background', 'var(--theme-primary, #3b82f6)');
+                $('#tabShowtimeMonitors').addClass('btn-dash-secondary').css('background', '');
+                $('#viewReleaseTrackers').show();
+                $('#viewShowtimeMonitors').hide();
+            });
+
+            // Single Snapshot Button for Active Monitor Card
+            $(document).on('click', '.btn-dash-snap-single', function() {
+                var $btn = $(this);
+                var trackerId = $btn.data('id');
+                var origText = $btn.html();
+                $btn.prop('disabled', true).text('⏳...');
+
+                $.post('/api', { action: 'trigger_snapshot', tracker_id: trackerId, csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Snapshot recorded successfully!');
+                    location.reload();
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to capture snapshot.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).html(origText);
+                });
+            });
+
+            // Snapshot All Active Monitors
+            $('#btnSnapshotAllActiveDash').on('click', function() {
+                var $btn = $(this);
+                var origText = $btn.html();
+                $btn.prop('disabled', true).text('⏳ Capturing All...');
+
+                $.post('/api', { action: 'trigger_all_snapshots', csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Captured snapshots for all active monitors!');
+                    location.reload();
+                }).fail(function(xhr) {
+                    var errMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Failed to capture all snapshots.';
+                    alert('Error: ' + errMsg);
+                    $btn.prop('disabled', false).html(origText);
+                });
+            });
+
+            // Stop Showtime Monitor
+            $(document).on('click', '.btn-dash-stop-monitor', function() {
+                var $btn = $(this);
+                var trackerId = $btn.data('id');
+                if (!confirm('Stop monitoring this showtime session?')) return;
+
+                $btn.prop('disabled', true).text('⌛...');
+                $.post('/api', { action: 'delete_tracker', tracker_id: trackerId, csrf_token: csrfToken }, function(res) {
+                    location.reload();
+                }).fail(function(xhr) {
+                    alert('Error: Failed to stop tracker.');
+                    $btn.prop('disabled', false).text('❌ Stop');
+                });
+            });
+
+            // Scan Release Rule
+            $(document).on('click', '.btn-scan-rule', function() {
+                var $btn = $(this);
+                var id = $btn.data('id');
+                $btn.prop('disabled', true).text('⏳ Scanning...');
+
+                $.post('/api', { action: 'scan_movie_tracker', tracker_id: id, csrf_token: csrfToken }, function(res) {
+                    alert(res.message || 'Rule scanned successfully!');
+                    location.reload();
+                }).fail(function(xhr) {
+                    alert('Error scanning rule.');
+                    $btn.prop('disabled', false).text('🔍 Scan Now');
+                });
+            });
+
+            // Toggle Pause/Resume Release Rule
+            $(document).on('click', '.btn-toggle-rule', function() {
+                var $btn = $(this);
+                var id = $btn.data('id');
+                var status = $btn.data('status');
+
+                $.post('/api', { action: 'toggle_movie_tracker', tracker_id: id, status: status, csrf_token: csrfToken }, function(res) {
+                    location.reload();
+                });
+            });
+
+            // Delete Release Rule
+            $(document).on('click', '.btn-del-rule', function() {
+                var $btn = $(this);
+                var id = $btn.data('id');
+                if (!confirm('Delete this automated release tracker rule?')) return;
+
+                $.post('/api', { action: 'delete_movie_tracker', tracker_id: id, csrf_token: csrfToken }, function(res) {
+                    location.reload();
                 });
             });
 

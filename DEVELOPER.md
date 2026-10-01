@@ -1,5 +1,7 @@
 # Cinepulse — Developer Reference & Extension Manual
 
+> 📖 **Single Source of Truth Documentation**: For complete architecture, directory structure, rate limit rules, and process specifications, see [`docs/CINEPULSE_MASTER_DOCUMENTATION.md`](docs/CINEPULSE_MASTER_DOCUMENTATION.md).
+
 Welcome to the Cinepulse development manual. This guide outlines the architectural design patterns, namespaces, class dependencies, and hooks available to extend Cinepulse.
 
 ---
