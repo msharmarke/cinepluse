@@ -941,7 +941,7 @@ if ($db_configured && !$tables_missing) {
                 
                 btn.prop('disabled', true).text('⏳ Registering...');
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         alert(response.message);
                         location.reload();
@@ -974,7 +974,7 @@ if ($db_configured && !$tables_missing) {
                 
                 submitBtn.prop('disabled', true).text('⏳ Registering...');
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         let msg = response.message;
                         if (response.matched_count > 0) {
@@ -1011,7 +1011,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         location.reload();
                     } else {
@@ -1039,7 +1039,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         alert(response.message);
                         location.reload();
@@ -1071,7 +1071,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         location.reload();
                     } else {
@@ -1099,7 +1099,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         location.reload();
                     } else {
@@ -1173,7 +1173,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         alert(response.message);
                         location.reload();
@@ -1202,7 +1202,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         alert(response.message);
                         location.reload();
@@ -1229,7 +1229,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         alert(response.message);
                         location.reload();
@@ -1266,7 +1266,7 @@ if ($db_configured && !$tables_missing) {
                     csrf_token: csrfToken
                 };
                 
-                $.post('api', postData, function(response) {
+                $.post('/api', postData, function(response) {
                     if (response.success) {
                         alert(response.message);
                         location.reload();

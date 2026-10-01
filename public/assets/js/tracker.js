@@ -27,22 +27,37 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Interactive Analysis Modal Triggers ---
-    document.body.addEventListener('click', function(e) {
-        // 1. OPEN ANALYTICS MODAL
-        const btn = e.target.closest('.view-analysis-btn');
-        if (btn) {
-            activeTrackerId = btn.dataset.trackerId;
-            modalTitle.innerText = `📊 History Analysis: ${btn.dataset.movieName}`;
-            analysisModal.classList.add('visible');
-            loadTrackerAnalysisData(activeTrackerId);
+    $(document).on('click', '.view-analysis-btn', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+        activeTrackerId = btn.data('trackerId') || btn.attr('data-tracker-id') || btn.data('id');
+        const movieName = btn.data('movieName') || btn.attr('data-movie-name') || 'Showtime Analysis';
+        
+        if (!activeTrackerId) {
+            alert('Tracker ID missing.');
+            return;
         }
 
-        // CLOSE MODAL
-        if (e.target === analysisModal || e.target.closest('#analysis-modal-close-btn')) {
-            analysisModal.classList.remove('visible');
+        modalTitle.innerText = `📊 History Analysis: ${movieName}`;
+        if (analysisModal) {
+            analysisModal.classList.add('visible');
+            $(analysisModal).css({'display': 'flex', 'opacity': 1, 'visibility': 'visible'});
+        }
+        loadTrackerAnalysisData(activeTrackerId);
+    });
+
+    // Close Modal Handler
+    $(document).on('click', '#analysis-modal-close-btn, #analysis-modal', function(e) {
+        if (e.target === analysisModal || e.target.id === 'analysis-modal-close-btn') {
+            if (analysisModal) {
+                analysisModal.classList.remove('visible');
+                $(analysisModal).css({'display': 'none', 'opacity': 0, 'visibility': 'hidden'});
+            }
             activeTrackerId = null;
         }
+    });
 
+    document.body.addEventListener('click', function(e) {
         // 2. TRIGGER MANUAL SNAPSHOT
         const snapBtn = e.target.closest('#take-instant-snap-btn');
         if (snapBtn && activeTrackerId) {
@@ -62,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load analysis datasets
     async function loadTrackerAnalysisData(trackerId) {
         try {
-            const res = await fetch(`api?action=get_history&tracker_id=${trackerId}`);
+            const res = await fetch(`/api?action=get_history&tracker_id=${trackerId}`);
             if (!res.ok) throw new Error("HTTP failure loading statistics.");
             const data = await res.json();
             if (data.error) throw new Error(data.error);
@@ -155,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const filename = snapshotInfo.seatmap_file_path;
         
         try {
-            const res = await fetch(`api?action=get_snapshot_seatmap&filename=${filename}`);
+            const res = await fetch(`/api?action=get_snapshot_seatmap&filename=${filename}`);
             if (!res.ok) throw new Error("Connection failed fetching snapshot layout file.");
             const data = await res.json();
             if (data.error) throw new Error(data.error);
@@ -290,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         jqBtn.prop('disabled', true).text('⏳ Logging...');
         
         try {
-            const response = await fetch('api?action=trigger_snapshot', {
+            const response = await fetch('/api?action=trigger_snapshot', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -315,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const jqCard = $(btn).closest('.tracker-card');
         
         try {
-            const response = await fetch('api?action=delete_tracker', {
+            const response = await fetch('/api?action=delete_tracker', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
