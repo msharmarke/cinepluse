@@ -29,6 +29,7 @@
     RewriteRule ^watch-party/?$ watch-party.php [L,QSA]
     RewriteRule ^export-pdf/?$ export_pdf.php [L,QSA]
     RewriteRule ^api/?$ api.php [L,QSA]
+    RewriteRule ^admin/api/?$ api.php [L,QSA]
 
     # Automatically route extensionless files to .php if the file exists
     RewriteCond %{REQUEST_FILENAME} !-d

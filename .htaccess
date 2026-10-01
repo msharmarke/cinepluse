@@ -26,4 +26,5 @@
     RewriteRule ^watch-party/?$ public/watch-party.php [L,QSA]
     RewriteRule ^export-pdf/?$ public/export_pdf.php [L,QSA]
     RewriteRule ^api/?$ public/api.php [L,QSA]
+    RewriteRule ^admin/api/?$ public/api.php [L,QSA]
 </IfModule>
