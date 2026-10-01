@@ -6,10 +6,6 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    const analysisModal = document.getElementById('analysis-modal');
-    const modalTitle = document.getElementById('analysis-modal-title');
-    const chartCtx = document.getElementById('history-chart')?.getContext('2d');
-    const liveMapRenderArea = document.getElementById('live-map-render-area');
     const tooltip = document.getElementById('tooltip');
     
     let historyChart = null;
@@ -17,6 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let snapshotHistoryArray = [];
     let currentSelectedSnapshotIdx = -1;
     let layoutTemplateCached = null;
+
+    // Helper DOM element getters to ensure valid references regardless of load order
+    const getModal = () => document.getElementById('analysis-modal');
+    const getModalTitle = () => document.getElementById('analysis-modal-title');
+    const getChartCtx = () => document.getElementById('history-chart')?.getContext('2d');
+    const getLiveMapArea = () => document.getElementById('live-map-render-area');
 
     // Mouse movement position tooltip
     document.addEventListener('mousemove', function(e) {
@@ -38,11 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (modalTitle) {
-            modalTitle.innerText = `📊 History Analysis: ${movieName}`;
+        const titleElem = getModalTitle();
+        if (titleElem) {
+            titleElem.innerText = `📊 History Analysis: ${movieName}`;
         }
         
-        const modal = document.getElementById('analysis-modal');
+        const modal = getModal();
         if (modal) {
             modal.classList.add('visible');
             $(modal).css({
@@ -57,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Close Modal Handler
     $(document).on('click', '#analysis-modal-close-btn, #analysis-modal', function(e) {
-        const modal = document.getElementById('analysis-modal');
+        const modal = getModal();
         if (e.target === modal || e.target.id === 'analysis-modal-close-btn') {
             if (modal) {
                 modal.classList.remove('visible');
@@ -130,7 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No snapshot logs collected yet.</td></tr>';
                 if (historyChart) historyChart.destroy();
-                liveMapRenderArea.innerHTML = '<div class="notice">No snapshots recorded yet. Click standard triggers to schedule a background run.</div>';
+                const mapArea = getLiveMapArea();
+                if (mapArea) mapArea.innerHTML = '<div class="notice">No snapshots recorded yet. Click standard triggers to schedule a background run.</div>';
             }
         } catch (err) {
             alert(`Error: ${err.message}`);
@@ -142,6 +146,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (historyChart) {
             historyChart.destroy();
         }
+
+        const chartCtx = getChartCtx();
+        if (!chartCtx) return;
 
         const reversedLogs = [...logs].reverse(); // cronological order
         const labels = reversedLogs.map(l => l.snapshot_time.substring(5, 16));
@@ -179,7 +186,8 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadSeatmapSnapshot(snapshotInfo) {
         if (!snapshotInfo) return;
         
-        document.getElementById('scrubber-current-time').innerText = snapshotInfo.snapshot_time;
+        const timeElem = document.getElementById('scrubber-current-time');
+        if (timeElem) timeElem.innerText = snapshotInfo.snapshot_time;
         
         const filename = snapshotInfo.seatmap_file_path;
         
@@ -196,11 +204,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             updateSeatsAvailabilityClasses(data.availability);
         } catch (err) {
-            liveMapRenderArea.innerHTML = `<div class="notice notice-error">${err.message}</div>`;
+            const mapArea = getLiveMapArea();
+            if (mapArea) mapArea.innerHTML = `<div class="notice notice-error">${err.message}</div>`;
         }
     }
 
     function buildSeatmapLayoutDOM(layout) {
+        const liveMapRenderArea = getLiveMapArea();
+        if (!liveMapRenderArea) return;
         liveMapRenderArea.innerHTML = '';
         
         const screen = document.createElement('div');
