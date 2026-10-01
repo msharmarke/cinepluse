@@ -38,20 +38,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        modalTitle.innerText = `📊 History Analysis: ${movieName}`;
-        if (analysisModal) {
-            analysisModal.classList.add('visible');
-            $(analysisModal).css({'display': 'flex', 'opacity': 1, 'visibility': 'visible'});
+        if (modalTitle) {
+            modalTitle.innerText = `📊 History Analysis: ${movieName}`;
+        }
+        
+        const modal = document.getElementById('analysis-modal');
+        if (modal) {
+            modal.classList.add('visible');
+            $(modal).css({
+                'display': 'flex',
+                'opacity': '1',
+                'visibility': 'visible',
+                'z-index': '100000'
+            });
         }
         loadTrackerAnalysisData(activeTrackerId);
     });
 
     // Close Modal Handler
     $(document).on('click', '#analysis-modal-close-btn, #analysis-modal', function(e) {
-        if (e.target === analysisModal || e.target.id === 'analysis-modal-close-btn') {
-            if (analysisModal) {
-                analysisModal.classList.remove('visible');
-                $(analysisModal).css({'display': 'none', 'opacity': 0, 'visibility': 'hidden'});
+        const modal = document.getElementById('analysis-modal');
+        if (e.target === modal || e.target.id === 'analysis-modal-close-btn') {
+            if (modal) {
+                modal.classList.remove('visible');
+                $(modal).css({
+                    'display': 'none',
+                    'opacity': '0',
+                    'visibility': 'hidden'
+                });
             }
             activeTrackerId = null;
         }

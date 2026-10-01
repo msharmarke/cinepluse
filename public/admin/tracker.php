@@ -851,7 +851,7 @@ if ($db_configured && !$tables_missing) {
     </div>
 
     <!-- ANALYSIS & TIMELINE SCRUBBER MODAL WINDOW -->
-    <div id="analysis-modal" class="modal-overlay">
+    <div id="analysis-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content glass-card" style="max-width: 1200px; width: 95%;">
             <button id="analysis-modal-close-btn" class="modal-close" aria-label="Close modal">&times;</button>
             <h2 id="analysis-modal-title" style="margin-top:0; border-bottom:1px solid var(--border-light); padding-bottom:10px;">📊 History Analysis</h2>
