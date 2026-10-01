@@ -6,6 +6,9 @@
     RewriteEngine On
     RewriteBase /
 
+    # Admin assets alias fallback
+    RewriteRule ^admin/assets/(.*)$ assets/$1 [L]
+
     # Admin routes
     RewriteRule ^admin/login/?$ admin/login.php [L,QSA]
     RewriteRule ^admin/logout/?$ admin/logout.php [L,QSA]
