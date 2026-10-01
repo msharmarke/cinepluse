@@ -13,7 +13,10 @@ use Cinepulse\ShowtimeService;
 Security::startSession();
 Security::requireAdmin();
 
-// Prevent browser HTML caching of admin pages
+// Invalidate PHP OPcache & prevent browser HTML caching
+if (function_exists('opcache_reset')) {
+    @opcache_reset();
+}
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
