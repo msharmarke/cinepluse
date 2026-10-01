@@ -12,6 +12,11 @@ use Cinepulse\ArchiveService;
 Security::startSession();
 Security::requireAdmin();
 
+// Prevent browser HTML caching of admin pages
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 // Setup DB status
 $dbConfigured = true;
 $dbError = '';

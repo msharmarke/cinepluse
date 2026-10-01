@@ -13,6 +13,11 @@ use Cinepulse\ShowtimeService;
 Security::startSession();
 Security::requireAdmin();
 
+// Prevent browser HTML caching of admin pages
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 // Setup DB connection
 $db_configured = true;
 $db_error = '';
