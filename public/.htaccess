@@ -15,6 +15,7 @@
     RewriteRule ^admin/dashboard/?$ admin/dashboard.php [L,QSA]
     RewriteRule ^admin/tracker/?$ admin/tracker.php [L,QSA]
     RewriteRule ^admin/scan-logs/?$ admin/tracker_scan_logs.php [L,QSA]
+    RewriteRule ^admin/api/?$ admin/api.php [L,QSA]
     RewriteRule ^admin/?$ admin/dashboard.php [L,QSA]
 
     # Legacy/shortcut admin aliases
