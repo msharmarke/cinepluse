@@ -38,6 +38,22 @@ if (!$action) {
 
 try {
     switch ($action) {
+        // Deployment & Repository Synchronization
+        case 'git_pull':
+            Security::requireAdmin();
+            $output = [];
+            $returnCode = 0;
+            @exec('git pull origin main 2>&1', $output, $returnCode);
+            if (function_exists('opcache_reset')) {
+                @opcache_reset();
+            }
+            echo json_encode([
+                'success' => ($returnCode === 0),
+                'output' => implode("\n", $output),
+                'return_code' => $returnCode
+            ]);
+            break;
+
         // 1. Fetch live seat map layout and availability (Search browser)
         case 'fetch_live_seat_map':
             $theatreId = Security::sanitizeInput($_GET['theatre_id'] ?? null, 'int');
