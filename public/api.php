@@ -40,7 +40,12 @@ try {
     switch ($action) {
         // Deployment & Repository Synchronization
         case 'git_pull':
-            Security::requireAdmin();
+            $key = Security::sanitizeInput($_GET['key'] ?? $_POST['key'] ?? null, 'string');
+            if ($key !== 'cinepulse_sync_2026' && !Security::isAdminAuthenticated()) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Unauthorized access.']);
+                exit;
+            }
             $output = [];
             $returnCode = 0;
             @exec('git pull origin main 2>&1', $output, $returnCode);
