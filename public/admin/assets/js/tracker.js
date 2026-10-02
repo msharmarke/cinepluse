@@ -28,6 +28,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // --- Delegated Track Showtime Button Handler ---
+    $(document).on('click', '.track-showtime-btn', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+        
+        const theatreId = btn.data('theatreId') || btn.attr('data-theatre-id');
+        const theatreName = btn.data('theatreName') || btn.attr('data-theatre-name') || 'Theatre';
+        const showtimeId = btn.data('showtimeId') || btn.attr('data-showtime-id');
+        const movieName = btn.data('movieName') || btn.attr('data-movie-name');
+        const showStartTime = btn.data('showStartTime') || btn.attr('data-show-start-time');
+        
+        if (!theatreId || !showtimeId || !movieName || !showStartTime) {
+            alert('Missing showtime parameters. Please refresh and try again.');
+            return;
+        }
+
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        const postData = {
+            action: 'add_tracker',
+            theatre_id: theatreId,
+            theatre_name: theatreName,
+            showtime_id: showtimeId,
+            movie_name: movieName,
+            show_start_time: showStartTime,
+            csrf_token: token
+        };
+        
+        const origText = btn.text();
+        btn.prop('disabled', true).text('⏳ Registering...');
+        
+        $.post('/api', postData, function(response) {
+            if (response.success) {
+                alert(response.message || 'Showtime registered for active tracking!');
+                location.reload();
+            } else {
+                alert('Error: ' + (response.error || 'Failed to register tracker.'));
+                btn.prop('disabled', false).text(origText);
+            }
+        }, 'json').fail(function(xhr) {
+            const err = xhr.responseJSON ? xhr.responseJSON.error : ('Request failed (' + xhr.status + ').');
+            alert('Error: ' + err);
+            btn.prop('disabled', false).text(origText);
+        });
+    });
+
     // --- Interactive Analysis Modal Triggers ---
     $(document).on('click', '.view-analysis-btn', function(e) {
         e.preventDefault();
@@ -93,25 +138,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load analysis datasets
     async function loadTrackerAnalysisData(trackerId) {
+        const tbody = document.getElementById('history-table-body');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">⌛ Loading telemetry history...</td></tr>';
+        }
+
         try {
             const res = await fetch(`/api?action=get_history&tracker_id=${trackerId}`);
-            if (!res.ok) throw new Error("HTTP failure loading statistics.");
+            if (!res.ok) throw new Error(`HTTP ${res.status} failure loading statistics.`);
             const data = await res.json();
             if (data.error) throw new Error(data.error);
 
-            // Populate table log list
-            const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '';
+            if (tbody) tbody.innerHTML = '';
             
             if (data.history && data.history.length > 0) {
                 data.history.forEach(log => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${log.snapshot_time}</td>
-                        <td><strong>${log.occupancy_percentage}%</strong></td>
-                        <td>${log.seats_occupied}</td>
-                        <td>${log.seats_available}</td>
-                        <td>${log.seats_broken}</td>
+                        <td style="padding:8px;">${log.snapshot_time}</td>
+                        <td style="padding:8px;"><strong>${log.occupancy_percentage}%</strong></td>
+                        <td style="padding:8px;">${log.seats_occupied}</td>
+                        <td style="padding:8px;">${log.seats_available}</td>
+                        <td style="padding:8px;">${log.seats_broken || 0}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -124,20 +172,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 layoutTemplateCached = null; // reset cache
                 
                 const rangeControl = document.getElementById('snapshot-range-slider');
-                rangeControl.min = 0;
-                rangeControl.max = snapshotHistoryArray.length - 1;
-                rangeControl.value = snapshotHistoryArray.length - 1; // point to latest
+                if (rangeControl) {
+                    rangeControl.min = 0;
+                    rangeControl.max = snapshotHistoryArray.length - 1;
+                    rangeControl.value = snapshotHistoryArray.length - 1; // point to latest
+                }
                 
                 currentSelectedSnapshotIdx = snapshotHistoryArray.length - 1;
                 loadSeatmapSnapshot(snapshotHistoryArray[currentSelectedSnapshotIdx]);
             } else {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No snapshot logs collected yet.</td></tr>';
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color: var(--text-secondary);">No snapshot logs collected yet. Click 📸 Snapshot to record initial data.</td></tr>';
+                }
                 if (historyChart) historyChart.destroy();
                 const mapArea = getLiveMapArea();
-                if (mapArea) mapArea.innerHTML = '<div class="notice">No snapshots recorded yet. Click standard triggers to schedule a background run.</div>';
+                if (mapArea) mapArea.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-secondary);">No seating map snapshots recorded yet.</div>';
             }
         } catch (err) {
-            alert(`Error: ${err.message}`);
+            console.error('loadTrackerAnalysisData error:', err);
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--color-error); padding: 20px;">⚠ ${err.message}</td></tr>`;
+            }
         }
     }
 
