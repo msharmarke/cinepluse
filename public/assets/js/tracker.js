@@ -4,9 +4,10 @@
  * and the visual seatmap player timeline scrubber.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    const tooltip = document.getElementById('tooltip');
+(function() {
+    function initTrackerApp() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const tooltip = document.getElementById('tooltip');
     
     let historyChart = null;
     let activeTrackerId = null;
@@ -425,6 +426,11 @@ document.addEventListener('DOMContentLoaded', function() {
             jqCard.fadeOut(300, function() { $(this).remove(); });
         } catch (err) {
             alert(`Error: ${err.message}`);
-        }
     }
-});
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTrackerApp);
+    } else {
+        initTrackerApp();
+    }
+})();
