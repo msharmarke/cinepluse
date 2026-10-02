@@ -116,6 +116,9 @@ try {
     <!-- External Dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/tracker.js?v=<?php echo time(); ?>"></script>
     
     <!-- Cinepulse Layout Stylesheets -->
     <link rel="stylesheet" href="/assets/css/style.css">
@@ -1073,9 +1076,6 @@ try {
         </div>
     </div>
 
-    <script src="/assets/js/shared.js"></script>
-    <script src="/assets/js/design-options-modal.js"></script>
-    
     <script>
         $(document.body).ready(function() {
             var csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -2178,6 +2178,5 @@ try {
     <!-- Hover tooltip element -->
     <div id="tooltip" class="tooltip" style="display: none; position: absolute; background: rgba(0,0,0,0.85); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; pointer-events: none; z-index: 10000; box-shadow: var(--shadow-md);"></div>
 
-    <script src="/assets/js/tracker.js" defer></script>
 </body>
 </html>

@@ -134,6 +134,9 @@ if ($db_configured && !$tables_missing) {
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
+    <script src="/assets/js/tracker.js?v=<?php echo time(); ?>"></script>
     
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/design-system.css">
@@ -1382,8 +1385,5 @@ if ($db_configured && !$tables_missing) {
         </div>
     </div>
 
-    <script src="/assets/js/shared.js?v=<?php echo time(); ?>"></script>
-    <script src="/assets/js/design-options-modal.js?v=<?php echo time(); ?>"></script>
-    <script src="/assets/js/tracker.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
