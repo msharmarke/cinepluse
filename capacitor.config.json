@@ -1,0 +1,20 @@
+{
+  "appId": "com.cinepulse.app",
+  "appName": "Cinepulse",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://cinepluse.msharmarke.com",
+    "cleartext": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#FF4500",
+      "sound": "bevel.wav"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

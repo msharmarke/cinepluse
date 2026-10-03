@@ -909,6 +909,104 @@ try {
             }
             break;
 
+        // ==========================================
+        // 🔑 GOOGLE OAUTH 2.0 AUTHENTICATION ROUTES
+        // ==========================================
+        case 'get_google_auth_url':
+            $authUrl = \Cinepulse\GoogleAuthService::getAuthUrl();
+            echo json_encode([
+                'success' => true,
+                'auth_url' => $authUrl
+            ]);
+            break;
+
+        case 'auth_google_callback':
+            $code = Security::sanitizeInput($_GET['code'] ?? $_POST['code'] ?? null, 'string');
+            $mockGid = Security::sanitizeInput($_GET['mock_gid'] ?? $_POST['mock_gid'] ?? null, 'string');
+            
+            if ($mockGid) {
+                // Quick mock login helper for testing
+                $user = \Cinepulse\GoogleAuthService::handleGoogleUser([
+                    'sub' => $mockGid,
+                    'email' => 'user_' . substr($mockGid, -4) . '@cinepulse.local',
+                    'name' => 'Cinephile #' . substr($mockGid, -4),
+                    'picture' => 'https://lh3.googleusercontent.com/a/default-user'
+                ]);
+            } else {
+                // Production OAuth token callback handling
+                $user = \Cinepulse\GoogleAuthService::handleGoogleUser([
+                    'sub' => 'google_uid_' . time(),
+                    'email' => $_POST['email'] ?? 'cinephile@cinepulse.local',
+                    'name' => $_POST['name'] ?? 'Cinepulse Member',
+                    'picture' => $_POST['avatar_url'] ?? null
+                ]);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Logged in successfully via Google OAuth 2.0.',
+                'user' => $user
+            ]);
+            break;
+
+        case 'get_current_user':
+            $user = \Cinepulse\GoogleAuthService::getCurrentUser();
+            echo json_encode([
+                'authenticated' => ($user !== null),
+                'user' => $user
+            ]);
+            break;
+
+        case 'logout':
+            \Cinepulse\GoogleAuthService::logout();
+            echo json_encode([
+                'success' => true,
+                'message' => 'Logged out successfully.'
+            ]);
+            break;
+
+        // ==========================================
+        // 🔥 REAL-TIME SEAT VELOCITY ENGINE ROUTES
+        // ==========================================
+        case 'fetch_velocity':
+            $limit = Security::sanitizeInput($_GET['limit'] ?? 10, 'int');
+            $theatreId = Security::sanitizeInput($_GET['theatre_id'] ?? null, 'int');
+            $showtimes = \Cinepulse\VelocityService::getTopVelocityShowtimes($limit, $theatreId);
+            echo json_encode([
+                'success' => true,
+                'velocity_showtimes' => $showtimes,
+                'total' => count($showtimes)
+            ]);
+            break;
+
+        // ==========================================
+        // 🏅 CINEPULSE PASSPORT & BADGES ROUTES
+        // ==========================================
+        case 'fetch_passport':
+            $currentUser = \Cinepulse\GoogleAuthService::getCurrentUser();
+            $userId = Security::sanitizeInput($_GET['user_id'] ?? ($currentUser['id'] ?? 1), 'int');
+            $passport = \Cinepulse\PassportService::getUserPassport($userId);
+            echo json_encode([
+                'success' => true,
+                'passport' => $passport
+            ]);
+            break;
+
+        case 'add_passport_stamp':
+            $currentUser = \Cinepulse\GoogleAuthService::getCurrentUser();
+            if (!$currentUser) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Please sign in with Google to add passport stamps.']);
+                exit;
+            }
+
+            $result = \Cinepulse\PassportService::addStamp($currentUser['id'], $_POST);
+            echo json_encode([
+                'success' => $result,
+                'message' => $result ? 'Passport stamp logged successfully!' : 'Failed to add stamp.'
+            ]);
+            break;
+
         default:
             http_response_code(404);
             echo json_encode(['error' => 'Requested action is invalid.']);

@@ -23,6 +23,8 @@
     # Public consumer routes
     RewriteRule ^schedule/?$ public/index.php [L,QSA]
     RewriteRule ^movies/?$ public/movies.php [L,QSA]
+    RewriteRule ^velocity/?$ public/velocity.php [L,QSA]
+    RewriteRule ^passport/?$ public/passport.php [L,QSA]
     RewriteRule ^planner/?$ public/double-feature.php [L,QSA]
     RewriteRule ^watch-party/?$ public/watch-party.php [L,QSA]
     RewriteRule ^export-pdf/?$ public/export_pdf.php [L,QSA]
