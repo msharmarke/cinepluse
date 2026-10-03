@@ -49,6 +49,7 @@ cinepluse-main/
 │
 ├── docs/                           # Master Documentation & Architecture Guides
 │   ├── CINEPULSE_MASTER_DOCUMENTATION.md     # ⭐ Ongoing Living Master Documentation (SSOT)
+│   ├── CINEPULSE_MASTER_RECAP_AND_SOCIAL_PLAN.md # 🍿 System Recap, Host Audit, & Social Plan
 │   ├── CINEPULSE_EVOLUTION_AND_ARCHIVE_JOURNAL.md
 │   ├── CINEPULSE_SYSTEM_AND_RATE_LIMIT_DOCS.md
 │   ├── THEATRE_TRACKING_AND_EXPANSION_ROSTER.md
