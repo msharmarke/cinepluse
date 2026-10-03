@@ -924,29 +924,39 @@ try {
             $code = Security::sanitizeInput($_GET['code'] ?? $_POST['code'] ?? null, 'string');
             $mockGid = Security::sanitizeInput($_GET['mock_gid'] ?? $_POST['mock_gid'] ?? null, 'string');
             
-            if ($mockGid) {
-                // Quick mock login helper for testing
-                $user = \Cinepulse\GoogleAuthService::handleGoogleUser([
-                    'sub' => $mockGid,
-                    'email' => 'user_' . substr($mockGid, -4) . '@cinepulse.local',
-                    'name' => 'Cinephile #' . substr($mockGid, -4),
-                    'picture' => 'https://lh3.googleusercontent.com/a/default-user'
-                ]);
-            } else {
-                // Production OAuth token callback handling
-                $user = \Cinepulse\GoogleAuthService::handleGoogleUser([
-                    'sub' => 'google_uid_' . time(),
-                    'email' => $_POST['email'] ?? 'cinephile@cinepulse.local',
-                    'name' => $_POST['name'] ?? 'Cinepulse Member',
-                    'picture' => $_POST['avatar_url'] ?? null
-                ]);
-            }
+            try {
+                if ($code) {
+                    // Production OAuth token exchange with Google
+                    $user = \Cinepulse\GoogleAuthService::authenticateCode($code);
+                    header("Location: /passport");
+                    exit;
+                } else if ($mockGid) {
+                    // Quick mock login helper for testing
+                    $user = \Cinepulse\GoogleAuthService::handleGoogleUser([
+                        'sub' => $mockGid,
+                        'email' => 'user_' . substr($mockGid, -4) . '@cinepulse.local',
+                        'name' => 'Cinephile #' . substr($mockGid, -4),
+                        'picture' => 'https://lh3.googleusercontent.com/a/default-user'
+                    ]);
+                } else {
+                    $user = \Cinepulse\GoogleAuthService::handleGoogleUser([
+                        'sub' => 'google_uid_' . time(),
+                        'email' => $_POST['email'] ?? 'cinephile@cinepulse.local',
+                        'name' => $_POST['name'] ?? 'Cinepulse Member',
+                        'picture' => $_POST['avatar_url'] ?? null
+                    ]);
+                }
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Logged in successfully via Google OAuth 2.0.',
-                'user' => $user
-            ]);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Logged in successfully via Google OAuth 2.0.',
+                    'user' => $user
+                ]);
+            } catch (\Exception $e) {
+                http_response_code(500);
+                echo "Authentication Error: " . htmlspecialchars($e->getMessage());
+                exit;
+            }
             break;
 
         case 'get_current_user':

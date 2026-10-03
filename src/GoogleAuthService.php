@@ -49,6 +49,52 @@ class GoogleAuthService {
     }
 
     /**
+     * Exchange OAuth Code for Google Token and Fetch Profile
+     */
+    public static function authenticateCode($code) {
+        self::initConfig();
+        
+        $token_url = 'https://oauth2.googleapis.com/token';
+        $post_fields = [
+            'code' => $code,
+            'client_id' => self::$client_id,
+            'client_secret' => self::$client_secret,
+            'redirect_uri' => self::$redirect_uri,
+            'grant_type' => 'authorization_code'
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $token_url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_fields));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $token_data = json_decode($response, true);
+        if (!$token_data || !isset($token_data['access_token'])) {
+            throw new Exception("Failed to exchange OAuth code with Google: " . ($token_data['error_description'] ?? 'Unknown error'));
+        }
+
+        // Fetch User Profile from Google API
+        $userinfo_url = 'https://www.googleapis.com/oauth2/v3/userinfo';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $userinfo_url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $token_data['access_token']]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $user_response = curl_exec($ch);
+        curl_close($ch);
+
+        $google_profile = json_decode($user_response, true);
+        if (!$google_profile || !isset($google_profile['sub'])) {
+            throw new Exception("Failed to fetch Google user profile.");
+        }
+
+        return self::handleGoogleUser($google_profile);
+    }
+
+    /**
      * Authenticate or Create User via Google OAuth Token Data
      */
     public static function handleGoogleUser($google_data) {

@@ -1,42 +1,21 @@
-; Cinepulse Configuration File Template
-; Copy this file to config.ini and edit the settings.
-
 [api]
-; Cineplex Subscription Key (Required)
-key = "YOUR_CINEPLEX_API_KEY_HERE"
+key = "dcdac5601d864addbc2675a2e96cb1f8"
 
 [database]
-; Database Connection Settings (Required)
-host = "localhost"
+host = "cinepluse-mysql-1"
 name = "cinepulse_db"
 user = "cinepulse_user"
 pass = "cinepulse_password"
 
 [email]
-; Email Notification Settings (Optional)
-enabled = 1
-smtp_from = "alerts@example.com"
-smtp_from_name = "Cinepulse Occupancy Alerts"
-smtp_to = "recipient@example.com"
-smtp_host = "smtp.example.com"
-smtp_port = 587
-smtp_user = "smtp_username"
-smtp_pass = "smtp_password"
-weekly_theatres = "7411,7408,7130"
-
-[social_media]
-; Social Media Integration Settings (Optional)
 enabled = 0
-threshold = 75
+smtp_from = "alerts@cinepulse.local"
+smtp_from_name = "Cinepulse Alerts"
 
-[reddit]
-; Reddit Bot Integration (Optional)
-reddit_enabled = 0
-reddit_client_id = "YOUR_REDDIT_CLIENT_ID"
-reddit_client_secret = "YOUR_REDDIT_CLIENT_SECRET"
-reddit_username = "YOUR_REDDIT_USERNAME"
-reddit_password = "YOUR_REDDIT_PASSWORD"
-reddit_user_agent = "CinepulsePlanner/1.0 (by /u/YOUR_USERNAME)"
 [admin]
-; Admin Authentication Settings
-password = "YOUR_SECURE_ADMIN_PASSCODE_HERE"
+password = "ms88"
+
+[google]
+client_id = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+client_secret = "YOUR_GOOGLE_CLIENT_SECRET"
+redirect_uri = "https://cinepluse.msharmarke.com/api?action=auth_google_callback"
