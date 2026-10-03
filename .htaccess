@@ -3,8 +3,9 @@
     Options -MultiViews
     RewriteEngine On
 
-    # Admin assets alias fallback
+    # Assets alias fallback
     RewriteRule ^admin/assets/(.*)$ public/assets/$1 [L]
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
 
     # Admin routes
     RewriteRule ^admin/login/?$ public/admin/login.php [L,QSA]

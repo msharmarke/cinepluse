@@ -2,7 +2,7 @@
 /**
  * Cinepulse — Real-Time Seat Velocity Engine ("Hypemeter")
  * Dynamic leaderboard tracking the fastest-filling showtimes across Canada (<1ms).
- * Fully wired into Cinepulse Dark Design System.
+ * Fully wired into Cinepulse Dark Design System with self-contained fallback styling.
  */
 
 require_once dirname(__DIR__) . '/src/Autoloader.php';
@@ -28,15 +28,59 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
     <title>🔥 Real-Time Seat Velocity — Cinepulse</title>
     <meta name="description" content="Live occupancy velocity leaderboard ranking the fastest filling movie showtimes across Canadian cinemas in real-time.">
     <link rel="stylesheet" href="/assets/css/style.css?v=20261003">
+    <link rel="stylesheet" href="/public/assets/css/style.css?v=20261003">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Outfit', sans-serif; background: #0b0e14; color: var(--text-primary); margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: #0b0e14; color: #e5e7eb; margin: 0; padding: 0; }
+        
+        .app-container { display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: 260px;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 50;
+        }
+        .sidebar-header { padding: 0 1.5rem 1.5rem 1.5rem; border-bottom: 1px solid #1f2937; }
+        .sidebar-header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: #FFF; }
+        .sidebar-header p { margin: 0.2rem 0 0 0; font-size: 0.78rem; color: #9ca3af; }
+        
+        .sidebar-nav { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem 0.85rem; }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.65rem 0.85rem;
+            color: #9ca3af;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+        }
+
         .velocity-card {
-            background: var(--bg-secondary, #1f2937);
-            border: 1px solid var(--border-primary, #374151);
+            background: #1f2937;
+            border: 1px solid #374151;
             border-radius: 14px;
             padding: 1.25rem 1.5rem;
             display: flex;
@@ -61,6 +105,12 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
         .status-nearly_full { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
         .status-selling_fast { background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid #60a5fa; }
         .status-sold_out { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; position: relative; height: auto; }
+            .main-content { margin-left: 0; padding: 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -99,12 +149,12 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(31, 41, 55, 0.8) 100%); padding: 1.75rem; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
                 <div>
-                    <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800;">🔥 Real-Time Seat Velocity Engine</h1>
-                    <p style="margin: 0.3rem 0 0 0; color: var(--text-secondary); font-size: 0.95rem;">Live occupancy leaderboard ranking the fastest-selling movie showtimes across Canadian cinemas.</p>
+                    <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color:#FFF;">🔥 Real-Time Seat Velocity Engine</h1>
+                    <p style="margin: 0.3rem 0 0 0; color: #9ca3af; font-size: 0.95rem;">Live occupancy leaderboard ranking the fastest-selling movie showtimes across Canadian cinemas.</p>
                 </div>
                 
                 <form method="GET" action="/velocity">
-                    <select name="theatre_id" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+                    <select name="theatre_id" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
                         <option value="">📍 All Cinema Locations</option>
                         <?php foreach ($locations as $tName => $tId): ?>
                             <option value="<?= $tId ?>" <?= $selected_theatre_id == $tId ? 'selected' : '' ?>>
@@ -117,15 +167,15 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
 
             <div class="velocity-list">
                 <?php if (empty($showtimes)): ?>
-                    <div style="background: var(--bg-secondary); padding: 2rem; border-radius: 14px; text-align: center; color: var(--text-secondary);">
+                    <div style="background: #1f2937; padding: 2rem; border-radius: 14px; text-align: center; color: #9ca3af;">
                         No showtimes currently tracked for this cinema location.
                     </div>
                 <?php endif; ?>
                 <?php foreach ($showtimes as $index => $item): ?>
                     <div class="velocity-card">
                         <div>
-                            <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700;">#<?= $index + 1 ?> <?= htmlspecialchars($item['movie_title']) ?></h3>
-                            <div style="color: var(--text-secondary); font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#<?= $index + 1 ?> <?= htmlspecialchars($item['movie_title']) ?></h3>
+                            <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                                 <span>📍 <?= htmlspecialchars($item['theatre_name']) ?></span>
                                 <span>🕒 <?= date('h:i A', strtotime($item['showtime_start'])) ?></span>
                                 <span class="badge-status status-<?= htmlspecialchars($item['velocity_status']) ?>">
@@ -135,7 +185,7 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
                         </div>
                         <div style="text-align: right; min-width: 130px;">
                             <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b;"><?= number_format($item['occupancy_pct'], 1) ?>%</div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">⚡ +<?= number_format($item['fill_rate_seats_per_hour'], 1) ?> seats/hr</div>
+                            <div style="font-size: 0.8rem; color: #9ca3af;">⚡ +<?= number_format($item['fill_rate_seats_per_hour'], 1) ?> seats/hr</div>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -2,7 +2,7 @@
 /**
  * Cinepulse — User Profile & Digital Moviegoer Passport
  * Manages user identity, favorite theater preference, ticket check-in stamps, and sign-out.
- * Fully wired into Cinepulse Dark Design System.
+ * Fully wired into Cinepulse Dark Design System with self-contained fallback styling.
  */
 
 require_once dirname(__DIR__) . '/src/Autoloader.php';
@@ -45,12 +45,55 @@ $locations = ShowtimeService::getTrackerTheatres(true);
     <title>🏅 User Profile & Passport — Cinepulse</title>
     <meta name="description" content="Your personal digital cinephile profile with movie check-in stamps, theater stats, and achievement badges.">
     <link rel="stylesheet" href="/assets/css/style.css?v=20261003">
+    <link rel="stylesheet" href="/public/assets/css/style.css?v=20261003">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Outfit', sans-serif; background: #0b0e14; color: var(--text-primary); margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: #0b0e14; color: #e5e7eb; margin: 0; padding: 0; }
+        
+        .app-container { display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: 260px;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 50;
+        }
+        .sidebar-header { padding: 0 1.5rem 1.5rem 1.5rem; border-bottom: 1px solid #1f2937; }
+        .sidebar-header h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: #FFF; }
+        .sidebar-header p { margin: 0.2rem 0 0 0; font-size: 0.78rem; color: #9ca3af; }
+        
+        .sidebar-nav { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem 0.85rem; }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.65rem 0.85rem;
+            color: #9ca3af;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+        }
         
         .passport-header {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(31, 41, 55, 0.9) 100%);
@@ -80,14 +123,15 @@ $locations = ShowtimeService::getTrackerTheatres(true);
             margin: 0 0 0.25rem 0;
             font-size: 1.6rem;
             font-weight: 800;
+            color: #FFF;
         }
         .user-email {
-            color: var(--text-secondary);
+            color: #9ca3af;
             font-size: 0.88rem;
             margin-bottom: 0.4rem;
         }
         .user-bio {
-            color: var(--text-secondary);
+            color: #9ca3af;
             margin: 0 0 0.75rem 0;
             font-size: 0.92rem;
         }
@@ -98,7 +142,7 @@ $locations = ShowtimeService::getTrackerTheatres(true);
         }
         .stat-pill {
             background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--border-primary);
+            border: 1px solid #374151;
             padding: 0.35rem 0.85rem;
             border-radius: 12px;
             font-size: 0.85rem;
@@ -129,8 +173,8 @@ $locations = ShowtimeService::getTrackerTheatres(true);
             margin-bottom: 2rem;
         }
         .badge-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
+            background: #1f2937;
+            border: 1px solid #374151;
             border-radius: 14px;
             padding: 1rem;
             display: flex;
@@ -148,11 +192,11 @@ $locations = ShowtimeService::getTrackerTheatres(true);
         .badge-info p {
             margin: 0;
             font-size: 0.78rem;
-            color: var(--text-secondary);
+            color: #9ca3af;
         }
         .form-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
+            background: #1f2937;
+            border: 1px solid #374151;
             border-radius: 16px;
             padding: 1.5rem;
             margin-bottom: 2rem;
@@ -166,27 +210,33 @@ $locations = ShowtimeService::getTrackerTheatres(true);
             display: block;
             font-size: 0.82rem;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: #9ca3af;
             margin-bottom: 0.4rem;
         }
         .form-input {
             width: 100%;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-primary);
+            border: 1px solid #374151;
             padding: 0.6rem;
             border-radius: 8px;
             color: #FFF;
             font-family: inherit;
         }
         .stamp-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
+            background: #1f2937;
+            border: 1px solid #374151;
             border-radius: 14px;
             padding: 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; position: relative; height: auto; }
+            .main-content { margin-left: 0; padding: 1rem; }
         }
     </style>
 </head>
@@ -246,14 +296,14 @@ $locations = ShowtimeService::getTrackerTheatres(true);
                     <?php if ($currentUser): ?>
                         <a href="/passport?action=logout" class="btn-logout">🚪 Sign Out</a>
                     <?php else: ?>
-                        <a href="/api?action=login_google" class="btn-dash" style="background: #fbbf24; color: #000; font-weight: 800; text-decoration: none;">🔑 Sign In with Google</a>
+                        <a href="/api?action=login_google" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #fbbf24; color: #000; font-weight: 800; padding: 0.6rem 1.1rem; border-radius: 10px; text-decoration: none; font-size: 0.88rem;">🔑 Sign In with Google</a>
                     <?php endif; ?>
                 </div>
             </div>
 
             <!-- Add Ticket Stamp Section -->
             <div class="form-card">
-                <h3 style="margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">➕ Log a Movie Ticket Check-In Stamp</h3>
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800; color:#FFF;">➕ Log a Movie Ticket Check-In Stamp</h3>
                 <form method="POST" action="/passport">
                     <input type="hidden" name="add_stamp" value="1">
                     <div class="form-grid">
@@ -289,12 +339,12 @@ $locations = ShowtimeService::getTrackerTheatres(true);
                         </div>
                     </div>
                     <div style="margin-top: 1rem; text-align: right;">
-                        <button type="submit" class="btn-dash" style="background: #fbbf24; color: #000; font-weight: 800; border: none; cursor: pointer; padding: 0.6rem 1.2rem; border-radius: 9px;">🎟️ Log Ticket Stamp</button>
+                        <button type="submit" style="background: #fbbf24; color: #000; font-weight: 800; border: none; cursor: pointer; padding: 0.65rem 1.25rem; border-radius: 9px; font-family: inherit;">🎟️ Log Ticket Stamp</button>
                     </div>
                 </form>
             </div>
 
-            <h2 style="font-size: 1.25rem; font-weight: 800; margin: 2rem 0 1rem 0;">🏆 Unlocked Badges</h2>
+            <h2 style="font-size: 1.25rem; font-weight: 800; margin: 2rem 0 1rem 0; color:#FFF;">🏆 Unlocked Badges</h2>
             <div class="badges-grid">
                 <?php foreach ($passport['badges'] as $badge): ?>
                     <div class="badge-card">
@@ -307,13 +357,13 @@ $locations = ShowtimeService::getTrackerTheatres(true);
                 <?php endforeach; ?>
             </div>
 
-            <h2 style="font-size: 1.25rem; font-weight: 800; margin: 2rem 0 1rem 0;">🎟️ Movie Check-In Stamps History</h2>
+            <h2 style="font-size: 1.25rem; font-weight: 800; margin: 2rem 0 1rem 0; color:#FFF;">🎟️ Movie Check-In Stamps History</h2>
             <div class="stamps-list">
                 <?php foreach ($passport['stamps'] as $stamp): ?>
                     <div class="stamp-card">
                         <div>
-                            <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem;"><?= htmlspecialchars($stamp['movie_title']) ?></div>
-                            <div style="color: var(--text-secondary); font-size: 0.88rem;">
+                            <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; color:#FFF;"><?= htmlspecialchars($stamp['movie_title']) ?></div>
+                            <div style="color: #9ca3af; font-size: 0.88rem;">
                                 📍 <?= htmlspecialchars($stamp['theatre_name']) ?> • 🕒 <?= htmlspecialchars($stamp['screening_date']) ?> • <?= htmlspecialchars($stamp['format_type']) ?> (<?= htmlspecialchars($stamp['seat_label']) ?>)
                             </div>
                         </div>
