@@ -2,7 +2,7 @@
 /**
  * Cinepulse — Real-Time Seat Velocity Engine ("Hypemeter")
  * Dynamic leaderboard tracking the fastest-filling showtimes across Canada (<1ms).
- * Fully wired into Cinepulse Dark Design System with self-contained fallback styling.
+ * Live 5-second auto-polling and reactive seat velocity progress indicators.
  */
 
 require_once dirname(__DIR__) . '/src/Autoloader.php';
@@ -78,21 +78,49 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
             max-width: 1200px;
         }
 
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
         .velocity-card {
             background: #1f2937;
             border: 1px solid #374151;
             border-radius: 14px;
             padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
             margin-bottom: 1rem;
             transition: border-color 0.2s, transform 0.2s;
         }
         .velocity-card:hover {
             border-color: #f59e0b;
             transform: translateY(-2px);
+        }
+        .velocity-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
         }
         .badge-status {
             font-size: 0.75rem;
@@ -105,6 +133,21 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
         .status-nearly_full { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
         .status-selling_fast { background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid #60a5fa; }
         .status-sold_out { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.85rem;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa 0%, #f59e0b 70%, #ef4444 100%);
+            border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
@@ -146,6 +189,11 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
 
         <!-- Main Content Area -->
         <main class="main-content">
+
+            <div class="live-indicator">
+                <span class="pulse-dot"></span>
+                <span>LIVE REAL-TIME TELEMETRY — AUTO-POLLING (5s)</span>
+            </div>
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(31, 41, 55, 0.8) 100%); padding: 1.75rem; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
                 <div>
@@ -153,8 +201,8 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
                     <p style="margin: 0.3rem 0 0 0; color: #9ca3af; font-size: 0.95rem;">Live occupancy leaderboard ranking the fastest-selling movie showtimes across Canadian cinemas.</p>
                 </div>
                 
-                <form method="GET" action="/velocity">
-                    <select name="theatre_id" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+                <form method="GET" action="/velocity" id="filterForm">
+                    <select name="theatre_id" id="theatreSelect" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
                         <option value="">📍 All Cinema Locations</option>
                         <?php foreach ($locations as $tName => $tId): ?>
                             <option value="<?= $tId ?>" <?= $selected_theatre_id == $tId ? 'selected' : '' ?>>
@@ -165,27 +213,32 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
                 </form>
             </div>
 
-            <div class="velocity-list">
+            <div class="velocity-list" id="velocityContainer">
                 <?php if (empty($showtimes)): ?>
                     <div style="background: #1f2937; padding: 2rem; border-radius: 14px; text-align: center; color: #9ca3af;">
                         No showtimes currently tracked for this cinema location.
                     </div>
                 <?php endif; ?>
                 <?php foreach ($showtimes as $index => $item): ?>
-                    <div class="velocity-card">
-                        <div>
-                            <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#<?= $index + 1 ?> <?= htmlspecialchars($item['movie_title']) ?></h3>
-                            <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                                <span>📍 <?= htmlspecialchars($item['theatre_name']) ?></span>
-                                <span>🕒 <?= date('h:i A', strtotime($item['showtime_start'])) ?></span>
-                                <span class="badge-status status-<?= htmlspecialchars($item['velocity_status']) ?>">
-                                    <?= strtoupper(str_replace('_', ' ', $item['velocity_status'])) ?>
-                                </span>
+                    <div class="velocity-card" id="card-<?= htmlspecialchars($item['showtime_id']) ?>">
+                        <div class="velocity-card-header">
+                            <div>
+                                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#<?= $index + 1 ?> <?= htmlspecialchars($item['movie_title']) ?></h3>
+                                <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                    <span>📍 <?= htmlspecialchars($item['theatre_name']) ?></span>
+                                    <span>🕒 <?= date('h:i A', strtotime($item['showtime_start'])) ?></span>
+                                    <span class="badge-status status-<?= htmlspecialchars($item['velocity_status']) ?>">
+                                        <?= strtoupper(str_replace('_', ' ', $item['velocity_status'])) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="text-align: right; min-width: 130px;">
+                                <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b;" class="val-pct"><?= number_format($item['occupancy_pct'], 1) ?>%</div>
+                                <div style="font-size: 0.8rem; color: #9ca3af;" class="val-rate">⚡ +<?= number_format($item['fill_rate_seats_per_hour'], 1) ?> seats/hr</div>
                             </div>
                         </div>
-                        <div style="text-align: right; min-width: 130px;">
-                            <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b;"><?= number_format($item['occupancy_pct'], 1) ?>%</div>
-                            <div style="font-size: 0.8rem; color: #9ca3af;">⚡ +<?= number_format($item['fill_rate_seats_per_hour'], 1) ?> seats/hr</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: <?= min(100, max(0, floatval($item['occupancy_pct']))) ?>%;"></div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -193,5 +246,72 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
 
         </main>
     </div>
+
+    <!-- Live 5-Second Real-Time Auto-Polling JavaScript -->
+    <script>
+        const selectedTheatreId = "<?= htmlspecialchars($selected_theatre_id ?: '') ?>";
+
+        async function pollVelocityData() {
+            try {
+                const url = `/api?action=fetch_velocity&limit=20` + (selectedTheatreId ? `&theatre_id=${selectedTheatreId}` : '');
+                const response = await fetch(url);
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.velocity_showtimes)) {
+                    renderVelocityCards(data.velocity_showtimes);
+                }
+            } catch (err) {
+                console.warn('Real-time velocity sync fallback:', err);
+            }
+        }
+
+        function renderVelocityCards(showtimes) {
+            const container = document.getElementById('velocityContainer');
+            if (!showtimes || showtimes.length === 0) {
+                container.innerHTML = `<div style="background: #1f2937; padding: 2rem; border-radius: 14px; text-align: center; color: #9ca3af;">No showtimes currently tracked for this cinema location.</div>`;
+                return;
+            }
+
+            let html = '';
+            showtimes.forEach((item, index) => {
+                const pct = parseFloat(item.occupancy_pct || 0).toFixed(1);
+                const rate = parseFloat(item.fill_rate_seats_per_hour || 0).toFixed(1);
+                const status = (item.velocity_status || 'normal').toLowerCase();
+                const statusLabel = status.replace('_', ' ').toUpperCase();
+                const startTime = new Date(item.showtime_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                html += `
+                    <div class="velocity-card" id="card-${item.showtime_id}">
+                        <div class="velocity-card-header">
+                            <div>
+                                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#${index + 1} ${escapeHtml(item.movie_title)}</h3>
+                                <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                    <span>📍 ${escapeHtml(item.theatre_name)}</span>
+                                    <span>🕒 ${startTime}</span>
+                                    <span class="badge-status status-${status}">${statusLabel}</span>
+                                </div>
+                            </div>
+                            <div style="text-align: right; min-width: 130px;">
+                                <div style="font-size: 1.6rem; font-weight: 800; color: #f59e0b;" class="val-pct">${pct}%</div>
+                                <div style="font-size: 0.8rem; color: #9ca3af;" class="val-rate">⚡ +${rate} seats/hr</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${Math.min(100, Math.max(0, pct))}%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Start 5-second real-time telemetry auto-polling
+        setInterval(pollVelocityData, 5000);
+    </script>
 </body>
 </html>
