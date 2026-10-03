@@ -28,7 +28,7 @@ class GoogleAuthService {
             }
         }
 
-        self::$client_id = self::$client_id ?: getenv('GOOGLE_CLIENT_ID');
+        self::$client_id = self::$client_id ?: getenv('GOOGLE_CLIENT_ID') ?: '554996252950-t03feqbebbch5rfuq8is4g6skpti7cre.apps.googleusercontent.com';
         self::$client_secret = self::$client_secret ?: getenv('GOOGLE_CLIENT_SECRET');
         self::$redirect_uri = self::$redirect_uri ?: getenv('GOOGLE_REDIRECT_URI') ?: 'https://cinepluse.msharmarke.com/api?action=auth_google_callback';
     }
