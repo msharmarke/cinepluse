@@ -9,13 +9,16 @@
 | Property | Value / Configuration |
 | :--- | :--- |
 | **Production Domain** | `https://cinepluse.msharmarke.com` |
-| **Operating System** | **Linux VPS (Debian GNU/Linux 11/12)** |
-| **Web Server Stack** | **Apache 2.4.68 (Debian)** + **Nginx** Reverse Proxy & Static Asset Handler |
-| **PHP Runtime** | **PHP 8.x (FPM & CLI)** |
-| **PHP Extensions Required** | `pdo_sqlite`, `pdo_mysql`, `curl`, `json`, `mbstring`, `opcache` |
-| **Database Engine** | **SQLite 3** (`schema.sql` stored in project root) / Optional **MySQL 8.0** (`cinepluse-mysql-1`) |
+| **Host IP** | `46.202.93.83` |
+| **Operating System** | **Ubuntu 24.04.2 LTS** (Kernel `6.8.0-88-generic`) |
+| **Processor (CPU)** | **AMD EPYC 9354P 32-Core Processor** (2 vCPU Cores assigned) |
+| **System Memory (RAM)** | **8 GB Total** (4.3 GB used, 3.4 GB available, 0 B swap) |
+| **Disk Storage (SSD)** | **96 GB NVMe/SSD** (19 GB used / **77 GB available**) |
+| **PaaS / Container Stack** | **Coolify PaaS** + **Docker Containers** + **Traefik Reverse Proxy** |
+| **Web Server Stack** | **`cinepluse-web-1` (Nginx + PHP 8 FPM)** (63.5 MB RAM footprint) |
+| **Database Engine** | **MySQL 8.0 (`cinepluse-mysql-1`)** (609 MB RAM footprint) + SQLite option |
 | **Admin Control Passcode** | `ms88` (Configured in `config/config.ini` under `[admin] password`) |
-| **Primary Repository** | `https://github.com/msharmarke.git` (`main` branch) |
+| **Primary Repository** | `https://github.com/msharmarke/cinepluse.git` (`main` branch) |
 
 ---
 
