@@ -257,7 +257,12 @@ if (!function_exists('getMovieColor')) {
                 <a href="/admin/dashboard">📊 Dashboard</a>
             </nav>
             <?php 
-                $currentUser = \Cinepulse\GoogleAuthService::getCurrentUser();
+                $currentUser = null;
+                try {
+                    $currentUser = \Cinepulse\GoogleAuthService::getCurrentUser();
+                } catch (\Throwable $e) {
+                    error_log("Sidebar user check warning: " . $e->getMessage());
+                }
             ?>
             <div style="padding: 1rem 1.5rem; margin-top: auto; display: flex; flex-direction: column; gap: 0.75rem;">
                 <?php if ($currentUser): ?>
