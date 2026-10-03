@@ -167,12 +167,16 @@ flowchart TD
     CoreBackend <--> Clients
 ```
 
+### Selected Architecture Choices
+* **PostgreSQL Container**: **Dedicated `cinepluse-pg-1` container in Coolify** (Isolated, lightweight, zero risk of affecting other host databases).
+* **Mobile App Framework**: **Capacitor.js PWA Wrapper** (Single codebase for Web, iOS `.ipa`, and Android `.apk` with native push notifications).
+
 ### App Architecture Blueprint
 1. **Single Backend Codebase**: The existing PHP 8 + PostgreSQL backend acts as a **unified REST JSON API** serving both the Web application and Mobile app.
-2. **PWA First (Instant Install)**: Users can tap *"Add to Home Screen"* on iOS/Android for a native app feel with push notifications.
-3. **Native iOS & Android Wrapper (Capacitor/React Native)**:
+2. **Capacitor Native Integration**:
    * Wraps the mobile-optimized frontend into a native `.apk` and `.ipa` bundle.
-   * Enables native hardware features (haptic feedback, native push notifications, offline passport caching).
+   * Enables native device capabilities (haptic feedback, native push notifications for seating alerts, offline passport caching).
+3. **PWA First (Instant Install)**: Users can also tap *"Add to Home Screen"* on iOS/Android without waiting for App Store approvals.
 
 ---
 
