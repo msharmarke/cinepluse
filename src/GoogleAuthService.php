@@ -11,26 +11,24 @@ use Throwable;
  * Bulletproof error handling: zero crash risk for host server.
  */
 class GoogleAuthService {
-    private static $client_id = null;
+    private static $client_id = "554996252950-t03feqbebbch5rfuq8is4g6skpti7cre.apps.googleusercontent.com";
     private static $client_secret = null;
-    private static $redirect_uri = null;
+    private static $redirect_uri = "https://cinepluse.msharmarke.com/api?action=auth_google_callback";
 
     private static function initConfig() {
-        if (self::$client_id !== null) return;
-
         $config_file = dirname(__DIR__) . '/config/config.ini';
         if (file_exists($config_file)) {
             $config = @parse_ini_file($config_file, true);
             if (isset($config['google'])) {
-                self::$client_id = $config['google']['client_id'] ?? null;
-                self::$client_secret = $config['google']['client_secret'] ?? null;
-                self::$redirect_uri = $config['google']['redirect_uri'] ?? null;
+                self::$client_id = $config['google']['client_id'] ?: self::$client_id;
+                self::$client_secret = $config['google']['client_secret'] ?: self::$client_secret;
+                self::$redirect_uri = $config['google']['redirect_uri'] ?: self::$redirect_uri;
             }
         }
 
-        self::$client_id = self::$client_id ?: getenv('GOOGLE_CLIENT_ID') ?: '554996252950-t03feqbebbch5rfuq8is4g6skpti7cre.apps.googleusercontent.com';
+        self::$client_id = self::$client_id ?: getenv('GOOGLE_CLIENT_ID') ?: "554996252950-t03feqbebbch5rfuq8is4g6skpti7cre.apps.googleusercontent.com";
         self::$client_secret = self::$client_secret ?: getenv('GOOGLE_CLIENT_SECRET');
-        self::$redirect_uri = self::$redirect_uri ?: getenv('GOOGLE_REDIRECT_URI') ?: 'https://cinepluse.msharmarke.com/api?action=auth_google_callback';
+        self::$redirect_uri = self::$redirect_uri ?: getenv('GOOGLE_REDIRECT_URI') ?: "https://cinepluse.msharmarke.com/api?action=auth_google_callback";
     }
 
     /**
@@ -39,9 +37,6 @@ class GoogleAuthService {
     public static function getAuthUrl() {
         try {
             self::initConfig();
-            if (!self::$client_id) {
-                return '#';
-            }
             $params = [
                 'client_id' => self::$client_id,
                 'redirect_uri' => self::$redirect_uri,
@@ -67,7 +62,7 @@ class GoogleAuthService {
         $post_fields = [
             'code' => $code,
             'client_id' => self::$client_id,
-            'client_secret' => self::$client_secret,
+            'client_secret' => self::$client_secret ?: getenv('GOOGLE_CLIENT_SECRET'),
             'redirect_uri' => self::$redirect_uri,
             'grant_type' => 'authorization_code'
         ];

@@ -912,8 +912,13 @@ try {
         // ==========================================
         // 🔑 GOOGLE OAUTH 2.0 AUTHENTICATION ROUTES
         // ==========================================
+        case 'login_google':
         case 'get_google_auth_url':
             $authUrl = \Cinepulse\GoogleAuthService::getAuthUrl();
+            if (isset($_GET['redirect']) || $action === 'login_google') {
+                header("Location: " . $authUrl);
+                exit;
+            }
             echo json_encode([
                 'success' => true,
                 'auth_url' => $authUrl
