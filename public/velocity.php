@@ -2,7 +2,7 @@
 /**
  * Cinepulse — Real-Time Seat Velocity Engine ("Hypemeter")
  * Dynamic leaderboard tracking the fastest-filling showtimes across Canada (<1ms).
- * Live 5-second auto-polling and reactive seat velocity progress indicators.
+ * Live 5-second auto-polling, dynamic seat drift telemetry, and reactive progress indicators.
  */
 
 require_once dirname(__DIR__) . '/src/Autoloader.php';
@@ -19,13 +19,26 @@ $locations = ShowtimeService::getTrackerTheatres(true);
 $selected_theatre_id = Security::sanitizeInput($_GET['theatre_id'] ?? null, 'int');
 
 $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
+
+// Compute top KPIs
+$totalVelocityRate = 0;
+$topMovie = 'N/A';
+$topOccupancy = 0;
+
+if (!empty($showtimes)) {
+    foreach ($showtimes as $s) {
+        $totalVelocityRate += floatval($s['fill_rate_seats_per_hour'] ?? 0);
+    }
+    $topMovie = $showtimes[0]['movie_title'] ?? 'N/A';
+    $topOccupancy = floatval($showtimes[0]['occupancy_pct'] ?? 0);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Real-Time Seat Velocity — Cinepulse</title>
+    <title>🔥 Real-Time Seat Velocity Engine — Cinepulse</title>
     <meta name="description" content="Live occupancy velocity leaderboard ranking the fastest filling movie showtimes across Canadian cinemas in real-time.">
     <link rel="stylesheet" href="/assets/css/style.css?v=20261003">
     <link rel="stylesheet" href="/public/assets/css/style.css?v=20261003">
@@ -78,6 +91,15 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
             max-width: 1200px;
         }
 
+        .top-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
         .live-indicator {
             display: inline-flex;
             align-items: center;
@@ -85,11 +107,10 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
             background: rgba(239, 68, 68, 0.15);
             border: 1px solid rgba(239, 68, 68, 0.4);
             color: #ef4444;
-            padding: 0.35rem 0.85rem;
+            padding: 0.4rem 0.9rem;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: 800;
-            margin-bottom: 0.75rem;
         }
         .pulse-dot {
             width: 8px;
@@ -104,24 +125,75 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
+        .sync-counter-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.4rem 0.85rem;
+            border-radius: 20px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+        .kpi-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .kpi-label { font-size: 0.8rem; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-val { font-size: 1.6rem; font-weight: 800; color: #FFF; }
+        .kpi-sub { font-size: 0.78rem; color: #6b7280; }
+
         .velocity-card {
             background: #1f2937;
             border: 1px solid #374151;
             border-radius: 14px;
             padding: 1.25rem 1.5rem;
             margin-bottom: 1rem;
-            transition: border-color 0.2s, transform 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         .velocity-card:hover {
             border-color: #f59e0b;
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
         }
+        .velocity-card.flash-update {
+            animation: cardFlash 0.8s ease;
+        }
+        @keyframes cardFlash {
+            0% { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+            100% { border-color: #374151; box-shadow: none; }
+        }
+
         .velocity-card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
         }
+        
+        .badge-screen {
+            background: rgba(147, 51, 234, 0.2);
+            color: #c084fc;
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+        }
+
         .badge-status {
             font-size: 0.75rem;
             font-weight: 800;
@@ -136,17 +208,45 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
 
         .progress-bar-bg {
             width: 100%;
-            height: 8px;
+            height: 9px;
             background: rgba(0, 0, 0, 0.4);
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
             margin-top: 0.85rem;
         }
         .progress-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, #60a5fa 0%, #f59e0b 70%, #ef4444 100%);
-            border-radius: 4px;
+            border-radius: 5px;
             transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .seats-avail-badge {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-sync {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #f59e0b;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 0.65rem 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-sync:hover {
+            background: #f59e0b;
+            color: #111827;
         }
 
         @media (max-width: 768px) {
@@ -190,27 +290,56 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
         <!-- Main Content Area -->
         <main class="main-content">
 
-            <div class="live-indicator">
-                <span class="pulse-dot"></span>
-                <span>LIVE REAL-TIME TELEMETRY — AUTO-POLLING (5s)</span>
+            <div class="top-status-header">
+                <div class="live-indicator">
+                    <span class="pulse-dot"></span>
+                    <span>REAL-TIME TELEMETRY STREAM</span>
+                </div>
+                <div class="sync-counter-badge" id="syncCounter">
+                    ⚡ Auto-Sync in: <span id="countdownSec">5</span>s
+                </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(31, 41, 55, 0.8) 100%); padding: 1.75rem; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(31, 41, 55, 0.8) 100%); padding: 1.75rem; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
                 <div>
                     <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color:#FFF;">🔥 Real-Time Seat Velocity Engine</h1>
                     <p style="margin: 0.3rem 0 0 0; color: #9ca3af; font-size: 0.95rem;">Live occupancy leaderboard ranking the fastest-selling movie showtimes across Canadian cinemas.</p>
                 </div>
                 
-                <form method="GET" action="/velocity" id="filterForm">
-                    <select name="theatre_id" id="theatreSelect" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
-                        <option value="">📍 All Cinema Locations</option>
-                        <?php foreach ($locations as $tName => $tId): ?>
-                            <option value="<?= $tId ?>" <?= $selected_theatre_id == $tId ? 'selected' : '' ?>>
-                                📍 <?= htmlspecialchars($tName) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                    <button class="btn-sync" onclick="pollVelocityData(true)">
+                        ⚡ Refresh Telemetry Now
+                    </button>
+                    <form method="GET" action="/velocity" id="filterForm">
+                        <select name="theatre_id" id="theatreSelect" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
+                            <option value="">📍 All Cinema Locations</option>
+                            <?php foreach ($locations as $tName => $tId): ?>
+                                <option value="<?= $tId ?>" <?= $selected_theatre_id == $tId ? 'selected' : '' ?>>
+                                    📍 <?= htmlspecialchars($tName) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Real-Time System KPI Summary Grid -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <span class="kpi-label">⚡ System Velocity Stream</span>
+                    <span class="kpi-val" style="color:#f59e0b;" id="kpiVelocity"><?= number_format($totalVelocityRate, 1) ?> seats/hr</span>
+                    <span class="kpi-sub">Aggregate ticket sales rate across monitored venues</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">🔥 Highest Demand Showtime</span>
+                    <span class="kpi-val" style="font-size:1.15rem; color:#60a5fa;" id="kpiTopMovie"><?= htmlspecialchars($topMovie) ?></span>
+                    <span class="kpi-sub" id="kpiTopOccupancy">Occupancy: <?= number_format($topOccupancy, 1) ?>%</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">📡 Telemetry Connection</span>
+                    <span class="kpi-val" style="font-size:1.1rem; color:#10b981;">🟢 Live (5000ms)</span>
+                    <span class="kpi-sub" id="kpiLastSync">Last sync: <?= date('H:i:s') ?></span>
+                </div>
             </div>
 
             <div class="velocity-list" id="velocityContainer">
@@ -223,12 +352,20 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
                     <div class="velocity-card" id="card-<?= htmlspecialchars($item['showtime_id']) ?>">
                         <div class="velocity-card-header">
                             <div>
-                                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#<?= $index + 1 ?> <?= htmlspecialchars($item['movie_title']) ?></h3>
-                                <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom: 0.35rem;">
+                                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#<?= $index + 1 ?> <?= htmlspecialchars($item['movie_title']) ?></h3>
+                                    <?php if (!empty($item['screen_type'])): ?>
+                                        <span class="badge-screen"><?= htmlspecialchars($item['screen_type']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
                                     <span>📍 <?= htmlspecialchars($item['theatre_name']) ?></span>
                                     <span>🕒 <?= date('h:i A', strtotime($item['showtime_start'])) ?></span>
                                     <span class="badge-status status-<?= htmlspecialchars($item['velocity_status']) ?>">
                                         <?= strtoupper(str_replace('_', ' ', $item['velocity_status'])) ?>
+                                    </span>
+                                    <span class="seats-avail-badge">
+                                        🪑 <?= isset($item['available_seats']) ? (int)$item['available_seats'] : 0 ?> / <?= isset($item['total_seats']) ? (int)$item['total_seats'] : 0 ?> left
                                     </span>
                                 </div>
                             </div>
@@ -250,9 +387,19 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
     <!-- Live 5-Second Real-Time Auto-Polling JavaScript -->
     <script>
         const selectedTheatreId = "<?= htmlspecialchars($selected_theatre_id ?: '') ?>";
+        let countdownTimer = 5;
 
-        async function pollVelocityData() {
+        // Countdown timer tick
+        setInterval(() => {
+            countdownTimer--;
+            if (countdownTimer < 0) countdownTimer = 5;
+            const el = document.getElementById('countdownSec');
+            if (el) el.innerText = countdownTimer;
+        }, 1000);
+
+        async function pollVelocityData(manual = false) {
             try {
+                if (manual) countdownTimer = 5;
                 const url = `/api?action=fetch_velocity&limit=20` + (selectedTheatreId ? `&theatre_id=${selectedTheatreId}` : '');
                 const response = await fetch(url);
                 if (!response.ok) return;
@@ -260,10 +407,28 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
                 
                 if (data.success && Array.isArray(data.velocity_showtimes)) {
                     renderVelocityCards(data.velocity_showtimes);
+                    updateKPIs(data.velocity_showtimes);
                 }
             } catch (err) {
                 console.warn('Real-time velocity sync fallback:', err);
             }
+        }
+
+        function updateKPIs(showtimes) {
+            if (!showtimes || showtimes.length === 0) return;
+
+            let totalVelocity = 0;
+            showtimes.forEach(s => totalVelocity += parseFloat(s.fill_rate_seats_per_hour || 0));
+
+            const kpiVelocity = document.getElementById('kpiVelocity');
+            const kpiTopMovie = document.getElementById('kpiTopMovie');
+            const kpiTopOccupancy = document.getElementById('kpiTopOccupancy');
+            const kpiLastSync = document.getElementById('kpiLastSync');
+
+            if (kpiVelocity) kpiVelocity.innerText = totalVelocity.toFixed(1) + ' seats/hr';
+            if (kpiTopMovie) kpiTopMovie.innerText = showtimes[0].movie_title || 'N/A';
+            if (kpiTopOccupancy) kpiTopOccupancy.innerText = 'Occupancy: ' + parseFloat(showtimes[0].occupancy_pct || 0).toFixed(1) + '%';
+            if (kpiLastSync) kpiLastSync.innerText = 'Last sync: ' + new Date().toLocaleTimeString();
         }
 
         function renderVelocityCards(showtimes) {
@@ -280,16 +445,23 @@ $showtimes = VelocityService::getTopVelocityShowtimes(20, $selected_theatre_id);
                 const status = (item.velocity_status || 'normal').toLowerCase();
                 const statusLabel = status.replace('_', ' ').toUpperCase();
                 const startTime = new Date(item.showtime_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const screenType = item.screen_type ? `<span class="badge-screen">${escapeHtml(item.screen_type)}</span>` : '';
+                const availSeats = parseInt(item.available_seats || 0);
+                const totalSeats = parseInt(item.total_seats || 0);
 
                 html += `
-                    <div class="velocity-card" id="card-${item.showtime_id}">
+                    <div class="velocity-card flash-update" id="card-${item.showtime_id}">
                         <div class="velocity-card-header">
                             <div>
-                                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#${index + 1} ${escapeHtml(item.movie_title)}</h3>
-                                <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.35rem;">
+                                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color:#FFF;">#${index + 1} ${escapeHtml(item.movie_title)}</h3>
+                                    ${screenType}
+                                </div>
+                                <div style="color: #9ca3af; font-size: 0.88rem; display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap;">
                                     <span>📍 ${escapeHtml(item.theatre_name)}</span>
                                     <span>🕒 ${startTime}</span>
                                     <span class="badge-status status-${status}">${statusLabel}</span>
+                                    <span class="seats-avail-badge">🪑 ${availSeats} / ${totalSeats} left</span>
                                 </div>
                             </div>
                             <div style="text-align: right; min-width: 130px;">
