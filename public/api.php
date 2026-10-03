@@ -915,15 +915,15 @@ try {
         case 'login_google':
         case 'get_google_auth_url':
             $authUrl = \Cinepulse\GoogleAuthService::getAuthUrl();
-            if (isset($_GET['redirect']) || $action === 'login_google') {
+            if (isset($_GET['json'])) {
+                echo json_encode([
+                    'success' => true,
+                    'auth_url' => $authUrl
+                ]);
+            } else {
                 header("Location: " . $authUrl);
-                exit;
             }
-            echo json_encode([
-                'success' => true,
-                'auth_url' => $authUrl
-            ]);
-            break;
+            exit;
 
         case 'auth_google_callback':
             $code = Security::sanitizeInput($_GET['code'] ?? $_POST['code'] ?? null, 'string');
