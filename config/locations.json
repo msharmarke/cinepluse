@@ -1,7 +1,7 @@
 {
-  "Scotiabank Theatre": { "id": 7402, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["70mm IMAX Laser", "AVX", "VIP", "DBOX"], "enabled": false },
+  "Scotiabank Theatre": { "id": 7402, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["70mm IMAX Laser", "AVX", "VIP", "DBOX"], "enabled": true },
   "Vaughan": { "id": 7408, "city": "Vaughan", "province": "ON", "region": "GTA", "screens": ["70mm IMAX GT", "AVX"], "enabled": false },
-  "Courtney Park": { "id": 7122, "city": "Mississauga", "province": "ON", "region": "GTA", "screens": ["70mm IMAX GT", "AVX"], "enabled": false },
+  "Courtney Park": { "id": 7122, "city": "Mississauga", "province": "ON", "region": "GTA", "screens": ["70mm IMAX GT", "AVX"], "enabled": true },
   "Yonge-Dundas": { "id": 7130, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["IMAX", "4DX", "VIP"], "enabled": false },
   "Yorkdale": { "id": 7406, "city": "Toronto", "province": "ON", "region": "GTA", "screens": ["AVX", "VIP"], "enabled": false },
   "Scotiabank Montreal": { "id": 9406, "city": "Montreal", "province": "QC", "region": "Montreal Metro", "screens": ["IMAX GT Laser", "AVX", "VIP"], "enabled": false },
@@ -13,7 +13,7 @@
   "South Edmonton": { "id": 3144, "city": "Edmonton", "province": "AB", "region": "Edmonton Metro", "screens": ["IMAX", "AVX", "VIP"], "enabled": false },
   "Brampton": { "id": 7411, "city": "Brampton", "province": "ON", "region": "GTA", "screens": ["AVX", "DBOX"], "enabled": false },
   "Erin Mills": { "id": 7313, "city": "Mississauga", "province": "ON", "region": "GTA", "screens": ["Standard"], "enabled": false },
-  "Queensway": { "id": 7260, "city": "Etobicoke", "province": "ON", "region": "GTA", "screens": ["AVX", "VIP"], "enabled": false },
+  "Queensway": { "id": 7260, "city": "Etobicoke", "province": "ON", "region": "GTA", "screens": ["AVX", "VIP"], "enabled": true },
   "Milton": { "id": 7285, "city": "Milton", "province": "ON", "region": "GTA", "screens": ["AVX"], "enabled": false },
   "Empress Walk": { "id": 7298, "city": "North York", "province": "ON", "region": "GTA", "screens": ["VIP"], "enabled": false },
   "Richmond Hill": { "id": 7405, "city": "Richmond Hill", "province": "ON", "region": "GTA", "screens": ["AVX"], "enabled": false },

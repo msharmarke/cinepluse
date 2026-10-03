@@ -1,8 +1,8 @@
 <?php
 /**
  * Cinepulse — Real-Time Seat Velocity Engine ("Hypemeter")
- * Dynamic leaderboard tracking the fastest-filling showtimes across Canada (<1ms).
- * Live 5-second auto-polling, dynamic seat drift telemetry, and reactive progress indicators.
+ * Leaderboard ranking movies per approved theater from most full to least full.
+ * Off toggle by default for real-time stream auto-polling.
  */
 
 require_once dirname(__DIR__) . '/src/Autoloader.php';
@@ -14,7 +14,7 @@ use Cinepulse\ShowtimeService;
 Security::startSession();
 $currentUser = GoogleAuthService::getCurrentUser();
 
-// Get active locations for filter
+// Get active approved locations only (3 approved cinemas so far)
 $locations = ShowtimeService::getTrackerTheatres(true);
 $selected_theatre_id = Security::sanitizeInput($_GET['theatre_id'] ?? null, 'int');
 
@@ -39,7 +39,7 @@ if (!empty($showtimes)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔥 Real-Time Seat Velocity Engine — Cinepulse</title>
-    <meta name="description" content="Live occupancy velocity leaderboard ranking the fastest filling movie showtimes across Canadian cinemas in real-time.">
+    <meta name="description" content="Live occupancy velocity leaderboard ranking movies per approved cinema from most full to least full.">
     <link rel="stylesheet" href="/assets/css/style.css?v=20261003">
     <link rel="stylesheet" href="/public/assets/css/style.css?v=20261003">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -104,13 +104,14 @@ if (!empty($showtimes)) {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #ef4444;
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid rgba(156, 163, 175, 0.3);
+            color: #9ca3af;
             padding: 0.4rem 0.9rem;
             border-radius: 20px;
             font-size: 0.82rem;
             font-weight: 800;
+            transition: all 0.3s ease;
         }
         .pulse-dot {
             width: 8px;
@@ -119,10 +120,63 @@ if (!empty($showtimes)) {
             border-radius: 50%;
             animation: pulse 1.5s infinite;
         }
+        .pause-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+        }
         @keyframes pulse {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Stream Toggle Switch Styling */
+        .switch-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #374151;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #ef4444;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
         }
 
         .sync-counter-badge {
@@ -133,6 +187,7 @@ if (!empty($showtimes)) {
             font-weight: 700;
             padding: 0.4rem 0.85rem;
             border-radius: 20px;
+            display: none;
         }
 
         .kpi-grid {
@@ -291,28 +346,41 @@ if (!empty($showtimes)) {
         <main class="main-content">
 
             <div class="top-status-header">
-                <div class="live-indicator">
-                    <span class="pulse-dot"></span>
-                    <span>REAL-TIME TELEMETRY STREAM</span>
+                <div class="live-indicator" id="liveStatusBadge">
+                    <span class="pause-dot"></span>
+                    <span>STREAM PAUSED — MANUAL REFRESH MODE</span>
                 </div>
-                <div class="sync-counter-badge" id="syncCounter">
-                    ⚡ Auto-Sync in: <span id="countdownSec">5</span>s
+                
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <!-- Off Toggle Switch by Default -->
+                    <div class="switch-container">
+                        <span style="font-size:0.82rem; font-weight:800; color:#9ca3af;">⚡ Live Stream Polling:</span>
+                        <label class="switch">
+                            <input type="checkbox" id="streamToggleSwitch" onchange="toggleAutoStream(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="streamStatusLabel" style="font-size:0.8rem; font-weight:800; color:#9ca3af;">OFF</span>
+                    </div>
+
+                    <div class="sync-counter-badge" id="syncCounter">
+                        ⚡ Auto-Sync in: <span id="countdownSec">5</span>s
+                    </div>
                 </div>
             </div>
             
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(31, 41, 55, 0.8) 100%); padding: 1.75rem; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
                 <div>
-                    <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color:#FFF;">🔥 Real-Time Seat Velocity Engine</h1>
-                    <p style="margin: 0.3rem 0 0 0; color: #9ca3af; font-size: 0.95rem;">Live occupancy leaderboard ranking the fastest-selling movie showtimes across Canadian cinemas.</p>
+                    <h1 style="margin: 0; font-size: 1.75rem; font-weight: 800; color:#FFF;">🔥 Real-Time Seat Velocity Leaderboard</h1>
+                    <p style="margin: 0.3rem 0 0 0; color: #9ca3af; font-size: 0.95rem;">Ranking movies per approved cinema from most full to least full in real-time.</p>
                 </div>
                 
                 <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                     <button class="btn-sync" onclick="pollVelocityData(true)">
-                        ⚡ Refresh Telemetry Now
+                        ⚡ Refresh Leaderboard Now
                     </button>
                     <form method="GET" action="/velocity" id="filterForm">
                         <select name="theatre_id" id="theatreSelect" onchange="this.form.submit()" style="background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(245, 158, 11, 0.5); color: #FFF; padding: 0.65rem 1.1rem; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
-                            <option value="">📍 All Cinema Locations</option>
+                            <option value="">📍 Approved Cinema Locations (<?= count($locations) ?>)</option>
                             <?php foreach ($locations as $tName => $tId): ?>
                                 <option value="<?= $tId ?>" <?= $selected_theatre_id == $tId ? 'selected' : '' ?>>
                                     📍 <?= htmlspecialchars($tName) ?>
@@ -326,22 +394,23 @@ if (!empty($showtimes)) {
             <!-- Real-Time System KPI Summary Grid -->
             <div class="kpi-grid">
                 <div class="kpi-card">
-                    <span class="kpi-label">⚡ System Velocity Stream</span>
+                    <span class="kpi-label">⚡ System Velocity Rate</span>
                     <span class="kpi-val" style="color:#f59e0b;" id="kpiVelocity"><?= number_format($totalVelocityRate, 1) ?> seats/hr</span>
-                    <span class="kpi-sub">Aggregate ticket sales rate across monitored venues</span>
+                    <span class="kpi-sub">Aggregate ticket sales velocity across approved venues</span>
                 </div>
                 <div class="kpi-card">
-                    <span class="kpi-label">🔥 Highest Demand Showtime</span>
+                    <span class="kpi-label">🔥 #1 Most Full Showtime</span>
                     <span class="kpi-val" style="font-size:1.15rem; color:#60a5fa;" id="kpiTopMovie"><?= htmlspecialchars($topMovie) ?></span>
                     <span class="kpi-sub" id="kpiTopOccupancy">Occupancy: <?= number_format($topOccupancy, 1) ?>%</span>
                 </div>
                 <div class="kpi-card">
-                    <span class="kpi-label">📡 Telemetry Connection</span>
-                    <span class="kpi-val" style="font-size:1.1rem; color:#10b981;">🟢 Live (5000ms)</span>
-                    <span class="kpi-sub" id="kpiLastSync">Last sync: <?= date('H:i:s') ?></span>
+                    <span class="kpi-label">🏛️ Active Scope</span>
+                    <span class="kpi-val" style="font-size:1.1rem; color:#10b981;">🟢 <?= count($locations) ?> Approved Cinemas</span>
+                    <span class="kpi-sub" id="kpiLastSync">Last update: <?= date('H:i:s') ?></span>
                 </div>
             </div>
 
+            <!-- Leaderboard Rankings -->
             <div class="velocity-list" id="velocityContainer">
                 <?php if (empty($showtimes)): ?>
                     <div style="background: #1f2937; padding: 2rem; border-radius: 14px; text-align: center; color: #9ca3af;">
@@ -384,18 +453,81 @@ if (!empty($showtimes)) {
         </main>
     </div>
 
-    <!-- Live 5-Second Real-Time Auto-Polling JavaScript -->
+    <!-- Real-Time Velocity JavaScript Controller -->
     <script>
         const selectedTheatreId = "<?= htmlspecialchars($selected_theatre_id ?: '') ?>";
+        let isStreamActive = false; // OFF BY DEFAULT!
+        let pollInterval = null;
+        let countdownInterval = null;
         let countdownTimer = 5;
 
-        // Countdown timer tick
-        setInterval(() => {
-            countdownTimer--;
-            if (countdownTimer < 0) countdownTimer = 5;
-            const el = document.getElementById('countdownSec');
-            if (el) el.innerText = countdownTimer;
-        }, 1000);
+        document.addEventListener('DOMContentLoaded', () => {
+            initStreamToggle();
+        });
+
+        function initStreamToggle() {
+            const savedState = localStorage.getItem('cinepulse_velocity_stream');
+            const checkbox = document.getElementById('streamToggleSwitch');
+            
+            // OFF by default unless user has explicitly saved 'on'
+            if (savedState === 'on') {
+                checkbox.checked = true;
+                setStreamState(true);
+            } else {
+                checkbox.checked = false;
+                setStreamState(false);
+            }
+        }
+
+        function toggleAutoStream(enabled) {
+            localStorage.setItem('cinepulse_velocity_stream', enabled ? 'on' : 'off');
+            setStreamState(enabled);
+        }
+
+        function setStreamState(enabled) {
+            isStreamActive = enabled;
+            const badge = document.getElementById('liveStatusBadge');
+            const syncCounter = document.getElementById('syncCounter');
+            const statusLabel = document.getElementById('streamStatusLabel');
+
+            if (enabled) {
+                if (badge) {
+                    badge.innerHTML = `<span class="pulse-dot"></span><span>LIVE REAL-TIME TELEMETRY — AUTO-POLLING (5s)</span>`;
+                    badge.style.color = '#ef4444';
+                    badge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                }
+                if (statusLabel) {
+                    statusLabel.innerText = 'ON';
+                    statusLabel.style.color = '#ef4444';
+                }
+                if (syncCounter) syncCounter.style.display = 'inline-block';
+
+                countdownTimer = 5;
+                if (!pollInterval) pollInterval = setInterval(pollVelocityData, 5000);
+                if (!countdownInterval) {
+                    countdownInterval = setInterval(() => {
+                        countdownTimer--;
+                        if (countdownTimer < 0) countdownTimer = 5;
+                        const el = document.getElementById('countdownSec');
+                        if (el) el.innerText = countdownTimer;
+                    }, 1000);
+                }
+            } else {
+                if (badge) {
+                    badge.innerHTML = `<span class="pause-dot"></span><span>STREAM PAUSED — MANUAL REFRESH MODE</span>`;
+                    badge.style.color = '#9ca3af';
+                    badge.style.borderColor = 'rgba(156, 163, 175, 0.3)';
+                }
+                if (statusLabel) {
+                    statusLabel.innerText = 'OFF';
+                    statusLabel.style.color = '#9ca3af';
+                }
+                if (syncCounter) syncCounter.style.display = 'none';
+
+                if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+            }
+        }
 
         async function pollVelocityData(manual = false) {
             try {
@@ -428,7 +560,7 @@ if (!empty($showtimes)) {
             if (kpiVelocity) kpiVelocity.innerText = totalVelocity.toFixed(1) + ' seats/hr';
             if (kpiTopMovie) kpiTopMovie.innerText = showtimes[0].movie_title || 'N/A';
             if (kpiTopOccupancy) kpiTopOccupancy.innerText = 'Occupancy: ' + parseFloat(showtimes[0].occupancy_pct || 0).toFixed(1) + '%';
-            if (kpiLastSync) kpiLastSync.innerText = 'Last sync: ' + new Date().toLocaleTimeString();
+            if (kpiLastSync) kpiLastSync.innerText = 'Last update: ' + new Date().toLocaleTimeString();
         }
 
         function renderVelocityCards(showtimes) {
@@ -481,9 +613,6 @@ if (!empty($showtimes)) {
         function escapeHtml(str) {
             return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
-
-        // Start 5-second real-time telemetry auto-polling
-        setInterval(pollVelocityData, 5000);
     </script>
 </body>
 </html>

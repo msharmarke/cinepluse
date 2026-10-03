@@ -61,16 +61,15 @@ class VelocityService {
             $tName = array_search((int)$theatre_id, $locationsMap) ?: ('Cinema #' . $theatre_id);
             $theatresToQuery[$tName] = (int)$theatre_id;
         } else {
-            // Flagship Canadian Cineplex locations
-            $theatresToQuery = [
-                'Cineplex Queensway' => 7260,
-                'Scotiabank Theatre Toronto' => 7402,
-                'Cineplex Courtney Park' => 7122,
-                'Cineplex Vaughan' => 7408,
-                'Scotiabank Montreal' => 9406,
-                'Scotiabank Chinook Calgary' => 3401,
-                'Scotiabank Vancouver' => 1422
-            ];
+            // Strictly query approved active cinemas from configuration
+            $theatresToQuery = ShowtimeService::getTrackerTheatres(true);
+            if (empty($theatresToQuery)) {
+                $theatresToQuery = [
+                    'Queensway' => 7260,
+                    'Scotiabank Theatre' => 7402,
+                    'Courtney Park' => 7122
+                ];
+            }
         }
 
         $allShowtimes = [];
